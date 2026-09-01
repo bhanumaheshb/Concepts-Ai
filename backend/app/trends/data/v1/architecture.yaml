@@ -1,0 +1,55 @@
+domain: ARCHITECTURE
+candidates:
+  - id: tc_arch_mass_timber
+    title: Exposed mass-timber structural grids in public buildings
+    summary: >
+      Large-span engineered timber left visible as the finished ceiling, with the
+      structural rhythm doing the work that applied ornament used to do.
+    signal: {recency: 0.82, momentum: 0.74, relevance: 0.70, design_value: 0.88,
+             source_quality: 0.85, novelty: 0.62, cross_domain_potential: 0.75}
+    evidence:
+      - {source: MOCK FIXTURE · architecture trade press, tier: TRADE_PUBLICATION, published: 2026-05-14,
+         excerpt: "Mass timber moves from structural expedient to primary visual language."}
+      - {source: MOCK FIXTURE · major design publication, tier: MAJOR_PUBLICATION, published: 2026-02-03,
+         excerpt: "Exposed glulam grids increasingly define interior character."}
+    surface_terms: []
+    literal_label: exposed timber ceiling grid
+    literal_facets: [material:laminated_timber, structural_logic:post_and_beam, tectonic_logic:assembled_modular]
+    naive_rendering: >
+      A warm-toned hall with a visible glulam beam grid overhead, timber columns on a
+      regular bay, soft uplighting on the joints and blond wood everywhere.
+    reference_type: ARCHITECTURE
+    hints:
+      - {dimension: GEOMETRY, statement: "one repeated structural bay generates the whole room",
+         abstraction: 0.88, salience: 0.85, suggests: [geometry_system:modular_bay, structural_logic:post_and_beam]}
+      - {dimension: MATERIAL_BEHAVIOUR, statement: "the structure is the finish; nothing is applied over it",
+         abstraction: 0.90, salience: 0.82, suggests: [tectonic_logic:assembled_modular, material:laminated_timber]}
+      - {dimension: RHYTHM_PACING, statement: "rhythm is set by the span, not by decoration",
+         abstraction: 0.88, salience: 0.70, suggests: [geometry_system:modular_bay]}
+
+  - id: tc_arch_excavated_ground
+    title: Buildings that begin below grade
+    summary: >
+      Cultural and civic projects placing their primary volume underground, using the
+      descent as the arrival sequence and the earth as the thermal system.
+    signal: {recency: 0.68, momentum: 0.55, relevance: 0.72, design_value: 0.92,
+             source_quality: 0.88, novelty: 0.80, cross_domain_potential: 0.70}
+    evidence:
+      - {source: MOCK FIXTURE · architecture trade press, tier: TRADE_PUBLICATION, published: 2026-04-02,
+         excerpt: "Subterranean civic volumes recur across this year's completions."}
+      - {source: MOCK FIXTURE · established architecture journal, tier: MAJOR_PUBLICATION, published: 2025-11-19,
+         excerpt: "Designers treat the ground itself as the enclosing material."}
+    surface_terms: []
+    literal_label: sunken concrete court
+    literal_facets: [tectonic_logic:excavated, site_relationship:embedded, material:sandstone]
+    naive_rendering: >
+      A sunken board-marked concrete courtyard with a single square oculus overhead,
+      steps on all sides and a shallow reflecting pool at the bottom.
+    reference_type: ARCHITECTURE
+    hints:
+      - {dimension: CIRCULATION_MOVEMENT, statement: "descent is the arrival, not the route to it",
+         abstraction: 0.92, salience: 0.88, suggests: [spatial_narrative:descent, spatial_narrative:revelation]}
+      - {dimension: ENVIRONMENTAL_RELATIONSHIP, statement: "the ground is used as the climate system",
+         abstraction: 0.90, salience: 0.80, suggests: [site_relationship:embedded, site_relationship:terraced_into]}
+      - {dimension: LIGHTING_PHILOSOPHY, statement: "a single opening above does all the modelling",
+         abstraction: 0.88, salience: 0.72, suggests: [lighting_philosophy:skylight_well]}

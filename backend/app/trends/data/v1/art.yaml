@@ -1,0 +1,28 @@
+domain: ART
+candidates:
+  - id: tc_art_field_of_light
+    title: Installations built from thousands of small light sources
+    summary: >
+      Room-scale works where illumination is distributed across many tiny emitters and
+      the darkness between them is the material.
+    signal: {recency: 0.76, momentum: 0.66, relevance: 0.74, design_value: 0.90,
+             source_quality: 0.82, novelty: 0.78, cross_domain_potential: 0.90}
+    evidence:
+      - {source: MOCK FIXTURE · art publication, tier: MAJOR_PUBLICATION, published: 2026-05-30,
+         excerpt: "Distributed-emitter installations recur across major biennales."}
+      - {source: MOCK FIXTURE · exhibitions trade press, tier: TRADE_PUBLICATION, published: 2025-12-08,
+         excerpt: "Darkness is treated as the primary material."}
+    surface_terms: []
+    literal_label: field of small lights in a dark room
+    literal_facets: [lighting_philosophy:darkness_pools, material:emissive_light]
+    naive_rendering: >
+      A pitch-black room filled with thousands of tiny colour-changing LED stems on
+      thin poles, fog in the air and mirrored floor.
+    reference_type: ART
+    hints:
+      - {dimension: LIGHTING_PHILOSOPHY, statement: "light comes from many small sources and never from a fixture",
+         abstraction: 0.92, salience: 0.88, suggests: [lighting_philosophy:oil_lamp_field, lighting_philosophy:emissive_surface]}
+      - {dimension: ATMOSPHERE, statement: "the unlit space between sources does the composing",
+         abstraction: 0.90, salience: 0.80, suggests: [lighting_philosophy:darkness_pools, emotional_register:contemplative]}
+      - {dimension: SCALE, statement: "comprehension is only possible from inside the work",
+         abstraction: 0.88, salience: 0.70, suggests: [scale_strategy:landscape]}

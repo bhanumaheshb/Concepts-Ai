@@ -1,0 +1,82 @@
+version: v1
+identity:
+  reference_id: ref_temperate_forest
+  kind: NATURE
+  display_name: Temperate forest
+  aliases: [forest, woodland, temperate woodland, deciduous forest]
+  blurb: A canopy system organised by competition for a single overhead resource.
+traits:
+  - id: t_for_geom
+    dimension: GEOMETRY
+    statement: "vertical members of one family at many diameters, spaced by competition rather than by rule"
+    abstraction: 0.90
+    salience: 0.92
+    maps_to: [geometry_system, structural_logic]
+    suggests: [geometry_system:voronoi_cellular, geometry_system:modular_bay, structural_logic:post_and_beam]
+    evidence: "Trunk spacing is an emergent field, not a grid, yet reads as ordered."
+  - id: t_for_light
+    dimension: LIGHTING_PHILOSOPHY
+    statement: "light arrives already broken by a layer above, and moves across the floor through the day"
+    abstraction: 0.90
+    salience: 0.90
+    maps_to: [lighting_philosophy]
+    suggests: [lighting_philosophy:filtered_daylight, lighting_philosophy:direct_sun_shafts]
+    evidence: "Nothing is lit directly; everything is lit through."
+  - id: t_for_rhythm
+    dimension: RHYTHM_PACING
+    statement: "growth accumulates in visible annual layers, so the form records its own duration"
+    abstraction: 0.90
+    salience: 0.82
+    maps_to: [geometry_system, spatial_narrative]
+    suggests: [geometry_system:stacked_tiers, spatial_narrative:transformation]
+    evidence: "Rings, litter layers and canopy strata all encode elapsed time."
+  - id: t_for_env
+    dimension: ENVIRONMENTAL_RELATIONSHIP
+    statement: "the floor, the understorey and the canopy are three distinct climates in one volume"
+    abstraction: 0.88
+    salience: 0.86
+    maps_to: [site_relationship, scale_strategy]
+    suggests: [site_relationship:embedded, site_relationship:camouflaged, scale_strategy:landscape]
+    evidence: "Temperature, humidity and light differ by height within a single space."
+  - id: t_for_mat
+    dimension: MATERIAL_BEHAVIOUR
+    statement: "material is grown in place and decays in place; nothing is delivered and nothing is removed"
+    abstraction: 0.90
+    salience: 0.80
+    maps_to: [tectonic_logic, material_palette]
+    suggests: [tectonic_logic:grown_living, material:living_plant, material:bamboo]
+    evidence: "The system is closed; fallen matter becomes the substrate."
+  - id: t_for_scale
+    dimension: SCALE
+    statement: "there is no single vantage from which the whole can be seen"
+    abstraction: 0.88
+    salience: 0.76
+    maps_to: [scale_strategy, occupation_staging]
+    suggests: [scale_strategy:landscape, occupation_staging:dispersed_clusters]
+    evidence: "Comprehension is always partial and always from inside."
+  - id: t_for_sensory
+    dimension: SENSORY_ASSOCIATION
+    statement: "sound is absorbed rather than reflected, and the air carries the smell of the floor"
+    abstraction: 0.85
+    salience: 0.68
+    maps_to: [material_palette]
+    suggests: [material:woven_jute, material:living_plant]
+    evidence: "Acoustically dead, olfactorily present."
+literal_reading:
+  label: enchanted woodland set
+  facet_values:
+    - material:living_plant
+    - tectonic_logic:grown_living
+    - lighting_philosophy:filtered_daylight
+    - site_relationship:camouflaged
+  surface_tokens: [enchanted forest, fairy lights, mossy log, woodland glade]
+  prevalence: 0.78
+  naive_rendering: >
+    An enchanted woodland set with real birch trunks brought indoors, moss carpet, a
+    carpet of fallen leaves, hanging fairy lights in the branches, dappled gobo lighting
+    and a mist machine at ankle height.
+surface_lexicon:
+  - {token: enchanted forest, category: FRANCHISE_TERM, transformed_to: "a volume comprehensible only from inside it"}
+  - {token: fairy lights, category: ICONIC_OBJECT, transformed_to: "many small distributed sources read against dark"}
+  - {token: woodland glade, category: SET_ELEMENT, transformed_to: "a clearing defined by what surrounds it"}
+  - {token: mossy log, category: ICONIC_OBJECT, justification: "a prop with no transferable spatial principle"}

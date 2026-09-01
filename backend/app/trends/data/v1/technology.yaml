@@ -1,0 +1,28 @@
+domain: TECHNOLOGY
+candidates:
+  - id: tc_tec_responsive_surface
+    title: Surfaces that change state in response to occupancy
+    summary: >
+      Environments where the enclosure itself reacts at a rate a person can perceive,
+      making presence legible without screens or signage.
+    signal: {recency: 0.88, momentum: 0.76, relevance: 0.68, design_value: 0.82,
+             source_quality: 0.78, novelty: 0.86, cross_domain_potential: 0.92}
+    evidence:
+      - {source: MOCK FIXTURE · technology publication, tier: MAJOR_PUBLICATION, published: 2026-07-11,
+         excerpt: "Responsive envelopes move from prototype to installed work."}
+      - {source: MOCK FIXTURE · design trade press, tier: TRADE_PUBLICATION, published: 2026-03-25,
+         excerpt: "Occupancy-driven surfaces replace screen-based interaction."}
+    surface_terms: []
+    literal_label: interactive projection room
+    literal_facets: [lighting_philosophy:projected_light, material:emissive_light]
+    naive_rendering: >
+      A dark room with floor-to-ceiling projection mapping, particles following visitors,
+      neon grid graphics and mirrored walls doubling the effect.
+    reference_type: TECHNOLOGY
+    hints:
+      - {dimension: RHYTHM_PACING, statement: "the environment changes state slowly enough to read as intentional",
+         abstraction: 0.90, salience: 0.84, suggests: [spatial_narrative:transformation]}
+      - {dimension: MATERIAL_BEHAVIOUR, statement: "the surface is its own light source, with no visible fixture",
+         abstraction: 0.90, salience: 0.78, suggests: [lighting_philosophy:emissive_surface, material:emissive_light]}
+      - {dimension: CIRCULATION_MOVEMENT, statement: "the route reconfigures around the person rather than the reverse",
+         abstraction: 0.88, salience: 0.72, suggests: [occupation_staging:concealed_reveal, spatial_narrative:immersion]}

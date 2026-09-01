@@ -1,0 +1,71 @@
+version: v1
+# Declarative pruning evaluated during search-space instantiation.
+# Every removal is recorded on the FacetDomain with its rule id, so
+# "why isn't parametric an option here?" has a machine answer.
+rules:
+  - id: RULE_BUDGET_COST_BAND
+    when: {budget_band_lte: 2}
+    prune_cost_gte: 4
+    reason: "cost band exceeds the project budget band"
+
+  - id: RULE_BUDGET_COST_BAND_MID
+    when: {budget_band_lte: 3}
+    prune_cost_gte: 5
+    reason: "cost band 5 exceeds a mid budget"
+
+  - id: RULE_CLIMATE_UNSUITABLE
+    when: {always: true}
+    prune_climate_bad: true
+    reason: "value is unsuitable for the site climate"
+
+  - id: RULE_TYPOLOGY_AFFINITY
+    when: {always: true}
+    prune_typ_low: true
+    reason: "value has low affinity for this typology"
+
+  - id: RULE_INDOOR_NO_GROUNDWORK
+    when: {site_kind: INDOOR}
+    prune_nodes:
+      - tectonic_logic:excavated
+      - site_relationship:embedded
+      - site_relationship:terraced_into
+      - thesis_archetype:excavation
+      - material:living_plant
+    reason: "no groundwork possible on an indoor floor plate"
+
+  - id: RULE_INDOOR_NO_DAYLIGHT_PRIMARY
+    when: {site_kind: INDOOR}
+    prune_nodes:
+      - lighting_philosophy:direct_sun_shafts
+      - lighting_philosophy:filtered_daylight
+    reason: "no daylight available indoors"
+
+  - id: RULE_MONSOON_NO_OPEN_FLAME_FIELD
+    when: {rain_risk_gte: 0.6, site_kind: OUTDOOR}
+    prune_nodes: [lighting_philosophy:oil_lamp_field, lighting_philosophy:candle_scatter]
+    reason: "open flame unreliable under monsoon exposure"
+
+  - id: RULE_SHORT_LOADIN_NO_HEAVY_CRAFT
+    when: {load_in_hours_lte: 12}
+    prune_nodes:
+      - tectonic_logic:carved
+      - tectonic_logic:cast_monolithic
+      - tectonic_logic:excavated
+      - tectonic_logic:grown_living
+    reason: "load-in window too short for this construction method"
+
+  - id: RULE_SPAN_LIMIT
+    kind: predicate
+    reason: "primary material cannot achieve the required clear span"
+
+  - id: RULE_SMALL_SITE_NO_LANDSCAPE_SCALE
+    when: {usable_area_lte: 120}
+    prune_nodes: [scale_strategy:landscape, scale_strategy:monumental]
+    reason: "site is too small for this scale strategy"
+
+# Relaxation order when a facet domain empties (spec stage 04).
+relaxation_order:
+  - RULE_TYPOLOGY_AFFINITY
+  - RULE_CLIMATE_UNSUITABLE
+  - RULE_BUDGET_COST_BAND_MID
+  - RULE_SMALL_SITE_NO_LANDSCAPE_SCALE

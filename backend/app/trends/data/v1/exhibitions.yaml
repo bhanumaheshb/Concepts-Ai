@@ -1,0 +1,28 @@
+domain: EXHIBITIONS
+candidates:
+  - id: tc_exh_one_room_one_idea
+    title: Single-room exhibitions built around one spatial move
+    summary: >
+      Shows that commit an entire volume to one gesture instead of subdividing it into
+      a sequence of vitrines and panels.
+    signal: {recency: 0.72, momentum: 0.60, relevance: 0.70, design_value: 0.88,
+             source_quality: 0.84, novelty: 0.74, cross_domain_potential: 0.82}
+    evidence:
+      - {source: MOCK FIXTURE · exhibitions trade press, tier: TRADE_PUBLICATION, published: 2026-04-27,
+         excerpt: "Curators commit whole volumes to a single spatial gesture."}
+      - {source: MOCK FIXTURE · art publication, tier: MAJOR_PUBLICATION, published: 2025-09-15,
+         excerpt: "The room itself becomes the exhibit."}
+    surface_terms: []
+    literal_label: single-gesture gallery room
+    literal_facets: [geometry_system:orthogonal_grid, emotional_register:austere]
+    naive_rendering: >
+      A white cube gallery with one large sculptural object in the centre, track
+      lighting and vinyl wall text.
+    reference_type: ART
+    hints:
+      - {dimension: SPATIAL_LANGUAGE, statement: "one gesture occupies the whole volume rather than dividing it",
+         abstraction: 0.90, salience: 0.84, suggests: [thesis_archetype:clearing, geometry_system:radial_concentric]}
+      - {dimension: NARRATIVE_STRUCTURE, statement: "there is nothing to walk past; there is only the thing itself",
+         abstraction: 0.88, salience: 0.72, suggests: [spatial_narrative:immersion]}
+      - {dimension: SCALE, statement: "the object is sized against the room, not against the body",
+         abstraction: 0.86, salience: 0.68, suggests: [scale_strategy:monumental]}

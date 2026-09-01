@@ -1,0 +1,164 @@
+{
+  "mandap/1234": {
+    "genotypes": "5990754d59e1431b78c80c0199aafc1d7f2b658f9643946fd5a5ac5e9f47d2ef",
+    "min": 0.7,
+    "prompts": "59353097c0a299b75ae19a94bf419862f6b3cb61715450e0b1dc48ea9da183aa",
+    "roles": [
+      "CANONICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "ADJACENT",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "RADICAL",
+      "WILDCARD"
+    ],
+    "vendi": 9.814
+  },
+  "mandap/42": {
+    "genotypes": "2a2d595b6b9741415d8586eeae481cd6d35785b13a49c8364bb9613f28d5eae0",
+    "min": 0.675,
+    "prompts": "5c6566c46232a7a51b7c6816182a61ddb68e036fbca797e3e3c03acb2012cd56",
+    "roles": [
+      "CANONICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "ADJACENT",
+      "RADICAL",
+      "WILDCARD",
+      "EXPLORATORY",
+      "EXPLORATORY"
+    ],
+    "vendi": 9.7939
+  },
+  "mandap/7": {
+    "genotypes": "fc1bb7fe4a0cebf384cbd27217cbd8e2a2f2bb35cd7fc43298815cbe7bd9a160",
+    "min": 0.6917,
+    "prompts": "90c2bf7174ac744393d1fb3233bbab3433c4fc4f2ef87b0df992b61a003a8f6f",
+    "roles": [
+      "CANONICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "RADICAL",
+      "WILDCARD"
+    ],
+    "vendi": 9.8024
+  },
+  "pavilion/1234": {
+    "genotypes": "a3d67836dfc0816a247ae4a547934c8b55817251cd6a98dea020ced666e3806b",
+    "min": 0.65,
+    "prompts": "4b10f61132184d3d0415f5c8b1e212efc1697407705bbf14a7990e7fada30c60",
+    "roles": [
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "RADICAL",
+      "WILDCARD",
+      "CANONICAL"
+    ],
+    "vendi": 9.6615
+  },
+  "pavilion/42": {
+    "genotypes": "6ad9dc3a597b1aeec9b201d94bd670186cad426eceb51a970bb75206fa48d185",
+    "min": 0.6432,
+    "prompts": "3a1891bcec07b6c446c7f068703860f694c09061ee9b0f91033c7634f290e582",
+    "roles": [
+      "CANONICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "ADJACENT",
+      "RADICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "WILDCARD"
+    ],
+    "vendi": 9.7583
+  },
+  "pavilion/7": {
+    "genotypes": "aaf5c84a3b3b6bd0fa8fdb64df531fed51134246ffe051cf61b6e63c39ed1ed2",
+    "min": 0.6694,
+    "prompts": "a6ea406518134c2e79f92b7c526d593a39cac529a87d5eb77566de0e87820998",
+    "roles": [
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "RADICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "WILDCARD",
+      "CANONICAL"
+    ],
+    "vendi": 9.7488
+  },
+  "restaurant/1234": {
+    "genotypes": "5bfcb2115d4418cd48182a2aaa6e48efefc237a9b3f21b8152f7a36b42143f4c",
+    "min": 0.5667,
+    "prompts": "ed81b2378e997491ae9f2ff34476ca9a11fafb70d91327218e854c2461744b8a",
+    "roles": [
+      "CANONICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "ADJACENT",
+      "RADICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "WILDCARD"
+    ],
+    "vendi": 9.7382
+  },
+  "restaurant/42": {
+    "genotypes": "4ba9aae02296fed9a28c8aec759407528b940ba259d5cf86fffcb28884229d5c",
+    "min": 0.671,
+    "prompts": "3410dff6be7fc11222e113ee07c0ea31a8dc7e90b6efd4b51d2358fede219c34",
+    "roles": [
+      "CANONICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "ADJACENT",
+      "RADICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "WILDCARD"
+    ],
+    "vendi": 9.7732
+  },
+  "restaurant/7": {
+    "genotypes": "e42f9d150e87ed7ea2959dcf9c64fd2afbe5c1faaba2eb07df4a101f8f39365c",
+    "min": 0.6556,
+    "prompts": "ebc34d5b89b5f6f324303a09767d26f0bbb3153d066b8700eaf8301eba9d3e18",
+    "roles": [
+      "CANONICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "ADJACENT",
+      "WILDCARD",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "RADICAL"
+    ],
+    "vendi": 9.7082
+  }
+}

@@ -1,0 +1,94 @@
+version: v1
+identity:
+  reference_id: ref_bridgerton
+  kind: TV_SERIES
+  display_name: Bridgerton
+  aliases: [bridgerton, the bridgertons, regency romance series]
+  blurb: A period social drama in which courtship is conducted as public performance.
+traits:
+  - id: t_bri_social
+    dimension: SOCIAL_BEHAVIOUR
+    statement: "a society performs itself in public, and the room exists to be looked at across"
+    abstraction: 0.85
+    salience: 0.95
+    maps_to: [occupation_staging, emotional_register]
+    suggests: [occupation_staging:in_the_round, occupation_staging:perimeter_ring, emotional_register:ceremonial]
+    evidence: "Every consequential scene is staged in a room where the assembled group is itself the audience."
+  - id: t_bri_narrative
+    dimension: NARRATIVE_STRUCTURE
+    statement: "status is disclosed by the order and manner of arrival, before anyone speaks"
+    abstraction: 0.90
+    salience: 0.85
+    maps_to: [spatial_narrative, thesis_archetype]
+    suggests: [spatial_narrative:arrival, spatial_narrative:procession, thesis_archetype:threshold]
+    evidence: "Entrances are the recurring structural device; the sequence of who enters when carries the plot."
+  - id: t_bri_spatial
+    dimension: SPATIAL_LANGUAGE
+    statement: "bilateral symmetry used as an instrument of social order rather than as decoration"
+    abstraction: 0.80
+    salience: 0.80
+    maps_to: [geometry_system, occupation_staging]
+    suggests: [geometry_system:charbagh_orthogonal, geometry_system:radial_concentric]
+    evidence: "Formal axial rooms organise who may stand where."
+  - id: t_bri_light
+    dimension: LIGHTING_PHILOSOPHY
+    statement: "warm sources sit at or below the height of a face, and nothing lights from above"
+    abstraction: 0.85
+    salience: 0.78
+    maps_to: [lighting_philosophy]
+    suggests: [lighting_philosophy:candle_scatter, lighting_philosophy:grazing_wash]
+    evidence: "Interiors are lit by flame at body height, which flatters and conceals in equal measure."
+  - id: t_bri_rhythm
+    dimension: RHYTHM_PACING
+    statement: "intimate exchange alternating with collective display, at a regular beat"
+    abstraction: 0.90
+    salience: 0.72
+    maps_to: [scale_strategy, spatial_narrative]
+    suggests: [spatial_narrative:enclosure, spatial_narrative:release]
+    evidence: "The structure alternates between two-person scenes and full-assembly scenes."
+  - id: t_bri_colour
+    dimension: COLOUR_BEHAVIOUR
+    statement: "saturated colour worn by people against a pale architectural ground"
+    abstraction: 0.80
+    salience: 0.70
+    maps_to: [material_palette, lighting_philosophy]
+    suggests: [material:limestone, material:lime_plaster]
+    evidence: "Costume carries the colour; the room stays light and recessive."
+  - id: t_bri_emotion
+    dimension: EMOTIONAL_TONE
+    statement: "romantic and sharply observed at once; warmth held inside strict decorum"
+    abstraction: 0.85
+    salience: 0.75
+    maps_to: [emotional_register]
+    suggests: [emotional_register:ceremonial, emotional_register:tender]
+    evidence: "Feeling is permitted only within an explicit code of conduct."
+  - id: t_bri_era
+    dimension: ERA
+    statement: "pre-industrial craft applied at a scale that lets the labour remain visible"
+    abstraction: 0.75
+    salience: 0.68
+    maps_to: []
+    evidence: "Everything is hand-made and reads as hand-made."
+literal_reading:
+  label: gilded formal ballroom
+  facet_values:
+    - geometry_system:charbagh_orthogonal
+    - material:marble
+    - material:brass
+    - lighting_philosophy:candle_scatter
+    - occupation_staging:centred_raised
+  surface_tokens: [regency, ballroom, corset, quadrille, debutante]
+  prevalence: 0.92
+  naive_rendering: >
+    A grand Regency ballroom with gilded mouldings, crystal chandeliers, a string quartet
+    on a raised dais, marble floors, tall mirrored panels, candlelight everywhere, pastel
+    silk drapes and a sweeping staircase for the debutantes to descend.
+surface_lexicon:
+  - {token: bridgerton, category: TITLE, transformed_to: "a society that performs itself in public"}
+  - {token: regency, category: FRANCHISE_TERM, transformed_to: "pre-industrial craft made visible"}
+  - {token: the ton, category: FRANCHISE_TERM, transformed_to: "a closed social class made visible to itself"}
+  - {token: debutante, category: CHARACTER, transformed_to: "the individual presented to the collective"}
+  - {token: ballroom, category: SET_ELEMENT, transformed_to: "a room whose purpose is collective display"}
+  - {token: corset, category: COSTUME, transformed_to: "form disciplined by an explicit code"}
+  - {token: quadrille, category: FRANCHISE_TERM, transformed_to: "movement organised by a shared rule"}
+  - {token: mayfair, category: PLACE, justification: "a place name with no transferable spatial content"}

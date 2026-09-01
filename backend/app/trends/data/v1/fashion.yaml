@@ -1,0 +1,55 @@
+domain: FASHION
+candidates:
+  - id: tc_fash_sculptural_volume
+    title: Sculptural volume replacing surface decoration
+    summary: >
+      Silhouettes built from a few large shaped planes, where the interest is the
+      contour against the body rather than pattern or print.
+    signal: {recency: 0.86, momentum: 0.80, relevance: 0.66, design_value: 0.84,
+             source_quality: 0.85, novelty: 0.70, cross_domain_potential: 0.88}
+    evidence:
+      - {source: MOCK FIXTURE · fashion publication, tier: MAJOR_PUBLICATION, published: 2026-06-20,
+         excerpt: "Volume, not print, carries the season."}
+      - {source: MOCK FIXTURE · industry report, tier: TRADE_PUBLICATION, published: 2026-03-11,
+         excerpt: "Structured shapes dominate runway silhouettes."}
+    surface_terms: []
+    literal_label: oversized metallic gown
+    literal_facets: [material:polished_steel, tectonic_logic:draped]
+    naive_rendering: >
+      A gleaming metallic oversized gown on a mirrored runway with hard spotlighting
+      and a wind machine, shot from below.
+    reference_type: FASHION
+    hints:
+      - {dimension: SCALE, statement: "a few large shaped planes replace many small details",
+         abstraction: 0.88, salience: 0.84, suggests: [scale_strategy:heroic]}
+      - {dimension: TEXTURE, statement: "the edge where a surface turns is the only ornament",
+         abstraction: 0.90, salience: 0.78, suggests: [tectonic_logic:tensioned, material:ptfe_membrane]}
+      - {dimension: MATERIAL_BEHAVIOUR, statement: "material is held in a shape it does not naturally take",
+         abstraction: 0.88, salience: 0.75, suggests: [tectonic_logic:tensioned, material:canvas_membrane]}
+
+  - id: tc_fash_reflective_skin
+    title: Reflective and liquid-metal surfacing
+    summary: >
+      High-gloss surfaces that read as liquid under movement, making the wearer's
+      environment part of the garment.
+    signal: {recency: 0.90, momentum: 0.88, relevance: 0.58, design_value: 0.62,
+             source_quality: 0.70, novelty: 0.55, cross_domain_potential: 0.80}
+    evidence:
+      - {source: MOCK FIXTURE · fashion publication, tier: MAJOR_PUBLICATION, published: 2026-07-02,
+         excerpt: "Chrome and liquid-metal finishes are everywhere this season."}
+      - {source: MOCK FIXTURE · visual culture aggregator, tier: AGGREGATOR, published: 2026-06-28,
+         excerpt: "Mirror finishes dominate social feeds."}
+    surface_terms: []
+    literal_label: chrome mirrored surface
+    literal_facets: [material:mirror_polymer, material:polished_steel]
+    naive_rendering: >
+      A chrome-wrapped room with mirror-polished walls, liquid metal blobs and pink
+      rim lighting, everything reflecting everything else.
+    reference_type: FASHION
+    hints:
+      - {dimension: MATERIAL_BEHAVIOUR, statement: "the surface shows its surroundings instead of itself",
+         abstraction: 0.88, salience: 0.80, suggests: [material:mirror_polymer, site_relationship:mirroring]}
+      - {dimension: COLOUR_BEHAVIOUR, statement: "colour arrives entirely as reflected light",
+         abstraction: 0.86, salience: 0.70, suggests: [lighting_philosophy:reflected_daylight]}
+      - {dimension: ATMOSPHERE, statement: "high contrast between a bright source and a dark ground",
+         abstraction: 0.85, salience: 0.65, suggests: [emotional_register:theatrical]}

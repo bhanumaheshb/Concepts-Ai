@@ -1,0 +1,82 @@
+version: v1
+identity:
+  reference_id: ref_palace_architecture
+  kind: HISTORICAL_PERIOD
+  display_name: Courtly palace architecture
+  aliases: [palace architecture, courtly architecture, royal court architecture, palace]
+  blurb: Architecture organised to stage a hierarchy through sequence and access.
+traits:
+  - id: t_pal_era
+    dimension: ERA
+    statement: "hand craft deployed at a scale that could only be reached by many people working together"
+    abstraction: 0.82
+    salience: 0.88
+    maps_to: []
+    evidence: "The labour is the display; scale demonstrates command of it."
+  - id: t_pal_social
+    dimension: SOCIAL_BEHAVIOUR
+    statement: "access is graded, and how far a person may proceed states their standing"
+    abstraction: 0.92
+    salience: 0.94
+    maps_to: [occupation_staging, spatial_narrative]
+    suggests: [occupation_staging:layered_terraces, occupation_staging:concealed_reveal, spatial_narrative:procession]
+    evidence: "The plan is a sequence of thresholds each admitting fewer people."
+  - id: t_pal_lang
+    dimension: ARCHITECTURAL_LANGUAGE
+    statement: "an axis holds the whole composition, and everything is measured from it"
+    abstraction: 0.88
+    salience: 0.90
+    maps_to: [architectural_language, geometry_system]
+    suggests: [geometry_system:charbagh_orthogonal, geometry_system:orthogonal_grid]
+    evidence: "A single organising line governs plan, elevation and planting."
+  - id: t_pal_mat
+    dimension: MATERIAL_BEHAVIOUR
+    statement: "stone worked so finely that its weight is contradicted by its surface"
+    abstraction: 0.86
+    salience: 0.85
+    maps_to: [material_palette, tectonic_logic]
+    suggests: [material:marble, material:sandstone, tectonic_logic:carved]
+    evidence: "Mass is present structurally and denied visually."
+  - id: t_pal_culture
+    dimension: CULTURAL_CONTEXT
+    statement: "water and shade are treated as the highest form of luxury a place can offer"
+    abstraction: 0.85
+    salience: 0.80
+    maps_to: []
+    evidence: "In a hot climate, coolness is the resource being displayed."
+  - id: t_pal_env
+    dimension: ENVIRONMENTAL_RELATIONSHIP
+    statement: "the enclosure holds a garden, so the interior faces inward onto its own landscape"
+    abstraction: 0.88
+    salience: 0.82
+    maps_to: [site_relationship, material_palette]
+    suggests: [site_relationship:framing, material:still_water, material:living_plant]
+    evidence: "The courtyard is the primary room and the facade faces it."
+  - id: t_pal_light
+    dimension: LIGHTING_PHILOSOPHY
+    statement: "light is admitted through a perforated plane so that it arrives already patterned"
+    abstraction: 0.86
+    salience: 0.74
+    maps_to: [lighting_philosophy]
+    suggests: [lighting_philosophy:filtered_daylight, lighting_philosophy:reflected_daylight]
+    evidence: "Screens do the work that glass would do elsewhere."
+literal_reading:
+  label: axial marble courtyard with water channel
+  facet_values:
+    - architectural_language:mughal_courtyard
+    - geometry_system:charbagh_orthogonal
+    - material:marble
+    - material:still_water
+    - site_relationship:framing
+  surface_tokens: [mughal, taj, maharaja, palace, durbar]
+  prevalence: 0.90
+  naive_rendering: >
+    A symmetrical white marble courtyard with scalloped arches, a central water channel
+    with fountains, inlaid floral stonework, gold accents, red carpets down the axis and
+    peacocks, lit warm at golden hour.
+surface_lexicon:
+  - {token: mughal, category: FRANCHISE_TERM, transformed_to: "an axial enclosure holding its own garden"}
+  - {token: taj, category: PLACE, justification: "a specific monument, not a transferable principle"}
+  - {token: maharaja, category: CHARACTER, transformed_to: "the individual at the end of a graded sequence"}
+  - {token: palace, category: TITLE, transformed_to: "a plan that grades access as a statement of standing"}
+  - {token: durbar, category: FRANCHISE_TERM, transformed_to: "the assembly at which hierarchy is made visible"}

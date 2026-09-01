@@ -1,0 +1,28 @@
+domain: INTERIOR_DESIGN
+candidates:
+  - id: tc_int_single_material
+    title: Rooms resolved in a single material at several finishes
+    summary: >
+      Interiors built from one substance worked in different ways, so difference comes
+      from process rather than from a palette of materials.
+    signal: {recency: 0.74, momentum: 0.68, relevance: 0.78, design_value: 0.86,
+             source_quality: 0.83, novelty: 0.66, cross_domain_potential: 0.70}
+    evidence:
+      - {source: MOCK FIXTURE · interiors publication, tier: MAJOR_PUBLICATION, published: 2026-05-08,
+         excerpt: "Mono-material interiors dominate this year's completions."}
+      - {source: MOCK FIXTURE · design trade press, tier: TRADE_PUBLICATION, published: 2026-02-17,
+         excerpt: "One substance, many finishes, replaces the mixed palette."}
+    surface_terms: []
+    literal_label: all-travertine room
+    literal_facets: [material:limestone, tectonic_logic:carved]
+    naive_rendering: >
+      A beige travertine room with a travertine bench, travertine walls and a curved
+      travertine arch, lit with warm concealed strips.
+    reference_type: ARCHITECTURE
+    hints:
+      - {dimension: MATERIAL_BEHAVIOUR, statement: "one substance worked several ways replaces a palette",
+         abstraction: 0.90, salience: 0.86, suggests: [tectonic_logic:carved, material:limestone, material:sandstone]}
+      - {dimension: TEXTURE, statement: "difference is produced by process, not by contrast of materials",
+         abstraction: 0.88, salience: 0.76, suggests: [tectonic_logic:cast_monolithic]}
+      - {dimension: ATMOSPHERE, statement: "restraint reads as confidence rather than as absence",
+         abstraction: 0.86, salience: 0.66, suggests: [emotional_register:austere, emotional_register:contemplative]}

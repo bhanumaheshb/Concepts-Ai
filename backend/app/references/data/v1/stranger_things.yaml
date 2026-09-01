@@ -1,0 +1,93 @@
+version: v1
+identity:
+  reference_id: ref_stranger_things
+  kind: TV_SERIES
+  display_name: Stranger Things
+  aliases: [stranger things, upside down series, 80s mystery series]
+  blurb: An ordinary suburban world with a second, inverted world pressing against it.
+traits:
+  - id: t_str_atmos
+    dimension: ATMOSPHERE
+    statement: "an entirely ordinary environment that holds exactly one thing which does not belong"
+    abstraction: 0.90
+    salience: 0.95
+    maps_to: [emotional_register, geometry_system]
+    suggests: [emotional_register:unsettling, geometry_system:orthogonal_grid]
+    evidence: "The dramatic engine is a familiar setting with a single wrong element in it."
+  - id: t_str_env
+    dimension: ENVIRONMENTAL_RELATIONSHIP
+    statement: "a familiar place re-encountered inverted, where every surface is recognisable and wrong"
+    abstraction: 0.88
+    salience: 0.92
+    maps_to: [site_relationship, tectonic_logic]
+    suggests: [site_relationship:mirroring, site_relationship:camouflaged]
+    evidence: "The second world is a copy of the first, altered rather than replaced."
+  - id: t_str_light
+    dimension: LIGHTING_PHILOSOPHY
+    statement: "warm domestic light defined entirely by the darkness it fails to reach"
+    abstraction: 0.88
+    salience: 0.85
+    maps_to: [lighting_philosophy]
+    suggests: [lighting_philosophy:darkness_pools, lighting_philosophy:grazing_wash]
+    evidence: "Interiors are small pools of warm light inside large dark volumes."
+  - id: t_str_motif
+    dimension: RECURRING_MOTIF
+    statement: "machines whose workings are visible, operated by hand, failing in legible ways"
+    abstraction: 0.85
+    salience: 0.80
+    maps_to: [tectonic_logic, geometry_system]
+    suggests: [tectonic_logic:assembled_modular, material:corten_steel]
+    evidence: "Analogue devices are shown working, and their mechanism is part of the image."
+  - id: t_str_narrative
+    dimension: NARRATIVE_STRUCTURE
+    statement: "the transition between two states is a place you can stand in, not a door you pass"
+    abstraction: 0.92
+    salience: 0.86
+    maps_to: [spatial_narrative, thesis_archetype]
+    suggests: [spatial_narrative:transformation, thesis_archetype:threshold, spatial_narrative:descent]
+    evidence: "Crossings are given duration and physical extent rather than being instantaneous."
+  - id: t_str_social
+    dimension: SOCIAL_BEHAVIOUR
+    statement: "a small group holds knowledge the surrounding crowd does not, and must act inside it"
+    abstraction: 0.88
+    salience: 0.75
+    maps_to: [occupation_staging]
+    suggests: [occupation_staging:concealed_reveal, occupation_staging:dispersed_clusters]
+    evidence: "The protagonists operate as a knowing minority within an unknowing majority."
+  - id: t_str_colour
+    dimension: COLOUR_BEHAVIOUR
+    statement: "a saturated single hue bleeding into an otherwise neutral scene"
+    abstraction: 0.82
+    salience: 0.72
+    maps_to: [material_palette, lighting_philosophy]
+    suggests: [lighting_philosophy:emissive_surface, material:emissive_light]
+    evidence: "Colour arrives as an intrusion rather than as a palette."
+  - id: t_str_era
+    dimension: ERA
+    statement: "a recent past remembered more fondly than it was lived"
+    abstraction: 0.80
+    salience: 0.70
+    maps_to: []
+    evidence: "The period is treated as nostalgia rather than as history."
+literal_reading:
+  label: dark suburban interior with red light
+  facet_values:
+    - geometry_system:orthogonal_grid
+    - lighting_philosophy:darkness_pools
+    - material:emissive_light
+    - emotional_register:unsettling
+  surface_tokens: [upside down, demogorgon, hawkins, arcade, walkie talkie]
+  prevalence: 0.85
+  naive_rendering: >
+    A dark 1980s suburban basement strung with Christmas lights, an alphabet wall, red
+    and blue neon haze, fog machines, a bike leaning against wood panelling, and vines
+    creeping across the ceiling from the Upside Down.
+surface_lexicon:
+  - {token: stranger things, category: TITLE, transformed_to: "the ordinary holding one wrong thing"}
+  - {token: upside down, category: FRANCHISE_TERM, transformed_to: "a familiar environment re-encountered as inverted"}
+  - {token: demogorgon, category: CHARACTER, justification: "a creature design with no transferable spatial principle"}
+  - {token: hawkins, category: PLACE, justification: "a place name carrying no spatial content"}
+  - {token: eleven, category: CHARACTER, transformed_to: "the individual who does not fit the group"}
+  - {token: arcade, category: SET_ELEMENT, transformed_to: "a room lit only by the machines inside it"}
+  - {token: christmas lights, category: ICONIC_OBJECT, transformed_to: "a message carried by many small distributed sources"}
+  - {token: walkie talkie, category: ICONIC_OBJECT, transformed_to: "communication whose mechanism is audible"}

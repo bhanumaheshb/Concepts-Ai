@@ -1,0 +1,191 @@
+version: v1
+# Cross-domain principle library. Sources are ABSTRACTED at authoring time into
+# relational statements, so the engine never injects imagery or proper nouns.
+#
+# Authoring rules (enforced by tests):
+#   1. statements are relational, not visual
+#   2. no proper nouns inside `statements`
+#   3. `mappable_to` must contain >= 2 facets
+#   4. `forbidden_surface_tokens` must cover the source's recognisable vocabulary
+domain_distance:            # symmetric matrix over domain_class pairs
+  NATURE:        {NATURE: 0.0, ENGINEERING: 0.6, CRAFT: 0.6, ARCHITECTURE_HISTORIC: 0.8, CINEMA: 0.7, RITUAL: 0.7}
+  ENGINEERING:   {NATURE: 0.6, ENGINEERING: 0.0, CRAFT: 0.5, ARCHITECTURE_HISTORIC: 0.7, CINEMA: 0.6, RITUAL: 0.8}
+  CRAFT:         {NATURE: 0.6, ENGINEERING: 0.5, CRAFT: 0.0, ARCHITECTURE_HISTORIC: 0.5, CINEMA: 0.7, RITUAL: 0.6}
+  ARCHITECTURE_HISTORIC: {NATURE: 0.8, ENGINEERING: 0.7, CRAFT: 0.5, ARCHITECTURE_HISTORIC: 0.2, CINEMA: 0.6, RITUAL: 0.5}
+  CINEMA:        {NATURE: 0.7, ENGINEERING: 0.6, CRAFT: 0.7, ARCHITECTURE_HISTORIC: 0.6, CINEMA: 0.0, RITUAL: 0.6}
+  RITUAL:        {NATURE: 0.7, ENGINEERING: 0.8, CRAFT: 0.6, ARCHITECTURE_HISTORIC: 0.5, CINEMA: 0.6, RITUAL: 0.0}
+
+principles:
+- id: principle:thermal_descent
+  source_domain: "stepped water architecture"
+  domain_class: ARCHITECTURE_HISTORIC
+  statements:
+    - "arrival is a descent, and the descent is itself the ceremony"
+    - "thermal mass replaces mechanical cooling"
+    - "space is made by removal rather than by addition"
+    - "the destination is invisible from the entrance"
+  mappable_to: [thesis_archetype, spatial_narrative, site_relationship, occupation_staging]
+  biases:
+    thesis_archetype: [thesis_archetype:excavation, thesis_archetype:threshold]
+    site_relationship: [site_relationship:embedded, site_relationship:terraced_into]
+    occupation_staging: [occupation_staging:centred_sunken, occupation_staging:layered_terraces]
+  forbidden_surface_tokens: [stepwell, baori, vav, jaali, abhaneri, chand]
+  cost_band_shift: 1
+
+- id: principle:distributed_emission
+  source_domain: "bioluminescent forest floor"
+  domain_class: NATURE
+  statements:
+    - "light originates in the surface itself, never from a visible fixture"
+    - "emission is distributed across thousands of small sources"
+    - "it is only legible in the absence of other light"
+    - "intensity responds to the presence of people"
+  mappable_to: [lighting_philosophy, tectonic_logic, emotional_register, material]
+  biases:
+    lighting_philosophy: [lighting_philosophy:emissive_surface, lighting_philosophy:oil_lamp_field, lighting_philosophy:darkness_pools]
+    emotional_register: [emotional_register:contemplative, emotional_register:sublime]
+  forbidden_surface_tokens: [mushroom, fungus, bioluminescent, glowworm, forest floor, algae]
+  cost_band_shift: 1
+
+- id: principle:tensegrity_balance
+  source_domain: "tensegrity structures"
+  domain_class: ENGINEERING
+  statements:
+    - "compression members never touch each other"
+    - "stability comes from continuous tension, not from mass"
+    - "the structure appears to defy its own weight"
+    - "every member is either purely pulled or purely pushed"
+  mappable_to: [structural_logic, site_relationship, thesis_archetype, tectonic_logic]
+  biases:
+    structural_logic: [structural_logic:cable_tensile, structural_logic:suspended_net]
+    site_relationship: [site_relationship:hovering, site_relationship:bridging]
+    thesis_archetype: [thesis_archetype:apparition]
+  forbidden_surface_tokens: [tensegrity, buckminster, geodesic, snelson]
+  cost_band_shift: 1
+
+- id: principle:resist_and_reveal
+  source_domain: "resist-dyeing textile craft"
+  domain_class: CRAFT
+  statements:
+    - "the pattern is made by what is protected from the process, not by what is added"
+    - "the boundary between treated and untreated carries all the expression"
+    - "repetition of a simple binding produces irreducible complexity"
+  mappable_to: [tectonic_logic, material, geometry_system, emotional_register]
+  biases:
+    tectonic_logic: [tectonic_logic:woven, tectonic_logic:draped]
+    geometry_system: [geometry_system:fractal_subdivision, geometry_system:modular_bay]
+  forbidden_surface_tokens: [bandhani, shibori, tie-dye, batik, ikat]
+  cost_band_shift: 0
+
+- id: principle:sequential_reveal_blocking
+  source_domain: "cinematic staging"
+  domain_class: CINEMA
+  statements:
+    - "the subject is withheld until a single prepared moment"
+    - "the route is choreographed so that each turn changes what is known"
+    - "foreground objects exist only to frame what is behind them"
+    - "light is motivated by something visible in the scene"
+  mappable_to: [spatial_narrative, occupation_staging, lighting_philosophy, thesis_archetype]
+  biases:
+    spatial_narrative: [spatial_narrative:revelation, spatial_narrative:discovery, spatial_narrative:procession]
+    occupation_staging: [occupation_staging:concealed_reveal, occupation_staging:processional_axis]
+  forbidden_surface_tokens: [film set, movie, cinema, camera crew, hollywood]
+  cost_band_shift: 0
+
+- id: principle:sedimentary_time
+  source_domain: "sedimentary deposition"
+  domain_class: NATURE
+  statements:
+    - "the object records the order in which it was made"
+    - "each layer is thin, and meaning accumulates only across many"
+    - "horizontal banding registers time as a visible dimension"
+  mappable_to: [tectonic_logic, material, geometry_system, architectural_language]
+  biases:
+    tectonic_logic: [tectonic_logic:stacked]
+    geometry_system: [geometry_system:stacked_tiers, geometry_system:stepped_orthogonal]
+  forbidden_surface_tokens: [sediment, geology, strata canyon, rock formation, canyon]
+  cost_band_shift: 0
+
+- id: principle:formwork_as_artefact
+  source_domain: "concrete formwork practice"
+  domain_class: ENGINEERING
+  statements:
+    - "the mould is as designed as the object it produces"
+    - "the trace of making is left deliberately visible"
+    - "a single repeated mould yields the entire construction"
+  mappable_to: [tectonic_logic, material, geometry_system, architectural_language]
+  biases:
+    tectonic_logic: [tectonic_logic:cast_monolithic, tectonic_logic:assembled_modular]
+    geometry_system: [geometry_system:modular_bay]
+  forbidden_surface_tokens: [formwork, shuttering, plywood mould, concrete pour]
+  cost_band_shift: 0
+
+- id: principle:threshold_preparation
+  source_domain: "processional rites of passage"
+  domain_class: RITUAL
+  statements:
+    - "the participant is changed by the act of crossing, not by the destination"
+    - "preparation happens in a space that is neither outside nor inside"
+    - "the community waits on one side and receives on the other"
+  mappable_to: [thesis_archetype, spatial_narrative, occupation_staging, emotional_register]
+  biases:
+    thesis_archetype: [thesis_archetype:threshold, thesis_archetype:procession_a]
+    spatial_narrative: [spatial_narrative:procession, spatial_narrative:arrival, spatial_narrative:transformation]
+  forbidden_surface_tokens: [initiation rite, pilgrimage, liminal anthropology]
+  cost_band_shift: 0
+
+- id: principle:phototropic_orientation
+  source_domain: "plant orientation toward light"
+  domain_class: NATURE
+  statements:
+    - "every element orients itself toward a single source"
+    - "the collective orientation is legible before any individual part is"
+    - "form is the accumulated record of where the light was"
+  mappable_to: [geometry_system, lighting_philosophy, tectonic_logic, spatial_narrative]
+  biases:
+    geometry_system: [geometry_system:radial_concentric, geometry_system:undulating_surface]
+    lighting_philosophy: [lighting_philosophy:direct_sun_shafts, lighting_philosophy:skylight_well]
+  forbidden_surface_tokens: [sunflower, phototropism, plant biology, heliotrope]
+  cost_band_shift: 0
+
+- id: principle:joinery_without_fasteners
+  source_domain: "interlocking timber joinery"
+  domain_class: CRAFT
+  statements:
+    - "parts are held by their geometry alone"
+    - "the whole can be taken apart in the reverse order it was made"
+    - "the joint is the only ornament permitted"
+  mappable_to: [tectonic_logic, structural_logic, material, architectural_language]
+  biases:
+    tectonic_logic: [tectonic_logic:assembled_modular, tectonic_logic:stacked, tectonic_logic:woven]
+    structural_logic: [structural_logic:post_and_beam, structural_logic:modular_frame]
+  forbidden_surface_tokens: [sashimono, kigumi, dovetail, mortise and tenon, japanese joinery]
+  cost_band_shift: 0
+
+- id: principle:swarm_aggregation
+  source_domain: "swarm aggregation behaviour"
+  domain_class: NATURE
+  statements:
+    - "no element is designed; only the rule between neighbours is"
+    - "density varies continuously without any part being different in kind"
+    - "the boundary of the whole is emergent and has no edge condition"
+  mappable_to: [geometry_system, tectonic_logic, architectural_language, occupation_staging]
+  biases:
+    geometry_system: [geometry_system:voronoi_cellular, geometry_system:fractal_subdivision]
+    occupation_staging: [occupation_staging:dispersed_clusters]
+  forbidden_surface_tokens: [swarm, murmuration, starling, flocking, bees, termite mound]
+  cost_band_shift: 1
+
+- id: principle:practical_light_only
+  source_domain: "available-light photography"
+  domain_class: CINEMA
+  statements:
+    - "every source of light must exist as an object within the space"
+    - "darkness is a material, not an absence to be corrected"
+    - "the eye is led by luminance alone, never by arrangement"
+  mappable_to: [lighting_philosophy, emotional_register, occupation_staging, material]
+  biases:
+    lighting_philosophy: [lighting_philosophy:candle_scatter, lighting_philosophy:darkness_pools, lighting_philosophy:open_flame]
+    emotional_register: [emotional_register:contemplative, emotional_register:melancholic, emotional_register:theatrical]
+  forbidden_surface_tokens: [cinematography, film stock, available light photography]
+  cost_band_shift: 0

@@ -1,0 +1,63 @@
+{
+  "_note": "REAL web results captured during the WebSearchTrendProvider milestone. Titles, URLs and publishers are verbatim from live search. `published` is present ONLY where the date was verified by fetching the page or is unambiguously encoded in the URL path; every other entry is null on purpose. Snippets are short factual descriptors derived from the retrieved result summaries.",
+  "captured_at": "2026-08-24",
+  "captures": [
+    {
+      "query": "2026 experiential event design trends",
+      "results": [
+        {"title": "6 Event Industry Trends and Predictions for 2026", "url": "https://www.bizbash.com/event-production-planning/event-industry-trends-and-predictions-for-2026", "publisher": "BizBash", "published": "2026-01-09", "snippet": "Shorter timelines, comfortable seating, natural light, and flexible layouts support relaxed, conversational interaction."},
+        {"title": "Inside the 2026 Event Design Trends Influencing Scenic and Experiential Design", "url": "https://www.blueprintstudios.com/article/2026-event-design-trends-scenic-experiential", "publisher": "Blueprint Studios", "published": null, "snippet": "From guest flow and visual storytelling to furniture, lighting, fabrication, and production, thoughtful spaces can spark connection and create experiences people remember."},
+        {"title": "Top Experiential Design Trends Shaping Events in 2026", "url": "https://www.shoppopdisplays.com/blog/2026/03/11/top-experiential-design-trends-shaping-events-in-2026/", "publisher": "shopPOPdisplays", "published": "2026-03-11", "snippet": "Multi-level setups, digital displays and interactive elements create an experience visitors want to explore."},
+        {"title": "Event Design Trends 2026: What We're Seeing Everywhere", "url": "https://www.nikkitapalmerdesigns.com/blog/event-design-trends-2026-what-were-seeing-everywhere", "publisher": "Nikkita Palmer Designs", "published": null, "snippet": "Event design is shifting toward sensory-rich, architectural experiences, with warm textures and integrated lighting to modular scenic builds."},
+        {"title": "8 Event Planning Trends for 2026", "url": "https://gomomentus.com/blog/revolutionizing-event-and-venue-management-event-trends", "publisher": "Momentus", "published": null, "snippet": "Roundtables, experiential activations and curated networking lounges replace presentation-heavy agendas; engagement rather than attendance."},
+        {"title": "Conference and Events Trends 2026", "url": "https://nottinghamvenues.com/blog/conference-trends-2026-how-to-create-events-that-truly-engage/", "publisher": "Nottingham Venues", "published": null, "snippet": "Lighting is planned from the outset rather than added as an afterthought, altering the perception of a space and guiding guests."},
+        {"title": "CES 2026: Transforming Trade Shows with Experiential Design", "url": "https://skyline.com/blog/ces-2026-experiential-design", "publisher": "Skyline", "published": null, "snippet": "Trade show environments move toward layered, explorable structures rather than flat booth frontage."}
+      ]
+    },
+    {
+      "query": "2026 architecture design trends materials",
+      "results": [
+        {"title": "Design Trends for Architects in 2026: Materiality, Form and Space", "url": "https://archdaily.blog/design-trends-for-architects-in-2026-materiality-form-and-space/", "publisher": "ArchDaily Blog", "published": null, "snippet": "Materiality emphasises authenticity and sustainability, with low-carbon materials such as cross-laminated timber, hempcrete, bamboo composites and mycelium insulation."},
+        {"title": "Facade Architecture Trends 2026: Smart & Sustainable Design", "url": "https://metaguise.com/blog/top-facade-architecture-trends-2026-tech-sustainability-and-aesthetic-breakthroughs/", "publisher": "MetaGuise", "published": null, "snippet": "Architects pair ultra-matte aluminium panels with warmer elements such as natural stone, charred timber or earthy terracotta."},
+        {"title": "Architectural Trends in 2026: Guide for Designers", "url": "https://elixirenvironmental.com/architectural-trends-in-2026-guide-for-designers/", "publisher": "Elixir Environmental", "published": null, "snippet": "Circular materials are designed for disassembly, reuse or biological decomposition at end of life, keeping resources in continuous cycles."},
+        {"title": "Interior Design Trends in 2026: Materials & Finishes That Elevate Spaces", "url": "https://craftaforms.com/interior-design-trends-in-2026-materials-finishes-that-elevate-spaces/", "publisher": "Craftaforms", "published": null, "snippet": "Glass, rattan, matte metals, textured walls and layered material combinations dominate residential and commercial interiors."},
+        {"title": "10 Trends of Architecture in 2026: Shaping the Future", "url": "https://tkmsa.ac.in/10-trends-of-architecture-in-2026/", "publisher": "TKM School of Architecture", "published": null, "snippet": "Current trends are led by material honesty, adaptive shape and human-scale space."},
+        {"title": "2026 Architecture Design Trends", "url": "https://talmadgeconstruction.com/2026-architecture-design-trends/", "publisher": "Talmadge Construction", "published": null, "snippet": "Warm minimalism keeps lines sharp and clean while adding organic textures."},
+        {"title": "Redefining Modern Design Trends For 2026", "url": "https://architecturevogue.com/redefining-modern-design-trends-for-2026/", "publisher": "Architecture Vogue Magazine", "published": null, "snippet": "Generative design for material optimisation uses structural analysis to cut waste."}
+      ]
+    },
+    {
+      "query": "2026 restaurant interior design trends hospitality",
+      "results": [
+        {"title": "Interior Design Trends 2026: Authenticity, resonance, and resilience", "url": "https://www.watg.com/interior-design-trends-2026-authenticity-resonance-and-resilience/", "publisher": "WATG", "published": null, "snippet": "Five hospitality directions: multisensory design prioritising acoustics, scent and lighting over visual spectacle; hyper-localisation; wellness in the architectural fabric; material honesty focused on patinating finishes; mineral greens as a dominant palette."},
+        {"title": "Designing for How Guests Want to Feel: Hospitality Design Trends Evolving in 2026", "url": "https://www.shawcontract.com/en-us/details/blog/hospitality-design-trends-2026", "publisher": "Shaw Contract", "published": null, "snippet": "Artisan-led design shapes hotel interiors, with handcrafted details, local collaborations and custom surfaces driving authenticity."},
+        {"title": "Restaurant Interior Design: The 2026 Playbook", "url": "https://www.architectgpt.io/blog/restaurant-interior-design-2026-playbook", "publisher": "ArchitectGPT", "published": null, "snippet": "Every material, sightline and lighting decision has a job to do in supporting turnover, brand recall and a clear sense of place."},
+        {"title": "Restaurant Design Trends to Watch in 2026", "url": "https://www.labelfoodservice.com/post/restaurant-design-trends-to-watch", "publisher": "Label Foodservice", "published": null, "snippet": "Biophilic design evolves from decorative planting to structural integration: living walls as room dividers, interior trees defining spatial zones."},
+        {"title": "12 Hotel Restaurant Interior Design Trends to Watch in 2026", "url": "https://www.mingsungroup.com/article/hotel-restaurant-interior-design.html", "publisher": "Mingsun Group", "published": null, "snippet": "Technology that barely acknowledges itself: sound systems that shape atmosphere without drawing attention."},
+        {"title": "Most Sought-After Restaurant Interior Ideas for 2026", "url": "https://aispaces.ai/blog/internal//restaurant-interior-ideas-trends-2026", "publisher": "AI Spaces", "published": null, "snippet": "Natural materials such as wood, linen and terracotta with acoustic ceiling panels and warm adjustable lighting."}
+      ]
+    },
+    {
+      "query": "2026 luxury retail store design experience trends",
+      "results": [
+        {"title": "2026 Luxury Retail Trends", "url": "https://clarkstonconsulting.com/insights/2026-luxury-retail-trends/", "publisher": "Clarkston Consulting", "published": null, "snippet": "Experiential flagships become destinations, with in-store art installations, lounges and personalisation salons."},
+        {"title": "Retail Design Trends 2026: Creating Trust and an Atmosphere of Wellbeing", "url": "https://www.5starplusdesign.com/2026/04/30/the-rise-of-emotional-retail-how-retail-design-creates-trust-and-wellbeing-in-2026/", "publisher": "5 Star Plus Design", "published": "2026-04-30", "snippet": "Retail design creates trust and wellbeing through spatial calm and material quality."},
+        {"title": "2026 Retail Design Trends", "url": "https://thelookcompany.com/blog/2026-retail-design-trends/", "publisher": "The Look Company", "published": null, "snippet": "Retail design focuses on clarity, material quality and spatial experience, with natural materials, controlled colour palettes and layered lighting."},
+        {"title": "Beyond the Boutique: How Luxury Retail Became Interior Design's New Frontier", "url": "https://blog.mattoboard.com/blogs/beyond-the-boutique-how-luxury-retail-became-interior-designs-new-frontier", "publisher": "Mattoboard", "published": null, "snippet": "Luxury retail becomes a full interior experience built around atmosphere, storytelling and emotional connection."},
+        {"title": "6 Retail Design Trends for 2026 & How Stores Can Keep Up", "url": "https://www.rosedisplays.com/blog/general/retail-design-trends-2026/", "publisher": "Rose Displays", "published": null, "snippet": "Modular structures, mobile displays and dynamic signage let stores reinvent sales floors without reconstruction."},
+        {"title": "Global Luxury Retail Trends 2026", "url": "https://www.bspk.com/post/global-luxury-retail-trends-2026", "publisher": "BSPK", "published": null, "snippet": "Immersive digital tools that feel personalised and interactive, such as augmented reality lenses and virtual try-on."}
+      ]
+    },
+    {
+      "query": "2026 fashion visual trends silhouette material runway",
+      "results": [
+        {"title": "Summer Runway Trends 2026 Embrace Sculptural Silhouettes and Soft Glamour", "url": "https://www.runwaylive.com/summer-runway-trends-2026-sculptural-silhouettes.html", "publisher": "Runway Live", "published": null, "snippet": "Runways move toward sculptural silhouettes and soft glamour, from puffed skirts to structured tailoring and volume."},
+        {"title": "The Top 10 Trends From the Fall 2026 Runways", "url": "https://fashionmagazine.com/style/fall-2026-trends/", "publisher": "FASHION Magazine", "published": null, "snippet": "Oversized puffers, sculptural cocoon coats and exaggerated wrap styles with intentionally broad shoulders and rich tactile textures."},
+        {"title": "Industry Insights & Inspirations: 4 Runway Trends Worth Watching Right Now", "url": "https://www.insidefashiondesign.com/post/industry-insights-inspirations-part-2-4-runway-trends-worth-watching-right-now-lead-in-to-the-s", "publisher": "Inside Fashion Design", "published": null, "snippet": "Structured volume — wide sleeves with interior shaping, expanded shoulders built to carry visual weight, layered wrapping."},
+        {"title": "Mermaid Silhouette Returns in Summer Trends 2026", "url": "https://www.fashiontimes.com/mermaid-silhouette-returns-summer-trends-2026-runway-looks-styling-tips-14389", "publisher": "Fashion Times", "published": null, "snippet": "A fitted structure that hugs the body before flaring out near the hem."},
+        {"title": "10 Spring-Summer 2026 Trends We Loved at New York Fashion Week", "url": "https://www.yahoo.com/entertainment/articles/10-spring-summer-2026-trends-200211805.html", "publisher": "Yahoo Entertainment", "published": null, "snippet": "Translucent materials, clear PVC and structured mesh offer a literal window into the look below."},
+        {"title": "The Spring 2026 Clothing Trends That Will Actually Change How You Get Dressed", "url": "https://www.aol.com/articles/spring-2026-clothing-trends-actually-165500564.html", "publisher": "AOL", "published": null, "snippet": "Fringe is used as a design tool: a way to add movement, texture and visual energy to otherwise restrained pieces."}
+      ]
+    }
+  ]
+}

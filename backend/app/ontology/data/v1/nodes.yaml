@@ -1,0 +1,349 @@
+version: v1
+# Compact authoring format.
+#   abstract: true  -> internal tree node, never sampled
+#   cost            -> 1..5 cost band prior
+#   span            -> max clear span in metres (materials / structure)
+#   climate_bad     -> climates where this value is pruned
+#   typ_low         -> typologies where affinity is low (<0.4); default affinity 0.75
+#   phrase          -> prompt_phrase, used ONLY by the prompt compiler
+nodes:
+
+# ───────────────────────── thesis_archetype ─────────────────────────
+- {id: thesis_archetype:containment, label: Containment, abstract: true}
+- {id: thesis_archetype:movement,    label: Movement,    abstract: true}
+- {id: thesis_archetype:ground,      label: Ground,      abstract: true}
+- {id: thesis_archetype:apparition_g,label: Apparition,  abstract: true}
+- {id: thesis_archetype:vessel, label: Vessel, parent: thesis_archetype:containment, cost: 3,
+   desc: "A held interior volume that gathers people inward.", phrase: "an enclosing vessel that gathers inward"}
+- {id: thesis_archetype:clearing, label: Clearing, parent: thesis_archetype:containment, cost: 2,
+   desc: "A defined void carved out of a denser surround.", phrase: "a cleared open ground defined by its edges"}
+- {id: thesis_archetype:assembly, label: Assembly, parent: thesis_archetype:containment, cost: 2,
+   desc: "A field of repeated parts that together make a room.", phrase: "a field of repeated elements forming a room"}
+- {id: thesis_archetype:threshold, label: Threshold, parent: thesis_archetype:movement, cost: 2,
+   desc: "The design is the act of crossing from one state to another.", phrase: "a deep threshold, a crossing made architectural"}
+- {id: thesis_archetype:ascent, label: Ascent, parent: thesis_archetype:movement, cost: 4,
+   desc: "The organising act is rising.", phrase: "an ascending sequence rising toward a summit"}
+- {id: thesis_archetype:procession_a, label: Procession, parent: thesis_archetype:movement, cost: 3,
+   desc: "A linear unfolding along a path.", phrase: "a processional axis unfolding in stages"}
+- {id: thesis_archetype:excavation, label: Excavation, parent: thesis_archetype:ground, cost: 4,
+   desc: "Space is made by removal, not addition.", phrase: "space cut down into the ground by removal"}
+- {id: thesis_archetype:mound, label: Mound, parent: thesis_archetype:ground, cost: 3,
+   desc: "A raised mass read as landform.", phrase: "a raised earthen landform"}
+- {id: thesis_archetype:apparition, label: Apparition, parent: thesis_archetype:apparition_g, cost: 4,
+   desc: "The object appears without visible support or weight.", phrase: "an apparition that seems to have no weight"}
+- {id: thesis_archetype:veil, label: Veil, parent: thesis_archetype:apparition_g, cost: 2,
+   desc: "Definition by layered obscuring rather than by wall.", phrase: "layered veils that obscure and reveal"}
+
+# ─────────────────────── architectural_language ───────────────────────
+- {id: architectural_language:indian_traditional, label: Indian traditional, abstract: true}
+- {id: architectural_language:asian_traditional,  label: Asian traditional,  abstract: true}
+- {id: architectural_language:modern,             label: Modern,             abstract: true}
+- {id: architectural_language:experimental,       label: Contemporary experimental, abstract: true}
+- {id: architectural_language:vernacular,         label: Vernacular,         abstract: true}
+- {id: architectural_language:cinematic,          label: Cinematic,          abstract: true}
+
+- {id: architectural_language:mughal_courtyard, label: Mughal courtyard, parent: architectural_language:indian_traditional,
+   cost: 4, sensitivity: attribution_required, min_abstraction: 0.4, typ_low: [RESTAURANT],
+   desc: "Axial walled garden geometry, water channels, arcaded edges.",
+   phrase: "axial walled courtyard, arcaded edges, still water channels"}
+- {id: architectural_language:dravidian_temple, label: Dravidian temple, parent: architectural_language:indian_traditional,
+   cost: 5, sensitivity: sacred, min_abstraction: 0.6, typ_low: [RESTAURANT, INTERIOR],
+   desc: "Tiered stone mass, deep colonnades, compressive monumentality.",
+   phrase: "tiered stone mass, deep colonnade, carved granite courses"}
+- {id: architectural_language:rajasthani_stepwell, label: Rajasthani stepwell, parent: architectural_language:indian_traditional,
+   cost: 4, sensitivity: attribution_required, min_abstraction: 0.5, climate_bad: [monsoon],
+   desc: "Descending geometry that treats the ground as the material.",
+   phrase: "stepped subterranean stone court, descending tiers, deep shadow",
+   neg: ["ornate carved figurines", "tourist crowd"]}
+- {id: architectural_language:kerala_nalukettu, label: Kerala nalukettu, parent: architectural_language:indian_traditional,
+   cost: 3, sensitivity: attribution_required, min_abstraction: 0.4,
+   desc: "Timber-framed courtyard house with a sunken open-to-sky centre.",
+   phrase: "timber-framed courtyard, sloping tiled roofs, open-to-sky centre"}
+- {id: architectural_language:chettinad_mansion, label: Chettinad mansion, parent: architectural_language:indian_traditional,
+   cost: 4, sensitivity: attribution_required, min_abstraction: 0.4,
+   desc: "Polished lime surfaces, deep colonnaded courts, layered thresholds.",
+   phrase: "polished lime plaster columns, deep colonnaded court"}
+- {id: architectural_language:japanese_sukiya, label: Japanese sukiya, parent: architectural_language:asian_traditional,
+   cost: 4, sensitivity: attribution_required, min_abstraction: 0.5,
+   desc: "Restraint, modular timber, framed views, deliberate imperfection.",
+   phrase: "restrained timber frame, paper-thin screens, framed garden views"}
+- {id: architectural_language:chinese_garden_pavilion, label: Chinese garden pavilion, parent: architectural_language:asian_traditional,
+   cost: 3, sensitivity: attribution_required, min_abstraction: 0.5,
+   desc: "Borrowed scenery, meandering routes, framed apertures.",
+   phrase: "lattice pavilion, borrowed scenery, moon-gate apertures"}
+- {id: architectural_language:brutalist, label: Brutalist, parent: architectural_language:modern, cost: 3,
+   desc: "Board-marked mass, structural honesty, weight as expression.",
+   phrase: "board-marked concrete mass, raw structural honesty"}
+- {id: architectural_language:miesian_minimal, label: Miesian minimal, parent: architectural_language:modern, cost: 4,
+   desc: "Reduction to plane, column and proportion.",
+   phrase: "reduced planes, slender columns, exact proportion"}
+- {id: architectural_language:corbusian_sculptural, label: Sculptural modern, parent: architectural_language:modern, cost: 4,
+   desc: "Plastic form, thick walls, light cut through mass.",
+   phrase: "sculptural plastic form, thick walls, light cut through mass"}
+- {id: architectural_language:parametric, label: Parametric, parent: architectural_language:experimental, cost: 5,
+   typ_low: [], desc: "Continuously varied geometry driven by rule and fabrication.",
+   phrase: "continuously varied parametric surface, rule-driven articulation"}
+- {id: architectural_language:deconstructivist, label: Deconstructivist, parent: architectural_language:experimental, cost: 5,
+   desc: "Fragmented planes, unstable reading, deliberate disjunction.",
+   phrase: "fragmented intersecting planes, unstable geometry"}
+- {id: architectural_language:blob_organic, label: Organic continuous, parent: architectural_language:experimental, cost: 5,
+   desc: "Single continuous surface without discrete parts.",
+   phrase: "single continuous organic surface, seamless envelope"}
+- {id: architectural_language:tensile_membrane, label: Tensile membrane, parent: architectural_language:experimental, cost: 3,
+   desc: "Form found in tension; the surface is the structure.",
+   phrase: "form-found tensile membrane, taut curved surfaces"}
+- {id: architectural_language:rammed_earth_vernacular, label: Rammed-earth vernacular, parent: architectural_language:vernacular,
+   cost: 2, climate_bad: [monsoon], desc: "Layered compacted earth mass, thermal weight, local ground.",
+   phrase: "layered rammed-earth walls, visible strata, thermal mass"}
+- {id: architectural_language:bamboo_vernacular, label: Bamboo vernacular, parent: architectural_language:vernacular, cost: 1,
+   desc: "Slender lashed members, filtered light, lightness.",
+   phrase: "lashed bamboo lattice, filtered dappled light"}
+- {id: architectural_language:nomadic_tent, label: Nomadic tent, parent: architectural_language:vernacular, cost: 2,
+   desc: "Portable tension structure, fabric enclosure, rapid assembly.",
+   phrase: "portable fabric tent structure, guyed masts"}
+- {id: architectural_language:stone_dry_stack, label: Dry-stacked stone, parent: architectural_language:vernacular, cost: 3,
+   desc: "Unmortared coursed stone, joint as ornament.",
+   phrase: "dry-stacked stone courses, deep open joints"}
+- {id: architectural_language:scenographic_surreal, label: Scenographic surreal, parent: architectural_language:cinematic, cost: 4,
+   typ_low: [], desc: "Dreamlike scale shifts and impossible adjacency.",
+   phrase: "surreal scenographic space, impossible scale shifts"}
+- {id: architectural_language:cinematic_noir, label: Cinematic chiaroscuro, parent: architectural_language:cinematic, cost: 3,
+   desc: "Space authored by shadow and hard raking light.",
+   phrase: "chiaroscuro space, hard raking light, deep shadow"}
+- {id: architectural_language:futurist_hi_tech, label: Hi-tech futurist, parent: architectural_language:cinematic, cost: 5,
+   desc: "Exposed servicing, machined joints, technological display.",
+   phrase: "exposed machined structure, technological articulation"}
+- {id: architectural_language:retro_futurist, label: Retro-futurist, parent: architectural_language:cinematic, cost: 4,
+   desc: "Optimistic mid-century imagining of the future.",
+   phrase: "retro-futurist curves, optimistic mid-century sci-fi forms"}
+
+# ───────────────────────── geometry_system ─────────────────────────
+- {id: geometry_system:orthogonal, label: Orthogonal, abstract: true}
+- {id: geometry_system:radial,     label: Radial,     abstract: true}
+- {id: geometry_system:curvilinear,label: Curvilinear,abstract: true}
+- {id: geometry_system:irregular,  label: Irregular,  abstract: true}
+- {id: geometry_system:vertical,   label: Vertical,   abstract: true}
+- {id: geometry_system:orthogonal_grid, label: Orthogonal grid, parent: geometry_system:orthogonal, cost: 2,
+   primitive: EXTRUDED_POLYGON, desc: "Regular rectilinear bay structure.", phrase: "regular orthogonal grid of bays"}
+- {id: geometry_system:charbagh_orthogonal, label: Charbagh quadrant, parent: geometry_system:orthogonal, cost: 3,
+   primitive: EXTRUDED_POLYGON, desc: "Fourfold axial division around a centre.", phrase: "fourfold axial quadrant plan with a central crossing"}
+- {id: geometry_system:stepped_orthogonal, label: Stepped orthogonal, parent: geometry_system:orthogonal, cost: 3,
+   primitive: STACKED_MASS, desc: "Rectilinear masses stepping in plan and section.", phrase: "rectilinear masses stepping in section"}
+- {id: geometry_system:modular_bay, label: Modular bay, parent: geometry_system:orthogonal, cost: 2,
+   primitive: COLONNADE, desc: "One bay repeated as the whole system.", phrase: "a single repeated structural bay"}
+- {id: geometry_system:radial_concentric, label: Radial concentric, parent: geometry_system:radial, cost: 3,
+   primitive: EXTRUDED_POLYGON, desc: "Rings about a single centre.", phrase: "concentric rings about a single centre"}
+- {id: geometry_system:spiral_helical, label: Spiral helical, parent: geometry_system:radial, cost: 5,
+   primitive: CATENARY_SURFACE, desc: "A continuously turning rising path.", phrase: "a continuously turning helical path"}
+- {id: geometry_system:stepped_revolve, label: Stepped revolve, parent: geometry_system:radial, cost: 4,
+   primitive: STEPPED_REVOLVE, desc: "Stepped tiers revolved about a centre.", phrase: "stepped tiers revolved about a centre"}
+- {id: geometry_system:catenary, label: Catenary, parent: geometry_system:curvilinear, cost: 4,
+   primitive: CATENARY_SURFACE, desc: "Hanging curve resolved in pure tension or compression.", phrase: "hanging catenary curves"}
+- {id: geometry_system:shell_dome, label: Shell dome, parent: geometry_system:curvilinear, cost: 4,
+   primitive: SHELL_VAULT, desc: "Continuous curved surface spanning without ribs.", phrase: "thin continuous shell dome"}
+- {id: geometry_system:undulating_surface, label: Undulating surface, parent: geometry_system:curvilinear, cost: 5,
+   primitive: CATENARY_SURFACE, desc: "A single surface rising and falling across the plan.", phrase: "an undulating continuous surface"}
+- {id: geometry_system:torus_ring, label: Torus ring, parent: geometry_system:curvilinear, cost: 5,
+   primitive: SHELL_VAULT, desc: "A closed ring volume with a void centre.", phrase: "a closed ring volume around a void centre"}
+- {id: geometry_system:voronoi_cellular, label: Voronoi cellular, parent: geometry_system:irregular, cost: 5,
+   primitive: CATENARY_SURFACE, desc: "Cellular subdivision from seed points.", phrase: "cellular voronoi subdivision"}
+- {id: geometry_system:fractal_subdivision, label: Fractal subdivision, parent: geometry_system:irregular, cost: 5,
+   primitive: EXTRUDED_POLYGON, desc: "Self-similar division at several scales.", phrase: "self-similar subdivision at three scales"}
+- {id: geometry_system:fragmented_shard, label: Fragmented shard, parent: geometry_system:irregular, cost: 4,
+   primitive: PLANAR_SLAB, desc: "Intersecting angular planes.", phrase: "intersecting angular shard planes"}
+- {id: geometry_system:stacked_tiers, label: Stacked tiers, parent: geometry_system:vertical, cost: 3,
+   primitive: STACKED_MASS, desc: "Discrete horizontal layers piled in section.", phrase: "discrete stacked horizontal tiers"}
+- {id: geometry_system:suspended_layers, label: Suspended layers, parent: geometry_system:vertical, cost: 4,
+   primitive: MAST_AND_CABLE, desc: "Horizontal planes hung from above.", phrase: "horizontal planes suspended from above"}
+
+# ───────────────────────── structural_logic ─────────────────────────
+- {id: structural_logic:compression, label: Compression, abstract: true}
+- {id: structural_logic:tension,     label: Tension,     abstract: true}
+- {id: structural_logic:cantilever_g,label: Cantilever,  abstract: true}
+- {id: structural_logic:frame,       label: Frame,       abstract: true}
+- {id: structural_logic:compression_mass, label: Compression mass, parent: structural_logic:compression, cost: 3, span: 6,
+   desc: "Load carried by sheer accumulated weight.", phrase: "compressive load-bearing mass"}
+- {id: structural_logic:arch_vault, label: Arch and vault, parent: structural_logic:compression, cost: 4, span: 12,
+   desc: "Curved compression spanning an opening.", phrase: "arched vault spanning in compression"}
+- {id: structural_logic:corbelled, label: Corbelled, parent: structural_logic:compression, cost: 3, span: 5,
+   desc: "Successive courses stepped inward to close a span.", phrase: "corbelled courses stepping inward"}
+- {id: structural_logic:cable_tensile, label: Cable tensile, parent: structural_logic:tension, cost: 4, span: 30,
+   desc: "Load resolved entirely in tension through cables.", phrase: "cable-tensile structure, no compression members in the span"}
+- {id: structural_logic:membrane_tension, label: Membrane tension, parent: structural_logic:tension, cost: 3, span: 24,
+   desc: "The surface itself carries the load in tension.", phrase: "taut structural membrane surface"}
+- {id: structural_logic:suspended_net, label: Suspended net, parent: structural_logic:tension, cost: 4, span: 26,
+   desc: "A hung net supporting a light secondary skin.", phrase: "suspended structural net"}
+- {id: structural_logic:cantilever, label: Cantilever, parent: structural_logic:cantilever_g, cost: 5, span: 10,
+   desc: "Unsupported projection from a fixed root.", phrase: "long unsupported cantilever"}
+- {id: structural_logic:counterweighted, label: Counterweighted, parent: structural_logic:cantilever_g, cost: 4, span: 14,
+   desc: "Projection balanced by mass at the opposite end.", phrase: "counterweighted balanced projection"}
+- {id: structural_logic:post_and_beam, label: Post and beam, parent: structural_logic:frame, cost: 2, span: 8,
+   desc: "Discrete vertical supports carrying horizontal spans.", phrase: "post-and-beam frame"}
+- {id: structural_logic:space_frame, label: Space frame, parent: structural_logic:frame, cost: 4, span: 40,
+   desc: "Triangulated three-dimensional lattice.", phrase: "triangulated space-frame lattice"}
+- {id: structural_logic:modular_frame, label: Modular frame, parent: structural_logic:frame, cost: 2, span: 9,
+   desc: "Repeated demountable structural module.", phrase: "repeated demountable structural module"}
+- {id: structural_logic:buoyant, label: Buoyant, parent: structural_logic:tension, cost: 5, span: 18,
+   desc: "Held up by lift rather than by support.", phrase: "buoyant lifted structure"}
+
+# ───────────────────────────── material ─────────────────────────────
+- {id: material:stone_g, label: Stone, abstract: true}
+- {id: material:earth_g, label: Earth, abstract: true}
+- {id: material:wood_g,  label: Wood,  abstract: true}
+- {id: material:metal_g, label: Metal, abstract: true}
+- {id: material:textile_g, label: Textile, abstract: true}
+- {id: material:glass_g, label: Glass, abstract: true}
+- {id: material:water_g, label: Water, abstract: true}
+- {id: material:plant_g, label: Plant, abstract: true}
+- {id: material:immaterial_g, label: Immaterial, abstract: true}
+- {id: material:sandstone, label: Sandstone, parent: material:stone_g, cost: 3, span: 6, phrase: "split-face sandstone"}
+- {id: material:granite, label: Granite, parent: material:stone_g, cost: 4, span: 7, phrase: "honed dark granite"}
+- {id: material:marble, label: Marble, parent: material:stone_g, cost: 5, span: 5, phrase: "veined white marble"}
+- {id: material:limestone, label: Limestone, parent: material:stone_g, cost: 3, span: 6, phrase: "pale limestone"}
+- {id: material:dry_stack_stone, label: Dry-stacked stone, parent: material:stone_g, cost: 2, span: 4, phrase: "dry-stacked rubble stone"}
+- {id: material:rammed_earth, label: Rammed earth, parent: material:earth_g, cost: 2, span: 4, climate_bad: [monsoon], phrase: "layered rammed earth"}
+- {id: material:terracotta, label: Terracotta, parent: material:earth_g, cost: 2, span: 4, phrase: "unglazed terracotta"}
+- {id: material:brick, label: Brick, parent: material:earth_g, cost: 2, span: 5, phrase: "exposed brick"}
+- {id: material:lime_plaster, label: Lime plaster, parent: material:earth_g, cost: 2, span: 4, phrase: "polished lime plaster"}
+- {id: material:teak, label: Teak, parent: material:wood_g, cost: 4, span: 7, phrase: "oiled teak"}
+- {id: material:bamboo, label: Bamboo, parent: material:wood_g, cost: 1, span: 8, phrase: "lashed bamboo"}
+- {id: material:laminated_timber, label: Laminated timber, parent: material:wood_g, cost: 4, span: 18, phrase: "laminated timber"}
+- {id: material:charred_wood, label: Charred wood, parent: material:wood_g, cost: 3, span: 7, phrase: "charred blackened timber"}
+- {id: material:brass, label: Brass, parent: material:metal_g, cost: 4, span: 3, phrase: "warm brass"}
+- {id: material:corten_steel, label: Corten steel, parent: material:metal_g, cost: 4, span: 20, phrase: "weathered corten steel"}
+- {id: material:polished_steel, label: Polished steel, parent: material:metal_g, cost: 5, span: 24, phrase: "mirror-polished steel"}
+- {id: material:anodised_aluminium, label: Anodised aluminium, parent: material:metal_g, cost: 3, span: 14, phrase: "anodised aluminium"}
+- {id: material:silk_drape, label: Silk drape, parent: material:textile_g, cost: 4, span: 6, climate_bad: [monsoon], phrase: "silk drapery"}
+- {id: material:canvas_membrane, label: Canvas membrane, parent: material:textile_g, cost: 2, span: 14, phrase: "tensioned canvas"}
+- {id: material:ptfe_membrane, label: PTFE membrane, parent: material:textile_g, cost: 4, span: 28, phrase: "translucent PTFE membrane"}
+- {id: material:woven_jute, label: Woven jute, parent: material:textile_g, cost: 1, span: 5, phrase: "coarse woven jute"}
+- {id: material:clear_glass, label: Clear glass, parent: material:glass_g, cost: 4, span: 4, phrase: "clear structural glass"}
+- {id: material:fritted_glass, label: Fritted glass, parent: material:glass_g, cost: 5, span: 4, phrase: "fritted translucent glass"}
+- {id: material:still_water, label: Still water, parent: material:water_g, cost: 3, span: 0.1, phrase: "a still reflecting pool"}
+- {id: material:moving_water, label: Moving water, parent: material:water_g, cost: 4, span: 0.1, phrase: "thin sheets of moving water"}
+- {id: material:living_plant, label: Living planting, parent: material:plant_g, cost: 3, span: 2, phrase: "dense living planting"}
+- {id: material:cut_flower, label: Cut flower, parent: material:plant_g, cost: 3, span: 1, phrase: "massed cut flowers"}
+- {id: material:emissive_light, label: Emissive light, parent: material:immaterial_g, cost: 4, span: 0.1, phrase: "light emitted by the surface itself"}
+- {id: material:mirror_polymer, label: Mirror polymer, parent: material:immaterial_g, cost: 3, span: 6, phrase: "mirrored polymer film"}
+
+# ──────────────────────── spatial_narrative ────────────────────────
+- {id: spatial_narrative:arrival, label: Arrival, phrase: "a composed moment of arrival"}
+- {id: spatial_narrative:descent, label: Descent, phrase: "a descent below grade"}
+- {id: spatial_narrative:ascent, label: Ascent, phrase: "an ascent toward the focus"}
+- {id: spatial_narrative:procession, label: Procession, phrase: "a processional route"}
+- {id: spatial_narrative:discovery, label: Discovery, phrase: "an unfolding discovery"}
+- {id: spatial_narrative:revelation, label: Revelation, phrase: "a withheld then sudden revelation"}
+- {id: spatial_narrative:immersion, label: Immersion, phrase: "total immersion in the space"}
+- {id: spatial_narrative:enclosure, label: Enclosure, phrase: "a tightening enclosure"}
+- {id: spatial_narrative:release, label: Release, phrase: "a release into openness"}
+- {id: spatial_narrative:transformation, label: Transformation, phrase: "a visible transformation over time"}
+- {id: spatial_narrative:suspension, label: Suspension, phrase: "a suspension of weight and time"}
+- {id: spatial_narrative:circumambulation, label: Circumambulation, phrase: "a circling route around the centre"}
+
+# ──────────────────────── occupation_staging ────────────────────────
+- {id: occupation_staging:centred, label: Centred, abstract: true}
+- {id: occupation_staging:directional, label: Directional, abstract: true}
+- {id: occupation_staging:distributed, label: Distributed, abstract: true}
+- {id: occupation_staging:centred_raised, label: Centred raised, parent: occupation_staging:centred, cost: 3,
+   phrase: "the focus raised at the centre, guests looking up"}
+- {id: occupation_staging:centred_sunken, label: Centred sunken, parent: occupation_staging:centred, cost: 4,
+   phrase: "the focus sunk at the centre, guests looking down"}
+- {id: occupation_staging:in_the_round, label: In the round, parent: occupation_staging:centred, cost: 3,
+   phrase: "audience fully surrounding the focus"}
+- {id: occupation_staging:frontal_stage, label: Frontal stage, parent: occupation_staging:directional, cost: 2,
+   phrase: "a frontal stage with the audience facing one way"}
+- {id: occupation_staging:processional_axis, label: Processional axis, parent: occupation_staging:directional, cost: 3,
+   phrase: "guests lining a processional axis"}
+- {id: occupation_staging:asymmetric_focus, label: Asymmetric focus, parent: occupation_staging:directional, cost: 3,
+   phrase: "an off-centre focus with asymmetric gathering"}
+- {id: occupation_staging:dispersed_clusters, label: Dispersed clusters, parent: occupation_staging:distributed, cost: 2,
+   phrase: "dispersed clusters of occupation"}
+- {id: occupation_staging:perimeter_ring, label: Perimeter ring, parent: occupation_staging:distributed, cost: 3,
+   phrase: "occupation held at the perimeter ring"}
+- {id: occupation_staging:layered_terraces, label: Layered terraces, parent: occupation_staging:distributed, cost: 4,
+   phrase: "layered terraces of seating"}
+- {id: occupation_staging:concealed_reveal, label: Concealed reveal, parent: occupation_staging:distributed, cost: 4,
+   phrase: "the gathering concealed until a reveal"}
+
+# ─────────────────────── lighting_philosophy ───────────────────────
+- {id: lighting_philosophy:natural, label: Natural, abstract: true}
+- {id: lighting_philosophy:flame, label: Flame, abstract: true}
+- {id: lighting_philosophy:artificial, label: Artificial, abstract: true}
+- {id: lighting_philosophy:absence, label: Absence, abstract: true}
+- {id: lighting_philosophy:filtered_daylight, label: Filtered daylight, parent: lighting_philosophy:natural, cost: 1,
+   phrase: "filtered daylight through a perforated plane"}
+- {id: lighting_philosophy:direct_sun_shafts, label: Direct sun shafts, parent: lighting_philosophy:natural, cost: 2,
+   phrase: "hard shafts of direct sun"}
+- {id: lighting_philosophy:skylight_well, label: Skylight well, parent: lighting_philosophy:natural, cost: 3,
+   phrase: "a single deep light well from above"}
+- {id: lighting_philosophy:reflected_daylight, label: Reflected daylight, parent: lighting_philosophy:natural, cost: 2,
+   phrase: "daylight bounced off a bright surface"}
+- {id: lighting_philosophy:open_flame, label: Open flame, parent: lighting_philosophy:flame, cost: 2,
+   phrase: "open flame as the primary light"}
+- {id: lighting_philosophy:oil_lamp_field, label: Oil-lamp field, parent: lighting_philosophy:flame, cost: 3,
+   phrase: "hundreds of small oil lamps set into the surface"}
+- {id: lighting_philosophy:candle_scatter, label: Candle scatter, parent: lighting_philosophy:flame, cost: 2,
+   phrase: "scattered candlelight at low level"}
+- {id: lighting_philosophy:emissive_surface, label: Emissive surface, parent: lighting_philosophy:artificial, cost: 4,
+   phrase: "the surface itself glowing, no visible fixtures"}
+- {id: lighting_philosophy:projected_light, label: Projected light, parent: lighting_philosophy:artificial, cost: 4,
+   phrase: "projected light patterning the surfaces"}
+- {id: lighting_philosophy:grazing_wash, label: Grazing wash, parent: lighting_philosophy:artificial, cost: 2,
+   phrase: "warm light grazing across texture"}
+- {id: lighting_philosophy:silhouette_backlight, label: Silhouette backlight, parent: lighting_philosophy:artificial, cost: 2,
+   phrase: "figures read as silhouettes against backlight"}
+- {id: lighting_philosophy:darkness_pools, label: Darkness and pools, parent: lighting_philosophy:absence, cost: 1,
+   phrase: "mostly darkness, with small pools of light"}
+
+# ──────────────────────── site_relationship ────────────────────────
+- {id: site_relationship:engaged, label: Engaged, abstract: true}
+- {id: site_relationship:detached, label: Detached, abstract: true}
+- {id: site_relationship:embedded, label: Embedded, parent: site_relationship:engaged, cost: 4, phrase: "embedded into the ground"}
+- {id: site_relationship:grounded_mass, label: Grounded mass, parent: site_relationship:engaged, cost: 3, phrase: "sitting heavily on the ground"}
+- {id: site_relationship:framing, label: Framing, parent: site_relationship:engaged, cost: 2, phrase: "framing the existing context"}
+- {id: site_relationship:mirroring, label: Mirroring, parent: site_relationship:engaged, cost: 3, phrase: "mirroring the surroundings"}
+- {id: site_relationship:terraced_into, label: Terraced into, parent: site_relationship:engaged, cost: 4, phrase: "terraced into the level change"}
+- {id: site_relationship:hovering, label: Hovering, parent: site_relationship:detached, cost: 5, phrase: "hovering clear of the ground"}
+- {id: site_relationship:floating_on_water, label: Floating on water, parent: site_relationship:detached, cost: 5, phrase: "floating on a water plane"}
+- {id: site_relationship:camouflaged, label: Camouflaged, parent: site_relationship:detached, cost: 3, phrase: "dissolving into its surroundings"}
+- {id: site_relationship:ignoring_context, label: Autonomous object, parent: site_relationship:detached, cost: 3, phrase: "an autonomous object indifferent to context"}
+- {id: site_relationship:bridging, label: Bridging, parent: site_relationship:detached, cost: 4, phrase: "bridging across the site"}
+
+# ───────────────────────── tectonic_logic ─────────────────────────
+- {id: tectonic_logic:additive, label: Additive, abstract: true}
+- {id: tectonic_logic:subtractive, label: Subtractive, abstract: true}
+- {id: tectonic_logic:formed, label: Formed, abstract: true}
+- {id: tectonic_logic:stacked, label: Stacked, parent: tectonic_logic:additive, cost: 2, phrase: "stacked coursed units"}
+- {id: tectonic_logic:woven, label: Woven, parent: tectonic_logic:additive, cost: 3, phrase: "woven interlaced members"}
+- {id: tectonic_logic:assembled_modular, label: Assembled modular, parent: tectonic_logic:additive, cost: 2, phrase: "bolted modular assembly"}
+- {id: tectonic_logic:draped, label: Draped, parent: tectonic_logic:additive, cost: 2, phrase: "draped hanging fabric"}
+- {id: tectonic_logic:carved, label: Carved, parent: tectonic_logic:subtractive, cost: 4, phrase: "carved from solid material"}
+- {id: tectonic_logic:excavated, label: Excavated, parent: tectonic_logic:subtractive, cost: 4, phrase: "excavated out of the ground"}
+- {id: tectonic_logic:cast_monolithic, label: Cast monolithic, parent: tectonic_logic:formed, cost: 4, phrase: "cast as a single monolithic piece"}
+- {id: tectonic_logic:inflated, label: Inflated, parent: tectonic_logic:formed, cost: 3, phrase: "pneumatically inflated volumes"}
+- {id: tectonic_logic:grown_living, label: Grown living, parent: tectonic_logic:formed, cost: 4, phrase: "grown from living material"}
+- {id: tectonic_logic:tensioned, label: Tensioned, parent: tectonic_logic:formed, cost: 3, phrase: "tensioned taut surfaces"}
+
+# ───────────────────────── scale_strategy ─────────────────────────
+- {id: scale_strategy:miniature, label: Miniature, cost: 1, phrase: "intimate miniature scale"}
+- {id: scale_strategy:human, label: Human, cost: 2, phrase: "human scale"}
+- {id: scale_strategy:heroic, label: Heroic, cost: 3, phrase: "heroic scale, well above human height"}
+- {id: scale_strategy:monumental, label: Monumental, cost: 4, phrase: "monumental scale"}
+- {id: scale_strategy:landscape, label: Landscape, cost: 5, phrase: "landscape scale"}
+
+# ──────────────────────── emotional_register ────────────────────────
+- {id: emotional_register:elevated, label: Elevated, abstract: true}
+- {id: emotional_register:intimate_g, label: Intimate, abstract: true}
+- {id: emotional_register:dynamic, label: Dynamic, abstract: true}
+- {id: emotional_register:reverent, label: Reverent, parent: emotional_register:elevated, phrase: "reverent, still, weighty"}
+- {id: emotional_register:sublime, label: Sublime, parent: emotional_register:elevated, phrase: "sublime, overwhelming, vast"}
+- {id: emotional_register:austere, label: Austere, parent: emotional_register:elevated, phrase: "austere, spare, exacting"}
+- {id: emotional_register:ceremonial, label: Ceremonial, parent: emotional_register:elevated, phrase: "ceremonial, formal, composed"}
+- {id: emotional_register:intimate, label: Intimate, parent: emotional_register:intimate_g, phrase: "intimate, close, warm"}
+- {id: emotional_register:contemplative, label: Contemplative, parent: emotional_register:intimate_g, phrase: "contemplative, quiet, slow"}
+- {id: emotional_register:tender, label: Tender, parent: emotional_register:intimate_g, phrase: "tender, soft, unguarded"}
+- {id: emotional_register:melancholic, label: Melancholic, parent: emotional_register:intimate_g, phrase: "melancholic, cool, withdrawn"}
+- {id: emotional_register:euphoric, label: Euphoric, parent: emotional_register:dynamic, phrase: "euphoric, bright, celebratory"}
+- {id: emotional_register:playful, label: Playful, parent: emotional_register:dynamic, phrase: "playful, light, surprising"}
+- {id: emotional_register:theatrical, label: Theatrical, parent: emotional_register:dynamic, phrase: "theatrical, staged, high-contrast"}
+- {id: emotional_register:unsettling, label: Unsettling, parent: emotional_register:dynamic, phrase: "unsettling, uncanny, tense"}

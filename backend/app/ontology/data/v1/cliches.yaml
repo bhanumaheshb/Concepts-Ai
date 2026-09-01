@@ -1,0 +1,80 @@
+version: v1
+# Curated mode seeds per typology. This is the anti-brief's production fallback,
+# not a test fixture — it is why stage 03 cannot fail (spec R-ANTI-01).
+typologies:
+  WEDDING_MANDAP:
+    - label: "gilded palace courtyard"
+      prevalence: 0.85
+      facet_values: [architectural_language:mughal_courtyard, geometry_system:charbagh_orthogonal,
+                     material:marble, material:cut_flower, lighting_philosophy:grazing_wash,
+                     structural_logic:post_and_beam, tectonic_logic:stacked,
+                     occupation_staging:centred_raised, site_relationship:grounded_mass]
+      surface_tokens: [gold, gilded, marigold, chandelier, arches, red carpet, ornate]
+    - label: "draped fabric canopy"
+      prevalence: 0.78
+      facet_values: [tectonic_logic:draped, material:silk_drape, structural_logic:post_and_beam,
+                     occupation_staging:centred_raised]
+      surface_tokens: [drapes, swags, fairy lights, tulle, ceiling drape]
+    - label: "floral arch spectacle"
+      prevalence: 0.72
+      facet_values: [material:cut_flower, geometry_system:radial_concentric, scale_strategy:heroic]
+      surface_tokens: [flower wall, floral arch, rose petals, garland]
+  EVENT_STAGE:
+    - label: "LED wall and truss"
+      prevalence: 0.82
+      facet_values: [lighting_philosophy:projected_light, structural_logic:space_frame,
+                     occupation_staging:frontal_stage, material:anodised_aluminium,
+                     tectonic_logic:assembled_modular, site_relationship:grounded_mass]
+      surface_tokens: [led wall, truss, moving heads, haze, screen]
+    - label: "mirrored glamour box"
+      prevalence: 0.66
+      facet_values: [material:mirror_polymer, geometry_system:orthogonal_grid, emotional_register:euphoric]
+      surface_tokens: [mirror ball, sequins, gloss black, strobe]
+  RESTAURANT:
+    - label: "industrial edison warehouse"
+      prevalence: 0.80
+      facet_values: [material:brick, material:corten_steel, lighting_philosophy:grazing_wash,
+                     architectural_language:brutalist, structural_logic:post_and_beam,
+                     tectonic_logic:stacked, occupation_staging:dispersed_clusters]
+      surface_tokens: [edison bulb, exposed brick, ductwork, subway tile, blackboard]
+    - label: "soft luxe banquette"
+      prevalence: 0.70
+      facet_values: [material:brass, material:marble, emotional_register:intimate,
+                     occupation_staging:dispersed_clusters]
+      surface_tokens: [velvet banquette, brass trim, marble bar, pendant lights]
+  INTERIOR:
+    - label: "warm minimal beige"
+      prevalence: 0.83
+      facet_values: [architectural_language:miesian_minimal, material:lime_plaster,
+                     emotional_register:contemplative, lighting_philosophy:reflected_daylight,
+                     structural_logic:post_and_beam, tectonic_logic:cast_monolithic]
+      surface_tokens: [beige, boucle, travertine, minimal, arch niche, curved wall]
+  PAVILION:
+    - label: "white tensile canopy"
+      prevalence: 0.76
+      facet_values: [architectural_language:tensile_membrane, material:ptfe_membrane,
+                     structural_logic:membrane_tension, site_relationship:grounded_mass,
+                     tectonic_logic:tensioned, occupation_staging:dispersed_clusters]
+      surface_tokens: [white canopy, tent, guy ropes, sail]
+    - label: "timber slat box"
+      prevalence: 0.68
+      facet_values: [material:teak, geometry_system:modular_bay, tectonic_logic:assembled_modular]
+      surface_tokens: [timber slats, batten screen, plywood box]
+  EXHIBITION:
+    - label: "white cube plinth"
+      prevalence: 0.81
+      facet_values: [architectural_language:miesian_minimal, geometry_system:orthogonal_grid,
+                     lighting_philosophy:grazing_wash, occupation_staging:dispersed_clusters,
+                     structural_logic:post_and_beam, tectonic_logic:assembled_modular]
+      surface_tokens: [white cube, plinth, track lighting, vinyl lettering]
+    - label: "immersive projection room"
+      prevalence: 0.74
+      facet_values: [lighting_philosophy:projected_light, spatial_narrative:immersion,
+                     material:mirror_polymer]
+      surface_tokens: [projection mapping, infinity mirror, immersive room]
+  GENERIC_SPATIAL:
+    - label: "neutral contemporary"
+      prevalence: 0.70
+      facet_values: [architectural_language:miesian_minimal, geometry_system:orthogonal_grid,
+                     material:lime_plaster]
+      surface_tokens: [minimal, neutral palette, clean lines]

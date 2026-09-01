@@ -1,0 +1,84 @@
+version: v1
+identity:
+  reference_id: ref_speculative_technology
+  kind: TECHNOLOGY
+  display_name: Speculative near-future technology
+  aliases: [futuristic technology, near future tech, speculative tech, hi-tech]
+  blurb: Systems whose operation is designed to be legible while running.
+traits:
+  - id: t_tec_char
+    dimension: TECHNOLOGICAL_CHARACTER
+    statement: "operation is made legible while it runs, so the system explains itself without labels"
+    abstraction: 0.90
+    salience: 0.92
+    maps_to: []
+    evidence: "Feedback is continuous and ambient rather than reported after the fact."
+  - id: t_tec_geom
+    dimension: GEOMETRY
+    statement: "one component repeated at high count, varied continuously rather than in types"
+    abstraction: 0.88
+    salience: 0.88
+    maps_to: [geometry_system, structural_logic]
+    suggests: [geometry_system:voronoi_cellular, geometry_system:undulating_surface, structural_logic:space_frame]
+    evidence: "Difference is produced by parameter, not by a catalogue of parts."
+  - id: t_tec_rhythm
+    dimension: RHYTHM_PACING
+    statement: "the environment changes state in response to presence, at a rate a person can perceive"
+    abstraction: 0.90
+    salience: 0.85
+    maps_to: [spatial_narrative, geometry_system]
+    suggests: [spatial_narrative:transformation, spatial_narrative:discovery,
+               geometry_system:modular_bay, geometry_system:fractal_subdivision]
+    evidence: "Responsiveness is slow enough to be read as intentional."
+  - id: t_tec_mat
+    dimension: MATERIAL_BEHAVIOUR
+    statement: "surfaces emit rather than reflect; the material is the source of its own brightness"
+    abstraction: 0.88
+    salience: 0.86
+    maps_to: [material_palette, tectonic_logic]
+    suggests: [material:emissive_light, material:polished_steel, lighting_philosophy:emissive_surface]
+    evidence: "Illumination is a property of the surface, not of a fixture pointed at it."
+  - id: t_tec_circ
+    dimension: CIRCULATION_MOVEMENT
+    statement: "the route reconfigures around the person rather than the person following a fixed route"
+    abstraction: 0.90
+    salience: 0.78
+    maps_to: [spatial_narrative, occupation_staging]
+    suggests: [occupation_staging:concealed_reveal, occupation_staging:dispersed_clusters,
+               spatial_narrative:immersion, spatial_narrative:discovery]
+    evidence: "Wayfinding is performed by the environment, not by signage."
+  - id: t_tec_light
+    dimension: LIGHTING_PHILOSOPHY
+    statement: "no visible fixture anywhere; light appears to have no origin"
+    abstraction: 0.88
+    salience: 0.80
+    maps_to: [lighting_philosophy]
+    suggests: [lighting_philosophy:emissive_surface, lighting_philosophy:projected_light]
+    evidence: "Sources are concealed as a matter of principle."
+  - id: t_tec_scale
+    dimension: SCALE
+    statement: "the assembly is precise at the hand and vast at the room, with no intermediate scale"
+    abstraction: 0.85
+    salience: 0.70
+    maps_to: [scale_strategy]
+    suggests: [scale_strategy:heroic, scale_strategy:human, scale_strategy:monumental]
+    evidence: "Detail and extent are both extreme; the middle is suppressed."
+literal_reading:
+  label: glowing white sci-fi interior
+  facet_values:
+    - material:emissive_light
+    - lighting_philosophy:emissive_surface
+    - geometry_system:undulating_surface
+    - architectural_language:futurist_hi_tech
+  surface_tokens: [hologram, led wall, sci-fi, cyberpunk, blade runner]
+  prevalence: 0.82
+  naive_rendering: >
+    A glossy white sci-fi interior with blue LED strip lighting in every reveal, floating
+    holographic UI panels, a mirrored floor, chrome curves and volumetric haze, lit like
+    a technology product launch.
+surface_lexicon:
+  - {token: hologram, category: ICONIC_OBJECT, transformed_to: "an image with no physical support"}
+  - {token: led wall, category: SET_ELEMENT, transformed_to: "a surface that is its own light source"}
+  - {token: cyberpunk, category: FRANCHISE_TERM, transformed_to: "density and decay lit by signage"}
+  - {token: blade runner, category: TITLE, justification: "a specific work, not a transferable principle"}
+  - {token: sci-fi, category: FRANCHISE_TERM, transformed_to: "a system whose operation is made legible"}

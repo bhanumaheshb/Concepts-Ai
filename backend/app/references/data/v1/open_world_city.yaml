@@ -1,0 +1,83 @@
+version: v1
+identity:
+  reference_id: ref_open_world_city
+  kind: GAME
+  display_name: Open-world city game
+  aliases: [open world city, open-world game, sandbox city, urban sandbox game]
+  blurb: An urban world whose content is the act of moving through it.
+traits:
+  - id: t_owc_circ
+    dimension: CIRCULATION_MOVEMENT
+    statement: "movement through the space is the content, not the means of reaching content"
+    abstraction: 0.92
+    salience: 0.95
+    maps_to: [spatial_narrative, occupation_staging]
+    suggests: [spatial_narrative:procession, spatial_narrative:discovery, occupation_staging:processional_axis]
+    evidence: "Traversal is the primary designed activity."
+  - id: t_owc_env
+    dimension: ENVIRONMENTAL_RELATIONSHIP
+    statement: "identity is expressed district by district, so crossing a boundary changes the rules"
+    abstraction: 0.90
+    salience: 0.90
+    maps_to: [site_relationship, scale_strategy]
+    suggests: [site_relationship:framing, occupation_staging:dispersed_clusters]
+    evidence: "The world is legible as a set of adjacent characters rather than one character."
+  - id: t_owc_atmos
+    dimension: ATMOSPHERE
+    statement: "excess and neglect share a boundary, and the contrast is the subject"
+    abstraction: 0.88
+    salience: 0.85
+    maps_to: [emotional_register, material_palette]
+    suggests: [emotional_register:theatrical, material:polished_steel, material:brick]
+    evidence: "Wealth and dereliction are placed deliberately within sight of each other."
+  - id: t_owc_motif
+    dimension: RECURRING_MOTIF
+    statement: "light is emitted by signage rather than by fixtures, so information is the illumination"
+    abstraction: 0.90
+    salience: 0.86
+    maps_to: [tectonic_logic, geometry_system]
+    suggests: [lighting_philosophy:emissive_surface, material:emissive_light]
+    evidence: "The street is lit by what is written on it."
+  - id: t_owc_rhythm
+    dimension: RHYTHM_PACING
+    statement: "the environment is busiest at night and the day is the quiet state"
+    abstraction: 0.85
+    salience: 0.75
+    maps_to: [spatial_narrative, geometry_system]
+    suggests: [spatial_narrative:immersion, spatial_narrative:release]
+    evidence: "Activity inverts the ordinary diurnal expectation."
+  - id: t_owc_scale
+    dimension: SCALE
+    statement: "the street is the primary room, and interiors are subordinate to it"
+    abstraction: 0.88
+    salience: 0.80
+    maps_to: [scale_strategy, occupation_staging]
+    suggests: [scale_strategy:landscape, occupation_staging:perimeter_ring]
+    evidence: "Public exterior space carries the programme."
+  - id: t_owc_social
+    dimension: SOCIAL_BEHAVIOUR
+    statement: "the crowd is scenery that occasionally becomes participant"
+    abstraction: 0.86
+    salience: 0.70
+    maps_to: [occupation_staging]
+    suggests: [occupation_staging:dispersed_clusters, occupation_staging:perimeter_ring]
+    evidence: "Ambient population shifts between background and foreground."
+literal_reading:
+  label: neon street at night
+  facet_values:
+    - material:emissive_light
+    - lighting_philosophy:emissive_surface
+    - emotional_register:theatrical
+    - scale_strategy:landscape
+  surface_tokens: [gta, grand theft, los santos, neon sign, palm tree boulevard]
+  prevalence: 0.84
+  naive_rendering: >
+    A neon-drenched night street with palm trees, pink and cyan signage, wet asphalt
+    reflections, sports cars at the kerb, a strip club facade and a helicopter overhead,
+    shot in wide-angle from hip height.
+surface_lexicon:
+  - {token: gta, category: TITLE, transformed_to: "a city whose content is traversal"}
+  - {token: grand theft, category: TITLE, transformed_to: "a city whose content is traversal"}
+  - {token: los santos, category: PLACE, justification: "a place name with no transferable content"}
+  - {token: neon sign, category: ICONIC_OBJECT, transformed_to: "information that is also the light source"}
+  - {token: palm tree boulevard, category: SET_ELEMENT, justification: "a specific streetscape motif, not a principle"}

@@ -1,0 +1,69 @@
+version: v1
+# Default invariants filled in when the brief omits them. Marked source=DEFAULT and
+# surfaced to the user for confirmation rather than silently assumed.
+typologies:
+  WEDDING_MANDAP:
+    capacity: {guests: 200, seated: 200, principals: 2}
+    site: {kind: OUTDOOR, width_m: 34, depth_m: 24, ground: LAWN}
+    schedule: {load_in_hours: 24, strike_hours: 8}
+    required_zones:
+      - {zone: ceremony, min_area_m2: 60, capacity: 0}
+      - {zone: seating, min_area_m2: 180, capacity: 200}
+      - {zone: arrival, min_area_m2: 30, capacity: 0}
+    ritual:
+      tradition: hindu_north_indian
+      required_elements: [ritual:agni_kund, ritual:four_posts, ritual:seating_sightline]
+    invariants:
+      - {id: c_ritual_agni, category: RITUAL, sacred: true,
+         statement: "A fire vessel must be present at the ceremonial centre with 1.5 m radial and 4 m overhead clearance."}
+      - {id: c_ritual_four_posts, category: RITUAL, sacred: true,
+         statement: "The ceremonial canopy is defined by four supports."}
+      - {id: c_sightline_all, category: PROGRAM,
+         statement: "Every seated guest must have an unobstructed sightline to the ceremonial centre."}
+  EVENT_STAGE:
+    capacity: {guests: 500, seated: 400, principals: 6}
+    site: {kind: COVERED, width_m: 40, depth_m: 28, ground: HARD}
+    schedule: {load_in_hours: 16, strike_hours: 6}
+    required_zones:
+      - {zone: stage, min_area_m2: 80, capacity: 0}
+      - {zone: audience, min_area_m2: 300, capacity: 500}
+    invariants:
+      - {id: c_sightline_all, category: PROGRAM,
+         statement: "Every audience position must have an unobstructed sightline to the stage."}
+  RESTAURANT:
+    capacity: {guests: 60, seated: 60, principals: 0}
+    site: {kind: INDOOR, width_m: 18, depth_m: 12, ground: FLOOR}
+    schedule: {load_in_hours: 400, strike_hours: 0}
+    required_zones:
+      - {zone: dining, min_area_m2: 90, capacity: 60}
+      - {zone: bar, min_area_m2: 18, capacity: 8}
+      - {zone: entry, min_area_m2: 10, capacity: 0}
+    invariants:
+      - {id: c_covers, category: CAPACITY,
+         statement: "The dining zone must seat the stated number of covers."}
+  INTERIOR:
+    capacity: {guests: 30, seated: 20, principals: 0}
+    site: {kind: INDOOR, width_m: 14, depth_m: 10, ground: FLOOR}
+    schedule: {load_in_hours: 300, strike_hours: 0}
+    required_zones:
+      - {zone: main, min_area_m2: 70, capacity: 30}
+  PAVILION:
+    capacity: {guests: 150, seated: 60, principals: 0}
+    site: {kind: OUTDOOR, width_m: 30, depth_m: 30, ground: LAWN}
+    schedule: {load_in_hours: 72, strike_hours: 24}
+    required_zones:
+      - {zone: shelter, min_area_m2: 90, capacity: 150}
+      - {zone: approach, min_area_m2: 40, capacity: 0}
+  EXHIBITION:
+    capacity: {guests: 120, seated: 0, principals: 0}
+    site: {kind: INDOOR, width_m: 24, depth_m: 16, ground: FLOOR}
+    schedule: {load_in_hours: 48, strike_hours: 12}
+    required_zones:
+      - {zone: gallery, min_area_m2: 160, capacity: 120}
+      - {zone: entry, min_area_m2: 20, capacity: 0}
+  GENERIC_SPATIAL:
+    capacity: {guests: 100, seated: 60, principals: 0}
+    site: {kind: OUTDOOR, width_m: 28, depth_m: 20, ground: LAWN}
+    schedule: {load_in_hours: 48, strike_hours: 12}
+    required_zones:
+      - {zone: main, min_area_m2: 100, capacity: 100}

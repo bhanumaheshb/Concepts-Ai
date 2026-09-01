@@ -1,0 +1,28 @@
+domain: ENTERTAINMENT
+candidates:
+  - id: tc_ent_practical_sets
+    title: Return to built practical sets over volume screens
+    summary: >
+      Productions rebuilding physical environments so that light, dust and reflection
+      behave correctly, with the camera moving through real depth.
+    signal: {recency: 0.78, momentum: 0.70, relevance: 0.62, design_value: 0.80,
+             source_quality: 0.85, novelty: 0.60, cross_domain_potential: 0.78}
+    evidence:
+      - {source: MOCK FIXTURE · entertainment publication, tier: MAJOR_PUBLICATION, published: 2026-04-18,
+         excerpt: "Production designers report a swing back to built environments."}
+      - {source: MOCK FIXTURE · industry report, tier: TRADE_PUBLICATION, published: 2026-01-09,
+         excerpt: "Practical construction is favoured for on-set lighting behaviour."}
+    surface_terms: []
+    literal_label: built film set with practical lighting
+    literal_facets: [lighting_philosophy:grazing_wash, tectonic_logic:assembled_modular]
+    naive_rendering: >
+      A movie backlot set with visible rigging, haze in the beams, a camera dolly and
+      warm practical lamps dressed into the scene.
+    reference_type: MOVIE
+    hints:
+      - {dimension: LIGHTING_PHILOSOPHY, statement: "every source is an object that exists inside the space",
+         abstraction: 0.90, salience: 0.82, suggests: [lighting_philosophy:candle_scatter, lighting_philosophy:grazing_wash]}
+      - {dimension: NARRATIVE_STRUCTURE, statement: "the subject is withheld until one prepared moment",
+         abstraction: 0.90, salience: 0.76, suggests: [spatial_narrative:revelation, occupation_staging:concealed_reveal]}
+      - {dimension: MATERIAL_BEHAVIOUR, statement: "surfaces are chosen for how they behave under light, not how they look",
+         abstraction: 0.88, salience: 0.70, suggests: [material:lime_plaster, material:charred_wood]}

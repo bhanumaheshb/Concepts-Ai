@@ -1,0 +1,28 @@
+domain: NATURE
+candidates:
+  - id: tc_nat_mycelium_growth
+    title: Grown rather than manufactured building material
+    summary: >
+      Structures cultivated from living substrate, where the form records the growth
+      process and the material returns to the ground afterwards.
+    signal: {recency: 0.84, momentum: 0.64, relevance: 0.60, design_value: 0.88,
+             source_quality: 0.82, novelty: 0.90, cross_domain_potential: 0.86}
+    evidence:
+      - {source: MOCK FIXTURE · materials research publication, tier: TRADE_PUBLICATION, published: 2026-06-14,
+         excerpt: "Grown composites reach architectural scale in temporary structures."}
+      - {source: MOCK FIXTURE · major design publication, tier: MAJOR_PUBLICATION, published: 2025-10-02,
+         excerpt: "Cultivated materials shift from experiment to pavilion construction."}
+    surface_terms: []
+    literal_label: mushroom-grown pavilion
+    literal_facets: [tectonic_logic:grown_living, material:living_plant]
+    naive_rendering: >
+      A beige lumpy mycelium-brick dome with visible organic texture, moss patches and
+      soft diffuse daylight, photographed in a field.
+    reference_type: NATURE
+    hints:
+      - {dimension: MATERIAL_BEHAVIOUR, statement: "the material is grown in place and decays in place",
+         abstraction: 0.92, salience: 0.86, suggests: [tectonic_logic:grown_living, material:living_plant]}
+      - {dimension: GEOMETRY, statement: "form is the accumulated record of how it grew",
+         abstraction: 0.90, salience: 0.78, suggests: [geometry_system:voronoi_cellular, geometry_system:undulating_surface]}
+      - {dimension: ENVIRONMENTAL_RELATIONSHIP, statement: "nothing is delivered to site and nothing is removed from it",
+         abstraction: 0.88, salience: 0.70, suggests: [site_relationship:embedded, site_relationship:camouflaged]}

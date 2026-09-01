@@ -1,0 +1,26 @@
+version: v1
+# The twelve ACTIVE facets carry ontology depth, allocator participation and metric
+# weight. The six PASSIVE facets are typed and carried but weight 0.0 in metric v1.
+facets:
+  - {id: architectural_language, type: TREE,        weight: 0.13, active: true,  cardinality: single}
+  - {id: geometry_system,        type: TREE,        weight: 0.12, active: true,  cardinality: single}
+  - {id: thesis_archetype,       type: TREE,        weight: 0.12, active: true,  cardinality: single}
+  - {id: structural_logic,       type: TREE,        weight: 0.10, active: true,  cardinality: single}
+  - {id: material,               type: WEIGHTED_SET,weight: 0.10, active: true,  cardinality: set}
+  - {id: spatial_narrative,      type: ORDERED_SEQ, weight: 0.09, active: true,  cardinality: seq}
+  - {id: occupation_staging,     type: TREE,        weight: 0.08, active: true,  cardinality: single}
+  - {id: lighting_philosophy,    type: TREE,        weight: 0.07, active: true,  cardinality: single}
+  - {id: site_relationship,      type: TREE,        weight: 0.07, active: true,  cardinality: single}
+  - {id: tectonic_logic,         type: TREE,        weight: 0.06, active: true,  cardinality: single}
+  - {id: scale_strategy,         type: ORDERED,     weight: 0.03, active: true,  cardinality: single}
+  - {id: emotional_register,     type: TREE,        weight: 0.03, active: true,  cardinality: single}
+  # passive
+  - {id: design_philosophy,      type: TREE,        weight: 0.00, active: false, cardinality: single}
+  - {id: ephemerality,           type: ORDERED,     weight: 0.00, active: false, cardinality: single}
+  - {id: sensory_strategy,       type: SET,         weight: 0.00, active: false, cardinality: set}
+  - {id: technology,             type: SET,         weight: 0.00, active: false, cardinality: set}
+
+# scale_strategy and ephemerality are ORDERED: rank position matters for distance.
+orders:
+  scale_strategy: [miniature, human, heroic, monumental, landscape]
+  ephemerality:   [performative_decay, single_use, demountable, permanent]

@@ -1,0 +1,28 @@
+domain: EVENT_DESIGN
+candidates:
+  - id: tc_evt_processional_staging
+    title: Guests moved through a sequence rather than seated at one view
+    summary: >
+      Large events staged as a route with distinct rooms, so the audience changes
+      position and the reveal is spatial rather than announced.
+    signal: {recency: 0.80, momentum: 0.72, relevance: 0.92, design_value: 0.86,
+             source_quality: 0.80, novelty: 0.68, cross_domain_potential: 0.72}
+    evidence:
+      - {source: MOCK FIXTURE · event design trade press, tier: TRADE_PUBLICATION, published: 2026-06-05,
+         excerpt: "Processional formats replace the single-stage banquet layout."}
+      - {source: MOCK FIXTURE · hospitality publication, tier: MAJOR_PUBLICATION, published: 2026-01-22,
+         excerpt: "Guests are moved between rooms as the programme unfolds."}
+    surface_terms: []
+    literal_label: multi-room walkthrough event
+    literal_facets: [occupation_staging:processional_axis, spatial_narrative:procession]
+    naive_rendering: >
+      A sequence of themed rooms with archway transitions, a floral tunnel, a
+      champagne corridor and a big reveal curtain into the main hall.
+    reference_type: CULTURAL_REFERENCE
+    hints:
+      - {dimension: CIRCULATION_MOVEMENT, statement: "the audience changes position and the room changes with them",
+         abstraction: 0.90, salience: 0.90, suggests: [spatial_narrative:procession, occupation_staging:processional_axis]}
+      - {dimension: NARRATIVE_STRUCTURE, statement: "the reveal is a place you walk into, not an announcement",
+         abstraction: 0.92, salience: 0.82, suggests: [spatial_narrative:revelation, occupation_staging:concealed_reveal]}
+      - {dimension: SOCIAL_BEHAVIOUR, statement: "the crowd is split into groups that see different things",
+         abstraction: 0.88, salience: 0.70, suggests: [occupation_staging:dispersed_clusters]}

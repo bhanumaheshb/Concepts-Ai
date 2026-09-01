@@ -1,0 +1,167 @@
+version: v1
+# Typed, weighted, non-taxonomic edges. `is_a` lives in nodes.yaml as `parent`.
+#   excludes      hard prohibition (physics or culture)
+#   requires      hard entailment; selecting src pulls dst into the genotype
+#   implies       soft co-occurrence; raises the prior
+#   tensions_with valid but demands a reconciliation thesis  (weight < 0)
+#   inverse_of    symmetric; the `invert` mutation operator and RADICAL niches use these
+#   evokes        facet -> emotional_register
+edges:
+
+# ── excludes: physically impossible combinations ────────────────────────────
+- {src: structural_logic:buoyant, dst: material:sandstone, type: excludes, weight: 1.0}
+- {src: structural_logic:buoyant, dst: material:granite, type: excludes, weight: 1.0}
+- {src: structural_logic:buoyant, dst: material:marble, type: excludes, weight: 1.0}
+- {src: structural_logic:buoyant, dst: material:limestone, type: excludes, weight: 1.0}
+- {src: structural_logic:buoyant, dst: material:dry_stack_stone, type: excludes, weight: 1.0}
+- {src: structural_logic:buoyant, dst: material:rammed_earth, type: excludes, weight: 1.0}
+- {src: structural_logic:buoyant, dst: material:brick, type: excludes, weight: 1.0}
+- {src: structural_logic:cable_tensile, dst: material:rammed_earth, type: excludes, weight: 1.0}
+- {src: structural_logic:cable_tensile, dst: material:dry_stack_stone, type: excludes, weight: 1.0}
+- {src: structural_logic:membrane_tension, dst: material:granite, type: excludes, weight: 1.0}
+- {src: structural_logic:membrane_tension, dst: material:brick, type: excludes, weight: 1.0}
+- {src: structural_logic:suspended_net, dst: material:rammed_earth, type: excludes, weight: 1.0}
+- {src: tectonic_logic:excavated, dst: site_relationship:hovering, type: excludes, weight: 1.0}
+- {src: tectonic_logic:excavated, dst: site_relationship:floating_on_water, type: excludes, weight: 1.0}
+- {src: tectonic_logic:draped, dst: structural_logic:compression_mass, type: excludes, weight: 1.0}
+- {src: tectonic_logic:inflated, dst: structural_logic:compression_mass, type: excludes, weight: 1.0}
+- {src: tectonic_logic:inflated, dst: material:granite, type: excludes, weight: 1.0}
+- {src: tectonic_logic:carved, dst: material:canvas_membrane, type: excludes, weight: 1.0}
+- {src: tectonic_logic:carved, dst: material:ptfe_membrane, type: excludes, weight: 1.0}
+- {src: tectonic_logic:stacked, dst: structural_logic:cable_tensile, type: excludes, weight: 1.0}
+- {src: geometry_system:suspended_layers, dst: structural_logic:compression_mass, type: excludes, weight: 1.0}
+- {src: thesis_archetype:excavation, dst: site_relationship:hovering, type: excludes, weight: 1.0}
+- {src: thesis_archetype:excavation, dst: site_relationship:floating_on_water, type: excludes, weight: 1.0}
+- {src: thesis_archetype:apparition, dst: structural_logic:compression_mass, type: excludes, weight: 1.0}
+- {src: lighting_philosophy:open_flame, dst: material:ptfe_membrane, type: excludes, weight: 1.0}
+- {src: lighting_philosophy:open_flame, dst: material:mirror_polymer, type: excludes, weight: 1.0}
+
+# ── requires: selecting src forces dst into the genotype ────────────────────
+- {src: structural_logic:cable_tensile, dst: technology:cable_net, type: requires, weight: 1.0}
+- {src: structural_logic:membrane_tension, dst: technology:edge_beam, type: requires, weight: 1.0}
+- {src: structural_logic:suspended_net, dst: technology:cable_net, type: requires, weight: 1.0}
+- {src: structural_logic:space_frame, dst: technology:node_connector, type: requires, weight: 1.0}
+- {src: architectural_language:parametric, dst: technology:digital_fabrication, type: requires, weight: 1.0}
+- {src: geometry_system:voronoi_cellular, dst: technology:digital_fabrication, type: requires, weight: 1.0}
+- {src: geometry_system:undulating_surface, dst: technology:digital_fabrication, type: requires, weight: 1.0}
+- {src: tectonic_logic:inflated, dst: technology:air_handling, type: requires, weight: 1.0}
+- {src: tectonic_logic:grown_living, dst: technology:irrigation, type: requires, weight: 1.0}
+- {src: lighting_philosophy:emissive_surface, dst: technology:integrated_led, type: requires, weight: 1.0}
+- {src: lighting_philosophy:projected_light, dst: technology:projection_rig, type: requires, weight: 1.0}
+- {src: site_relationship:floating_on_water, dst: technology:water_recirculation, type: requires, weight: 1.0}
+- {src: tectonic_logic:assembled_modular, dst: technology:demountable_fixings, type: requires, weight: 1.0}
+
+# ── implies: raises the prior of dst when src is chosen ─────────────────────
+- {src: architectural_language:parametric, dst: geometry_system:voronoi_cellular, type: implies, weight: 0.7}
+- {src: architectural_language:parametric, dst: geometry_system:undulating_surface, type: implies, weight: 0.6}
+- {src: architectural_language:tensile_membrane, dst: structural_logic:membrane_tension, type: implies, weight: 0.9}
+- {src: architectural_language:tensile_membrane, dst: material:ptfe_membrane, type: implies, weight: 0.7}
+- {src: architectural_language:rajasthani_stepwell, dst: geometry_system:stepped_revolve, type: implies, weight: 0.7}
+- {src: architectural_language:rajasthani_stepwell, dst: tectonic_logic:excavated, type: implies, weight: 0.8}
+- {src: architectural_language:mughal_courtyard, dst: geometry_system:charbagh_orthogonal, type: implies, weight: 0.8}
+- {src: architectural_language:brutalist, dst: tectonic_logic:cast_monolithic, type: implies, weight: 0.7}
+- {src: architectural_language:bamboo_vernacular, dst: tectonic_logic:woven, type: implies, weight: 0.7}
+- {src: architectural_language:dravidian_temple, dst: structural_logic:corbelled, type: implies, weight: 0.6}
+- {src: architectural_language:japanese_sukiya, dst: structural_logic:post_and_beam, type: implies, weight: 0.7}
+- {src: architectural_language:nomadic_tent, dst: structural_logic:membrane_tension, type: implies, weight: 0.8}
+- {src: architectural_language:futurist_hi_tech, dst: structural_logic:space_frame, type: implies, weight: 0.7}
+
+# ── tensions_with: allowed, priced, must be reconciled in prose ─────────────
+- {src: architectural_language:parametric, dst: tectonic_logic:stacked, type: tensions_with, weight: -0.6}
+- {src: architectural_language:brutalist, dst: emotional_register:tender, type: tensions_with, weight: -0.5}
+- {src: architectural_language:miesian_minimal, dst: tectonic_logic:grown_living, type: tensions_with, weight: -0.5}
+- {src: architectural_language:dravidian_temple, dst: architectural_language:futurist_hi_tech, type: tensions_with, weight: -0.7}
+- {src: structural_logic:compression_mass, dst: emotional_register:playful, type: tensions_with, weight: -0.4}
+- {src: scale_strategy:monumental, dst: emotional_register:intimate, type: tensions_with, weight: -0.6}
+- {src: scale_strategy:landscape, dst: emotional_register:intimate, type: tensions_with, weight: -0.7}
+- {src: lighting_philosophy:darkness_pools, dst: emotional_register:euphoric, type: tensions_with, weight: -0.5}
+- {src: material:mirror_polymer, dst: emotional_register:reverent, type: tensions_with, weight: -0.4}
+- {src: tectonic_logic:inflated, dst: emotional_register:reverent, type: tensions_with, weight: -0.5}
+
+# ── inverse_of: the invert operator and RADICAL niche seeds ─────────────────
+- {src: site_relationship:embedded, dst: site_relationship:hovering, type: inverse_of, weight: 1.0}
+- {src: site_relationship:grounded_mass, dst: site_relationship:floating_on_water, type: inverse_of, weight: 1.0}
+- {src: site_relationship:framing, dst: site_relationship:ignoring_context, type: inverse_of, weight: 1.0}
+- {src: occupation_staging:centred_raised, dst: occupation_staging:centred_sunken, type: inverse_of, weight: 1.0}
+- {src: occupation_staging:frontal_stage, dst: occupation_staging:in_the_round, type: inverse_of, weight: 1.0}
+- {src: occupation_staging:perimeter_ring, dst: occupation_staging:asymmetric_focus, type: inverse_of, weight: 1.0}
+- {src: structural_logic:compression_mass, dst: structural_logic:cable_tensile, type: inverse_of, weight: 1.0}
+- {src: structural_logic:arch_vault, dst: structural_logic:suspended_net, type: inverse_of, weight: 1.0}
+- {src: structural_logic:corbelled, dst: structural_logic:cantilever, type: inverse_of, weight: 1.0}
+- {src: tectonic_logic:stacked, dst: tectonic_logic:cast_monolithic, type: inverse_of, weight: 1.0}
+- {src: tectonic_logic:carved, dst: tectonic_logic:inflated, type: inverse_of, weight: 1.0}
+- {src: tectonic_logic:excavated, dst: tectonic_logic:draped, type: inverse_of, weight: 1.0}
+- {src: lighting_philosophy:direct_sun_shafts, dst: lighting_philosophy:darkness_pools, type: inverse_of, weight: 1.0}
+- {src: lighting_philosophy:open_flame, dst: lighting_philosophy:emissive_surface, type: inverse_of, weight: 1.0}
+- {src: lighting_philosophy:filtered_daylight, dst: lighting_philosophy:silhouette_backlight, type: inverse_of, weight: 1.0}
+- {src: thesis_archetype:excavation, dst: thesis_archetype:apparition, type: inverse_of, weight: 1.0}
+- {src: thesis_archetype:vessel, dst: thesis_archetype:clearing, type: inverse_of, weight: 1.0}
+- {src: thesis_archetype:mound, dst: thesis_archetype:veil, type: inverse_of, weight: 1.0}
+- {src: thesis_archetype:threshold, dst: thesis_archetype:assembly, type: inverse_of, weight: 1.0}
+- {src: emotional_register:reverent, dst: emotional_register:playful, type: inverse_of, weight: 1.0}
+- {src: emotional_register:sublime, dst: emotional_register:intimate, type: inverse_of, weight: 1.0}
+- {src: emotional_register:austere, dst: emotional_register:euphoric, type: inverse_of, weight: 1.0}
+- {src: geometry_system:orthogonal_grid, dst: geometry_system:voronoi_cellular, type: inverse_of, weight: 1.0}
+- {src: geometry_system:radial_concentric, dst: geometry_system:fragmented_shard, type: inverse_of, weight: 1.0}
+- {src: geometry_system:stacked_tiers, dst: geometry_system:suspended_layers, type: inverse_of, weight: 1.0}
+- {src: geometry_system:shell_dome, dst: geometry_system:stepped_orthogonal, type: inverse_of, weight: 1.0}
+- {src: architectural_language:brutalist, dst: architectural_language:tensile_membrane, type: inverse_of, weight: 1.0}
+- {src: architectural_language:mughal_courtyard, dst: architectural_language:deconstructivist, type: inverse_of, weight: 1.0}
+- {src: architectural_language:miesian_minimal, dst: architectural_language:scenographic_surreal, type: inverse_of, weight: 1.0}
+
+# ── evokes: facet value -> emotional register (used by coherence scoring) ───
+- {src: architectural_language:rajasthani_stepwell, dst: emotional_register:reverent, type: evokes, weight: 0.8}
+- {src: architectural_language:brutalist, dst: emotional_register:austere, type: evokes, weight: 0.8}
+- {src: architectural_language:parametric, dst: emotional_register:sublime, type: evokes, weight: 0.6}
+- {src: architectural_language:bamboo_vernacular, dst: emotional_register:tender, type: evokes, weight: 0.6}
+- {src: architectural_language:scenographic_surreal, dst: emotional_register:theatrical, type: evokes, weight: 0.8}
+- {src: lighting_philosophy:oil_lamp_field, dst: emotional_register:reverent, type: evokes, weight: 0.7}
+- {src: lighting_philosophy:darkness_pools, dst: emotional_register:unsettling, type: evokes, weight: 0.6}
+
+# ── additional excludes found while validating the solver ───────────────────
+- {src: tectonic_logic:inflated, dst: material:sandstone, type: excludes, weight: 1.0}
+- {src: tectonic_logic:inflated, dst: material:marble, type: excludes, weight: 1.0}
+- {src: tectonic_logic:inflated, dst: material:limestone, type: excludes, weight: 1.0}
+- {src: tectonic_logic:inflated, dst: material:dry_stack_stone, type: excludes, weight: 1.0}
+- {src: tectonic_logic:inflated, dst: material:brick, type: excludes, weight: 1.0}
+- {src: tectonic_logic:inflated, dst: material:rammed_earth, type: excludes, weight: 1.0}
+- {src: tectonic_logic:woven, dst: material:granite, type: excludes, weight: 1.0}
+- {src: tectonic_logic:woven, dst: material:marble, type: excludes, weight: 1.0}
+- {src: tectonic_logic:woven, dst: material:rammed_earth, type: excludes, weight: 1.0}
+- {src: tectonic_logic:cast_monolithic, dst: material:dry_stack_stone, type: excludes, weight: 1.0}
+- {src: tectonic_logic:cast_monolithic, dst: material:bamboo, type: excludes, weight: 1.0}
+- {src: tectonic_logic:excavated, dst: material:ptfe_membrane, type: excludes, weight: 1.0}
+- {src: tectonic_logic:excavated, dst: material:canvas_membrane, type: excludes, weight: 1.0}
+- {src: tectonic_logic:draped, dst: material:granite, type: excludes, weight: 1.0}
+- {src: tectonic_logic:draped, dst: material:rammed_earth, type: excludes, weight: 1.0}
+- {src: tectonic_logic:draped, dst: material:dry_stack_stone, type: excludes, weight: 1.0}
+- {src: thesis_archetype:excavation, dst: site_relationship:bridging, type: excludes, weight: 1.0}
+- {src: thesis_archetype:mound, dst: site_relationship:hovering, type: excludes, weight: 1.0}
+- {src: structural_logic:compression_mass, dst: material:ptfe_membrane, type: excludes, weight: 1.0}
+- {src: structural_logic:compression_mass, dst: material:canvas_membrane, type: excludes, weight: 1.0}
+- {src: structural_logic:membrane_tension, dst: material:sandstone, type: excludes, weight: 1.0}
+- {src: structural_logic:membrane_tension, dst: material:dry_stack_stone, type: excludes, weight: 1.0}
+
+# ── tectonic logic steers material family ──────────────────────────────────
+- {src: tectonic_logic:stacked, dst: material:sandstone, type: implies, weight: 0.6}
+- {src: tectonic_logic:stacked, dst: material:brick, type: implies, weight: 0.5}
+- {src: tectonic_logic:stacked, dst: material:dry_stack_stone, type: implies, weight: 0.7}
+- {src: tectonic_logic:carved, dst: material:limestone, type: implies, weight: 0.6}
+- {src: tectonic_logic:carved, dst: material:sandstone, type: implies, weight: 0.5}
+- {src: tectonic_logic:excavated, dst: material:rammed_earth, type: implies, weight: 0.5}
+- {src: tectonic_logic:excavated, dst: material:sandstone, type: implies, weight: 0.5}
+- {src: tectonic_logic:woven, dst: material:bamboo, type: implies, weight: 0.8}
+- {src: tectonic_logic:woven, dst: material:woven_jute, type: implies, weight: 0.7}
+- {src: tectonic_logic:draped, dst: material:silk_drape, type: implies, weight: 0.8}
+- {src: tectonic_logic:draped, dst: material:canvas_membrane, type: implies, weight: 0.6}
+- {src: tectonic_logic:tensioned, dst: material:ptfe_membrane, type: implies, weight: 0.8}
+- {src: tectonic_logic:tensioned, dst: material:corten_steel, type: implies, weight: 0.4}
+- {src: tectonic_logic:cast_monolithic, dst: material:lime_plaster, type: implies, weight: 0.5}
+- {src: tectonic_logic:grown_living, dst: material:living_plant, type: implies, weight: 0.9}
+- {src: tectonic_logic:inflated, dst: material:ptfe_membrane, type: implies, weight: 0.7}
+- {src: tectonic_logic:assembled_modular, dst: material:anodised_aluminium, type: implies, weight: 0.5}
+- {src: tectonic_logic:assembled_modular, dst: material:laminated_timber, type: implies, weight: 0.5}
+- {src: structural_logic:cable_tensile, dst: material:polished_steel, type: implies, weight: 0.6}
+- {src: structural_logic:compression_mass, dst: material:sandstone, type: implies, weight: 0.5}
+- {src: lighting_philosophy:emissive_surface, dst: material:emissive_light, type: implies, weight: 0.8}
+- {src: lighting_philosophy:oil_lamp_field, dst: material:brass, type: implies, weight: 0.5}
