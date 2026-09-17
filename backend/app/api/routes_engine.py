@@ -30,6 +30,9 @@ router = APIRouter(prefix="/api", tags=["engine"])
 
 _sessions = SessionArchive()
 _lock = threading.Lock()
+# exploration_id -> cancel flag, for every run that is queued or running in THIS process.
+# A session saved as RUNNING that is not in here was cut off by a restart.
+_active: dict[str, threading.Event] = {}
 
 
 class ReferenceBlock(BaseModel):
@@ -313,6 +316,9 @@ def create_exploration(req: BriefRequest, background: BackgroundTasks) -> dict:
         except Exception as exc:                       # pragma: no cover
             elog.warn(f"session snapshot skipped ({type(exc).__name__}) — run unaffected")
 
+    cancel = threading.Event()
+    _active[rec_id] = cancel
+
     def _run():
         # Synthesis is minutes per concept. Snapshotting on a timer is what lets the
         # UI show concept 1 the moment it is written instead of after all k of them,
@@ -328,11 +334,12 @@ def create_exploration(req: BriefRequest, background: BackgroundTasks) -> dict:
         try:
             with _lock:
                 c.pipeline.run(brief, k=req.k, seed=seed, injection=injection,
-                               trend_result=trend_result)
+                               trend_result=trend_result, cancel=cancel)
         finally:
             stop.set()
             watcher.join(timeout=5.0)
-            _snapshot()          # authoritative: the completed run, or the failed one
+            _snapshot()          # authoritative: the completed, failed or cancelled run
+            _active.pop(rec_id, None)
 
     background.add_task(_run)
     return {"exploration_id": rec_id, "status": "RUNNING", "seed": seed, "k": req.k,
@@ -346,7 +353,26 @@ def list_sessions() -> dict:
     Read from disk rather than from the store: the store is in-memory and empties on
     every restart, which is exactly the history this endpoint exists to keep.
     """
-    return {"sessions": _sessions.list()}
+    rows = _sessions.list()
+    for r in rows:
+        if r["status"] == "RUNNING" and r["exploration_id"] not in _active:
+            r["status"] = "INTERRUPTED"      # the process that ran it has gone
+    return {"sessions": rows}
+
+
+@router.post("/explorations/{exploration_id}/cancel")
+def cancel_exploration(exploration_id: str) -> dict:
+    """Stop a run. It stops at the next stage boundary or between concepts; a model call
+    already in flight finishes first, so this can take as long as one concept."""
+    flag = _active.get(exploration_id)
+    if flag is None:
+        rec = get_container().store.get(exploration_id)
+        if rec is None:
+            raise HTTPException(404, f"exploration {exploration_id} is not running")
+        return {"exploration_id": exploration_id, "status": rec.status}
+    flag.set()
+    elog.warn(f"cancel requested for {exploration_id}")
+    return {"exploration_id": exploration_id, "status": "CANCELLING"}
 
 
 @router.get("/sessions/{exploration_id}")
@@ -354,7 +380,10 @@ def get_session(exploration_id: str) -> dict:
     doc = _sessions.get(exploration_id)
     if doc is None:
         raise HTTPException(404, f"session {exploration_id} not found")
-    return doc["exploration"]
+    payload = doc["exploration"]
+    if payload.get("status") == "RUNNING" and exploration_id not in _active:
+        payload = {**payload, "status": "INTERRUPTED"}
+    return payload
 
 
 @router.get("/sessions/{exploration_id}/concepts/{concept_id}")
@@ -396,7 +425,9 @@ def get_concepts(exploration_id: str) -> dict:
     c = get_container()
     rec = _record_or_404(exploration_id)
     from app.api.serializers import concept_summary
-    return {"concepts": [concept_summary(c.ontology, rec, x) for x in rec.concepts]}
+    return {"status": rec.status,
+            "cancelling": bool(rec.cancelled()) and rec.status == "RUNNING",
+            "concepts": [concept_summary(c.ontology, rec, x) for x in rec.concepts]}
 
 
 @router.get("/explorations/{exploration_id}/comparison")

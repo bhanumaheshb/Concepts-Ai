@@ -7,8 +7,10 @@ import { SessionList } from "../components/SessionList";
 import {
   BriefInput,
   Concept,
+  cancelExploration,
   createExploration,
   getConcepts,
+  isFinalStatus,
   getExploration,
   getSession,
   SemanticReading,
@@ -37,6 +39,8 @@ export default function Page() {
   // What the engine designed this run AS. Read from the run itself, so it shows what
   // was actually used (including a reasoning model's contribution), not a re-guess.
   const [semantic, setSemantic] = useState<SemanticReading | null>(null);
+  // "" while running; "stopping" once Stop is pressed; the final status once it ends
+  const [runState, setRunState] = useState<"" | "stopping" | "stopped">("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const semanticFor = useRef<string | null>(null);
 
@@ -51,7 +55,8 @@ export default function Page() {
   /** Poll until every concept has been written. Cards appear as they land. */
   const poll = useCallback((id: string, expected: number) => {
     getConcepts(id)
-      .then(({ concepts: list }) => {
+      .then(({ concepts: list, status, cancelling }) => {
+        if (cancelling) setRunState("stopping");
         if (list.length) {
           setConcepts(list);
           setPhase("results");
@@ -65,7 +70,13 @@ export default function Page() {
         }
         // A card is finished when it is written OR has failed. Waiting on
         // `synthesis` alone would poll forever whenever the model is unreachable.
-        const finished = list.length > 0 && list.every(isSettled);
+        const stopped = status === "CANCELLED" || status === "INTERRUPTED";
+        if (stopped) {
+          setRunState("stopped");
+          setExpected(list.length); // no placeholders for concepts that will never come
+        }
+        const finished = (list.length > 0 && list.every(isSettled)) || stopped
+          || status === "FAILED";
         setDone(finished);
         if (finished) {
           // the run is archived server-side at completion; pick it up
@@ -75,8 +86,25 @@ export default function Page() {
         }
       })
       .catch(() => {
-        // The record does not exist yet — the run is still in its early stages.
-        timer.current = setTimeout(() => poll(id, expected), 2500);
+        // No live record: either the run has not reached stage 01 yet, or the backend
+        // restarted and the run is gone. The saved session tells the two apart, so a
+        // run cut off by a restart shows as stopped instead of spinning forever.
+        getSession(id)
+          .then((ex) => {
+            if (ex.status === "INTERRUPTED" || ex.status === "CANCELLED") {
+              const list: Concept[] = ex.concepts || [];
+              setConcepts(list);
+              setExpected(list.length);
+              setRunState("stopped");
+              setDone(true);
+              setHistoryKey((k) => k + 1);
+            } else {
+              timer.current = setTimeout(() => poll(id, expected), 2500);
+            }
+          })
+          .catch(() => {
+            timer.current = setTimeout(() => poll(id, expected), 2500);
+          });
       });
   }, []);
 
@@ -85,6 +113,7 @@ export default function Page() {
       setError("");
       setConcepts([]);
       setSemantic(null);
+      setRunState("");
       setDone(false);
         setBrief(input.brief);
       createExploration(input)
@@ -119,14 +148,32 @@ export default function Page() {
           // A run that has not finished keeps going after you open it: pick the
           // live poll back up so the remaining concepts land in front of you
           // instead of freezing at whatever the last snapshot happened to hold.
-          const finished = ex.status === "COMPLETE" || ex.status === "FAILED";
-          setDone(finished && list.length > 0 && list.every(isSettled));
+          const finished = isFinalStatus(ex.status);
+          const stopped = ex.status === "CANCELLED" || ex.status === "INTERRUPTED";
+          setRunState(stopped ? "stopped" : "");
+          if (stopped) setExpected(list.length);
+          setDone((finished && list.length > 0 && list.every(isSettled)) || stopped);
           if (!finished) poll(id, ex.k ?? list.length);
         })
         .catch((e) => setError(String(e.message || e)));
     },
     [poll]
   );
+
+  const stop = () => {
+    if (!sessionId) return;
+    setRunState("stopping");
+    cancelExploration(sessionId)
+      .then((r) => {
+        if (r.status === "CANCELLED" || r.status === "COMPLETE" || r.status === "FAILED") {
+          setRunState("stopped");
+        }
+      })
+      .catch((e) => {
+        setRunState("");
+        setToast(String(e.message || e));
+      });
+  };
 
   const reset = () => {
     if (timer.current) clearTimeout(timer.current);
@@ -152,9 +199,21 @@ export default function Page() {
           Concepts<em>.</em>
         </div>
         {phase === "results" && (
-          <button className="btn btn-ghost" onClick={reset}>
-            New brief
-          </button>
+          <div style={{ display: "flex", gap: 10 }}>
+            {!done && (
+              <button
+                className="btn btn-ghost btn-stop"
+                onClick={stop}
+                disabled={runState === "stopping"}
+                title="Stops at the next step. A concept already being written finishes first."
+              >
+                {runState === "stopping" ? "Stopping…" : "Stop"}
+              </button>
+            )}
+            <button className="btn btn-ghost" onClick={reset}>
+              New brief
+            </button>
+          </div>
         )}
       </header>
 
@@ -189,11 +248,15 @@ export default function Page() {
                   </div>
                 )}
                 <div className="results-meta">
-                  {done
-                    ? `${written} concept${written === 1 ? "" : "s"}`
-                    : `${settled} of ${Math.max(expected, concepts.length)} written…`}
+                  {runState === "stopped"
+                    ? `Stopped · ${written} concept${written === 1 ? "" : "s"} written`
+                    : runState === "stopping"
+                      ? `Stopping after the current step… ${settled} of ${Math.max(expected, concepts.length)} written`
+                      : done
+                        ? `${written} concept${written === 1 ? "" : "s"}`
+                        : `${settled} of ${Math.max(expected, concepts.length)} written…`}
                   {writer && <> · written by <b>{writer}</b></>}
-                  {failed > 0 && <> · {failed} could not be written</>}
+                  {failed > 0 && runState !== "stopped" && <> · {failed} could not be written</>}
                 </div>
               </div>
             </div>

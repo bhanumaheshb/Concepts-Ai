@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { Session, isRunning, listSessions } from "../lib/api";
+import { Session, isRunning, isStopped, listSessions } from "../lib/api";
 
 /** Past runs, kept on disk by the backend so they outlive a restart.
  *  Numbered oldest-first, so Session 1 stays Session 1 as new runs arrive.
@@ -78,7 +78,9 @@ export function SessionList({
               <span className="session-meta">
                 {isRunning(s)
                   ? `${s.written} of ${s.k ?? s.concepts} written…`
-                  : `${s.concepts} concept${s.concepts === 1 ? "" : "s"}`}
+                  : isStopped(s)
+                    ? `Stopped · ${s.written} of ${s.k ?? s.concepts} written`
+                    : `${s.concepts} concept${s.concepts === 1 ? "" : "s"}`}
                 {s.started_at
                   ? ` · ${new Date(s.started_at * 1000).toLocaleDateString()}`
                   : ""}

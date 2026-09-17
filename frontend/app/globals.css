@@ -502,3 +502,6 @@ button, input, textarea, select { font: inherit; color: inherit; }
   cursor: pointer;
 }
 .combo-item.is-active { background: var(--accent-sft); color: var(--ink); }
+
+/* Stop: a quiet control until hovered; stopping is deliberate, not alarming. */
+.btn-stop:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }

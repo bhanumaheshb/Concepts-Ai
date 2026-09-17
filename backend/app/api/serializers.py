@@ -48,6 +48,10 @@ def concept_dna_rows(ont: Ontology, dna: ConceptDNA) -> list[dict[str, Any]]:
 def _synthesis_card(rec: ExplorationRecord, dna: ConceptDNA) -> dict[str, Any] | None:
     """Card-level synthesis fields. None when the synthesis layer is disabled."""
     sc = rec.structured.get(dna.concept_id)
+    if sc is None and rec.status == "CANCELLED" and dna.concept_id not in rec.synthesis_traces:
+        # settled, so the UI stops waiting for a concept nobody will write
+        return {"available": False, "error": "stopped before this concept was written",
+                "stopped": True}
     if sc is None:
         trace = rec.synthesis_traces.get(dna.concept_id)
         return {"available": False, "error": trace.error if trace else ""} if trace else None

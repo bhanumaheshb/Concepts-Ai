@@ -58,6 +58,10 @@ STAGES = [
 ]
 
 
+class RunCancelled(Exception):
+    """Raised at a stage boundary once the run's cancel flag is set."""
+
+
 @dataclass
 class ExplorationRecord:
     exploration_id: str
@@ -98,6 +102,12 @@ class ExplorationRecord:
     started_at: float = field(default_factory=time.time)
     finished_at: float | None = None
     error: str | None = None
+    # A threading.Event set by the API to stop the run. Checked at every stage boundary
+    # and between concepts; a model call already in flight is allowed to finish.
+    cancel: object | None = field(default=None, repr=False)
+
+    def cancelled(self) -> bool:
+        return bool(self.cancel is not None and self.cancel.is_set())
 
     def all_concepts(self) -> list[ConceptDNA]:
         return self.concepts + self.rejected
@@ -217,6 +227,8 @@ class Pipeline:
                 self.calls_before = rec.llm_calls
                 self.detail = ""
             def __enter__(self):
+                if self.rec.cancelled():
+                    raise RunCancelled(self.code)
                 self.t0 = time.perf_counter()
                 return self
             def __exit__(self, exc_type, exc, tb):
@@ -247,7 +259,7 @@ class Pipeline:
 
     # ---------- the run ----------
     def run(self, brief: DesignBrief, k: int, seed: int,
-            injection=None, trend_result=None) -> ExplorationRecord:
+            injection=None, trend_result=None, cancel=None) -> ExplorationRecord:
         """`injection` is the ONLY channel Reference Intelligence has (R-REF-01).
         With injection=None the pipeline is byte-identical to the pre-reference
         implementation for a given seed (R-REF-15)."""
@@ -257,7 +269,7 @@ class Pipeline:
             exploration_id=deterministic_id("ex", brief.brief_id, str(seed), str(k),
                                             *( [injection.injection_id] if injection else [] )),
             status="RUNNING", seed=seed, k=k, brief=brief, versions=versions,
-            injection=injection, trend_result=trend_result,
+            injection=injection, trend_result=trend_result, cancel=cancel,
         )
         elog.note("=" * 78)
         elog.note(f"RUN {rec.exploration_id}  k={k} seed={seed} "
@@ -587,6 +599,9 @@ class Pipeline:
                 forbidden = sorted(antibrief.surface_tokens_excluding(set()))
                 with self._stage(rec, "14b", "Creative synthesis") as st:
                     for dna in rec.concepts:
+                        if rec.cancelled():
+                            # stop between concepts: what is written is kept
+                            raise RunCancelled("14b")
                         refs = self._reference_statements(rec, dna)
                         result = self.synthesizer.synthesize(
                             dna=dna, brief=brief, program=program,
@@ -659,6 +674,10 @@ class Pipeline:
                 st.detail = f"{len(rec.concepts)} accepted + {len(rec.rejected)} rejected archived"
 
             rec.status = "COMPLETE"
+        except RunCancelled as where:
+            rec.status = "CANCELLED"
+            elog.warn(f"RUN CANCELLED {rec.exploration_id} at stage {where}: "
+                      f"{len(rec.concepts)} concepts, {len(rec.structured)} written")
         except Exception as exc:                      # pragma: no cover - surfaced to the API
             rec.status = "FAILED"
             rec.error = f"{type(exc).__name__}: {exc}"

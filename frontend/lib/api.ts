@@ -293,7 +293,19 @@ export function getKnowledge(): Promise<KnowledgeCatalogue> {
   return req("/api/semantics/knowledge");
 }
 
-export function getConcepts(id: string): Promise<{ concepts: Concept[] }> {
+/** A run that will not produce anything more, whether it finished or not. */
+export const isFinalStatus = (s: string | undefined) =>
+  s === "COMPLETE" || s === "FAILED" || s === "CANCELLED" || s === "INTERRUPTED";
+
+/** Stop a run. It stops at the next stage or between concepts, so it can take as long
+ *  as the model call already in progress. */
+export function cancelExploration(id: string): Promise<{ status: string }> {
+  return req(`/api/explorations/${id}/cancel`, { method: "POST" });
+}
+
+export function getConcepts(
+  id: string
+): Promise<{ concepts: Concept[]; status?: string; cancelling?: boolean }> {
   return req(`/api/explorations/${id}/concepts`);
 }
 
@@ -319,7 +331,8 @@ export type Session = {
 };
 
 /** A run still in flight. Its row keeps updating instead of waiting for the end. */
-export const isRunning = (s: Session) => s.status !== "COMPLETE" && s.status !== "FAILED";
+export const isRunning = (s: Session) => !isFinalStatus(s.status);
+export const isStopped = (s: Session) => s.status === "CANCELLED" || s.status === "INTERRUPTED";
 
 export function listSessions(): Promise<{ sessions: Session[] }> {
   return req("/api/sessions");
