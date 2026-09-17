@@ -210,6 +210,14 @@ class CreativeCognition:
         if outcome.status != "APPLIED" or outcome.genotype is None:
             self.memory.record(rec.model_copy(update={"rejection_reason": outcome.status}))
             return None
+        # Every cognitive operation claims to change how the space is conceived. An
+        # outcome that touched only the material palette changed what it is MADE of —
+        # the "stone courtyard / marble courtyard" failure — so it is not the operation
+        # it claims to be. This happens when e.g. DISTORT's attenuate finds the scale
+        # already minimal and falls through to a material swap.
+        if outcome.touched and set(outcome.touched) <= {"material_palette"}:
+            self.memory.record(rec.model_copy(update={"rejection_reason": "MATERIAL_ONLY"}))
+            return None
 
         # Measured with the SAME metric the allocator and Vendi use — cognition does
         # not get its own notion of distance. RECORDED, not gated: the metric is

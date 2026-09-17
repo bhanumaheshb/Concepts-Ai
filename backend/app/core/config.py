@@ -61,6 +61,12 @@ class Settings(BaseModel):
     # --- creative cognition (conceptual exploration layer) ---
     # OFF by default: enabling it adds candidates and LLM calls, so every
     # recorded baseline was captured with it disabled.
+    # Design Intelligence: a reasoning model reads the brief before the creative search.
+    # Off => the deterministic reading, which the trace labels as such.
+    semantic_reasoner_enabled: bool = False
+    # Visual Director refinement of the hero image by a reasoning model. Off by default:
+    # one call per concept is expensive on a local model and direction is complete without it.
+    visual_reasoner_enabled: bool = False
     creative_cognition_enabled: bool = False
     creative_cognition_budget: int = 8
     creative_max_mutations_per_candidate: int = 2
@@ -147,6 +153,8 @@ def get_settings() -> Settings:
         llm_timeout=float(e("LLM_TIMEOUT", "300")),
         llm_max_output_tokens=int(e("LLM_MAX_OUTPUT_TOKENS", "8192")),
         synthesis_repairs=int(e("SYNTHESIS_REPAIRS", "1")),
+        semantic_reasoner_enabled=_b("SEMANTIC_REASONER_ENABLED", False),
+        visual_reasoner_enabled=_b("VISUAL_REASONER_ENABLED", False),
         creative_cognition_enabled=_b("CREATIVE_COGNITION_ENABLED", False),
         creative_cognition_budget=int(e("CREATIVE_COGNITION_BUDGET", "8")),
         creative_max_mutations_per_candidate=int(e("CREATIVE_MAX_MUTATIONS_PER_CANDIDATE", "2")),

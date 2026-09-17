@@ -33,6 +33,9 @@ from app.providers.trend.search_backend import (
 )
 from app.providers.trend.web import WebSearchTrendProvider
 from app.references.service import ReferenceService
+from app.semantics.intelligence import DesignIntelligence
+from app.semantics.knowledge import load_knowledge
+from app.visual.director import VisualDirector
 from app.trends.service import TrendService
 
 
@@ -61,7 +64,15 @@ class Container:
                 configured=bool(synth.is_configured()),
                 missing=list(getattr(synth, "missing_settings", lambda: [])()),
             )
+        reasoner = getattr(self.pipeline.intelligence, "reasoner", None)
+        director = getattr(self.pipeline.visual_director, "reasoner", None)
         return {
+            "design_intelligence": {
+                "mode": "llm" if reasoner is not None else "deterministic",
+                "provider": getattr(reasoner, "name", None), "model": getattr(reasoner, "model", None),
+                "knowledge_version": load_knowledge().version},
+            "visual_director": {"mode": "llm-refined" if director is not None else "deterministic",
+                                "provider": getattr(director, "name", None)},
             "mock_mode": self.settings.mock_mode,
             "concept_writer": writer,
             "llm": {"name": self.llm.name, "configured": self.llm.is_configured()},
@@ -142,6 +153,27 @@ def build_synthesis_provider(settings, ont):
     return MockCreativeProvider(ont)
 
 
+def build_reasoning_model(settings):
+    """The single construction point for the reasoning model behind Design Intelligence
+    and the Visual Director. Any provider with an HttpLLM dialect serves it; the engine
+    only sees the StructuredGenerator protocol. None when no real model is configured,
+    which is a normal state: both stages then run deterministically and say so."""
+    if settings.llm_provider == "lmstudio":
+        from app.providers.llm import lmstudio
+        client = lmstudio.build_client(base_url=settings.llm_base_url, model=settings.llm_model,
+                                       api_key=settings.llm_api_key, timeout_s=settings.llm_timeout)
+    elif settings.llm_provider == "cloudflare":
+        from app.providers.llm import cloudflare
+        client = cloudflare.build_client(account_id=settings.cf_account_id,
+                                         api_token=settings.cf_api_token, model=settings.cf_model,
+                                         base_url=settings.cf_base_url, timeout_s=settings.llm_timeout)
+    else:
+        return None
+    from app.providers.llm.structured import HttpStructuredGenerator
+    return HttpStructuredGenerator(client, name=settings.llm_provider,
+                                   max_output_tokens=min(4096, settings.llm_max_output_tokens))
+
+
 def build_cognition(settings, ont):
     """The ONLY place a conceptual-mutation provider is constructed.
 
@@ -214,7 +246,12 @@ def get_container() -> Container:
             # are reproduced exactly; EMBEDDING_PROVIDER=mock turns it on.
             embeddings=(_build_embeddings(settings)
                         if settings.semantic_dedupe else None),
-            cognition=build_cognition(settings, ont)),
+            cognition=build_cognition(settings, ont),
+            intelligence=DesignIntelligence(
+                load_knowledge(),
+                reasoner=build_reasoning_model(settings) if settings.semantic_reasoner_enabled else None),
+            visual_director=VisualDirector(
+                ont, reasoner=build_reasoning_model(settings) if settings.visual_reasoner_enabled else None)),
         references=ReferenceService(ont, CuratedReferenceAnalyzer(ont)),
         trends=TrendService(ont, build_trend_provider(settings)),
     )

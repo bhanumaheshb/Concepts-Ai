@@ -71,10 +71,16 @@ def infer_programme(knowledge: Knowledge, profile: EventProfile, *,
             act = knowledge.activities.get(item.key)
             if act is None:
                 continue
+            grounded = any(i.provenance in (Provenance.USER_EXPLICIT, Provenance.DOMAIN_KNOWLEDGE)
+                           for i in profile.primary_activities)
             for spec in act.zones:
                 prio = spec.priority
                 if not primary and item.key not in explicit_activities and prio == "required":
                     prio = "recommended"
+                # a model's inference suggests a zone; only the brief or the knowledge
+                # base can make one part of the built programme
+                if item.provenance == Provenance.LLM_INFERENCE and grounded:
+                    prio = "optional"
                 b.add(_pz(spec, item.provenance,
                           f"implied by {act.label.lower()}", activity=act.key, priority=prio))
 
@@ -119,7 +125,8 @@ def infer_programme(knowledge: Knowledge, profile: EventProfile, *,
             b.drop(spec.key)
 
     # 6. universals — every occupied place is arrived at and moved through
-    roles = {z.role for z in b.zones.values()}
+    # only zones that will be built count: an optional suggestion is not an arrival
+    roles = {z.role for z in b.zones.values() if z.priority != "optional"}
     if "arrival" not in roles:
         b.add(ProgramZone(key="arrival", label="Arrival", role="arrival", area_share=0.05,
                           provenance=Provenance.DETERMINISTIC_RULE,

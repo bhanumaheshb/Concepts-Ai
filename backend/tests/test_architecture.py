@@ -11,6 +11,8 @@ ENGINE_PACKAGES = [
     "domain", "ontology", "diversity", "space", "niche", "genotype",
     "critics", "repair", "mutation", "scene", "prompt", "creative",
     "references",          # R-REF-18: inherits the isolation contract, is not exempt
+    "semantics", "visual",  # Design Intelligence and the Visual Director reach models
+                            # only through the StructuredGenerator protocol
 ]
 FORBIDDEN_PREFIXES = ("app.providers.image", "app.providers.llm", "app.providers.embeddings")
 

@@ -183,6 +183,8 @@ class HttpLLM:
             "seed": seed,
         }
         out = self._post(f"{self.base_url}/v1/chat/completions", payload)
+        # token accounting for the call record; absent on servers that do not report it
+        self.last_status = {**(self.last_status or {}), "usage": out.get("usage") or {}}
         try:
             choice = out["choices"][0]
             content = choice["message"]["content"]

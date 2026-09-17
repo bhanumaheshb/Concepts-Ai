@@ -471,3 +471,12 @@ button, input, textarea, select { font: inherit; color: inherit; }
   margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line);
   font-size: 12.5px; color: var(--ink-3);
 }
+
+/* Design Intelligence preview: what the engine understood before it designs. */
+.reading-head { font-size: 15px; color: var(--ink); margin-top: 4px; }
+.reading-head span { color: var(--ink-3); }
+.reading-tag {
+  display: inline-block; margin-left: 10px; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; color: var(--accent); border: 1px solid var(--line);
+}
+.reading-warn { color: var(--accent); }

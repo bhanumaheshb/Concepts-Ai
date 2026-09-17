@@ -144,20 +144,10 @@ export const REFERENCE_PRESETS = [
   { value: "ECHOES_OF", label: "Echoes of", hint: "A trace, barely legible." },
 ];
 
-export const EVENT_TYPES = [
-  { value: "SANGEETH", label: "Sangeeth" },
-  { value: "WEDDING", label: "Wedding ceremony" },
-  { value: "RECEPTION", label: "Reception" },
-  { value: "ENGAGEMENT", label: "Engagement" },
-  { value: "MEHENDI", label: "Mehendi" },
-  { value: "HALDI", label: "Haldi" },
-  { value: "GENERIC_EVENT", label: "Other event" },
-];
-
 // The ceremonial focus is not a dressing choice — a mandap, a nikah stage, an
 // altar and a palki differ in axis, enclosure and what must stay open to the sky.
 export const TRADITIONS = [
-  { value: "UNSPECIFIED", label: "Not specified" },
+  { value: "UNSPECIFIED", label: "Not stated" },
   { value: "HINDU", label: "Hindu", focus: "Mandap" },
   { value: "MUSLIM", label: "Muslim", focus: "Nikah stage" },
   { value: "CHRISTIAN", label: "Christian", focus: "Altar" },
@@ -173,9 +163,6 @@ export const VENUE_TYPES = [
   { value: "BEACH", label: "Beach" },
 ];
 
-/** Events whose focal area the tradition decides. Others ignore it. */
-export const CEREMONIAL_EVENTS = ["WEDDING", "ENGAGEMENT"];
-
 export const TREND_MODES = [
   { value: "CURRENT_INSPIRATION", label: "Current inspiration" },
   { value: "TRENDING_NOW", label: "Trending now" },
@@ -185,6 +172,7 @@ export const TREND_MODES = [
 ];
 
 export const PROJECT_TYPES = [
+  { value: "", label: "Detect from the brief" },
   { value: "WEDDING_MANDAP", label: "Wedding / Mandap" },
   { value: "EVENT_STAGE", label: "Event stage" },
   { value: "RESTAURANT", label: "Restaurant" },
@@ -198,8 +186,8 @@ export function createExploration(input: BriefInput): Promise<Exploration> {
   const body: Record<string, unknown> = {
     brief: input.brief,
     project_type: input.project_type || undefined,
-    event_type: input.event_type || undefined,
-    tradition: input.tradition || undefined,
+    event_type: input.event_type?.trim() || undefined,
+    tradition: input.tradition && input.tradition !== "UNSPECIFIED" ? input.tradition : undefined,
     venue_type: input.venue_type || undefined,
     location: input.location || undefined,
     dimensions: input.dimensions || undefined,
@@ -221,6 +209,79 @@ export function createExploration(input: BriefInput): Promise<Exploration> {
     method: "POST",
     body: JSON.stringify(body),
   });
+}
+
+/* ── design intelligence ─────────────────────────────────────────── */
+
+export type SemanticZone = {
+  key: string;
+  label: string;
+  role: string;
+  priority: "required" | "recommended" | "optional";
+  provenance: string;
+  rationale: string;
+};
+
+export type SemanticElement = {
+  key: string;
+  label: string;
+  status: "REQUIRED" | "RECOMMENDED" | "OPTIONAL" | "FORBIDDEN" | "CONTEXTUAL";
+  provenance: string;
+  rationale: string;
+  rule: string;
+};
+
+/** What the engine understood the brief to be, before any design was explored. */
+export type SemanticReading = {
+  profile: {
+    identity: {
+      event_type: string;
+      event_type_label: string;
+      event_family: string | null;
+      tradition: string | null;
+      known_type: boolean;
+      provenance: string;
+    };
+    primary_activities: { key: string; label: string; provenance: string }[];
+    audience_relationship: string;
+    focal_relationship: string;
+    elements: SemanticElement[];
+  };
+  intent: {
+    primary_focus: string;
+    must_communicate: string[];
+    avoid: string[];
+    uncertainties: string[];
+  };
+  programme: SemanticZone[];
+  reasoner: { source: string; model: string; error: string | null };
+};
+
+export function interpretBrief(input: {
+  brief: string;
+  event_type?: string;
+  tradition?: string;
+  project_type?: string;
+}): Promise<SemanticReading> {
+  return req("/api/semantics/interpret", {
+    method: "POST",
+    body: JSON.stringify({
+      brief: input.brief,
+      event_type: input.event_type || undefined,
+      tradition: input.tradition || undefined,
+      project_type: input.project_type || undefined,
+    }),
+  });
+}
+
+export type KnowledgeCatalogue = {
+  version: string;
+  event_types: { key: string; label: string; family: string; traditions: string[] }[];
+  traditions: Record<string, string>;
+};
+
+export function getKnowledge(): Promise<KnowledgeCatalogue> {
+  return req("/api/semantics/knowledge");
 }
 
 export function getConcepts(id: string): Promise<{ concepts: Concept[] }> {

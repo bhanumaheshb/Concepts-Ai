@@ -197,20 +197,25 @@ class DesignIntelligence:
                 confidence=0.95 if g["event_prov"] == Provenance.USER_EXPLICIT else 0.7,
                 venue_type=_venue(brief))
         else:
-            label = (reading.event_type_label.strip() if reading and reading.event_type_label
-                     else g["unknown_label"]) or "Unspecified brief"
-            fam = slugify(reading.event_family) if reading and reading.event_family else None
-            if fam and fam not in k.families:
-                uncertain.append(f"proposed family '{fam}' is not in the knowledge base")
+            # The user's own name for an unknown event outranks a model's paraphrase of
+            # it. The paraphrase is kept as the subtype, where it informs without replacing.
+            own = g["unknown_label"] if g["unknown_label"] not in ("", "unspecified brief") else ""
+            model_label = reading.event_type_label.strip() if reading and reading.event_type_label else ""
+            label = own or model_label or "Unspecified brief"
+            fam = _known_family(k, reading.event_family) if reading and reading.event_family else None
+            if reading and reading.event_family and fam is None:
+                uncertain.append(f"proposed family '{reading.event_family[:60]}' is not in the "
+                                 "knowledge base; no family assumed")
             domain = slugify(reading.domain) if reading and reading.domain else "event"
             identity = EventIdentity(
                 domain=domain if domain in ("event", "interior", "architecture", "installation",
                                             "landscape") else "event",
                 event_family=fam, event_type=slugify(label), event_type_label=label[:1].upper() + label[1:],
-                subtype=(reading.subtype or None) if reading else None,
+                subtype=((reading.subtype or (model_label if model_label and model_label != label else ""))
+                         or None) if reading else None,
                 tradition=g["tradition"], culture=brief.location, known_type=False,
-                provenance=(Provenance.LLM_INFERENCE if reading and reading.event_type_label
-                            else g["event_prov"]),
+                provenance=(g["event_prov"] if own else
+                            Provenance.LLM_INFERENCE if model_label else g["event_prov"]),
                 confidence=0.6 if reading else 0.4, venue_type=_venue(brief))
             if not reading:
                 uncertain.append("event type not in the knowledge base; programme inferred "
@@ -305,6 +310,14 @@ class DesignIntelligence:
                             else status, Provenance.LLM_INFERENCE, "inferred by the reasoning model")
             for phrase in reading.forbidden_elements:
                 for m in k.element_index.find(phrase):
+                    el = k.elements[m.key]
+                    implied = el.zone is not None and any(
+                        el.zone.key == z.key for i in primary + secondary if i.key in k.activities
+                        for z in k.activities[i.key].zones)
+                    if implied:
+                        overridden.append(f"forbidding '{m.key}' rejected: the brief's own "
+                                          "activities require it")
+                        continue
                     if m.key not in g["requested"] and m.key not in elements:
                         put(m.key, ElementStatus.FORBIDDEN, Provenance.LLM_INFERENCE,
                             "the reasoning model judged it foreign to this event")
@@ -380,8 +393,18 @@ class DesignIntelligence:
         # ---- programme
         llm_zones: list[ProgramZone] = []
         if reading:
+            existing = _zone_stems_for(k, profile)
             for zp in reading.zones:
+                if len(llm_zones) >= MAX_MODEL_ZONES:
+                    overridden.append(f"zone '{zp.key}' rejected: model zone cap ({MAX_MODEL_ZONES}) reached")
+                    break
                 key = slugify(zp.key or zp.label)
+                stems = _stems(f"{zp.key} {zp.label}")
+                if stems and stems & existing:
+                    overridden.append(f"zone '{key}' rejected: duplicates an existing zone "
+                                      f"({', '.join(sorted(stems & existing))})")
+                    continue
+                existing |= stems
                 role = zp.role if zp.role in ZONE_ROLES else "social"
                 leaks = find_leaks(k, profile, f"{zp.key.replace('_', ' ')} {zp.label}", "zone")
                 if leaks:
@@ -428,7 +451,10 @@ class DesignIntelligence:
                 and "neighbouring" in e.rationale]
         near += [e.label for e in profile.elements if e.status == ElementStatus.FORBIDDEN
                  and e.provenance == Provenance.USER_EXPLICIT]
-        avoid = _uniq(near + (clean(reading.avoid, "avoid") if reading else []))[:24]
+        # `avoid` is a list of prohibitions, so naming a forbidden element there is the
+        # point, not a leak; it is length-limited but not leak-checked
+        model_avoid = [" ".join(str(s).split())[:160] for s in (reading.avoid if reading else []) if s]
+        avoid = _uniq(near + model_avoid)[:24]
         if identity.tradition is None and et and et.traditions:
             uncertain.append("tradition not stated: no rite-specific elements were assumed")
         intent = DesignIntent(
@@ -479,6 +505,42 @@ def _primary_zone(k: Knowledge, programme, profile: EventProfile, et, tb):
         if z:
             return z
     return max(programme, key=lambda z: z.area_share, default=None)
+
+
+MAX_MODEL_ZONES = 4
+# words that describe any zone and so cannot tell two zones apart
+_GENERIC_ZONE_WORDS = {"zone", "zones", "area", "areas", "space", "spaces", "position",
+                       "field", "station", "stations", "point", "corner", "room", "main",
+                       "the", "and", "for", "of", "with", "guest", "guests", "general"}
+
+
+def _stems(text: str) -> set[str]:
+    words = re.findall(r"[a-z]+", text.lower().replace("_", " "))
+    return {w[:6] for w in words if w not in _GENERIC_ZONE_WORDS and len(w) > 2}
+
+
+def _zone_stems_for(k: Knowledge, profile: EventProfile) -> set[str]:
+    """Stems of every zone the activities and elements already imply."""
+    out: set[str] = set()
+    for item in profile.primary_activities + profile.secondary_activities:
+        act = k.activities.get(item.key)
+        for spec in (act.zones if act else ()):
+            out |= _stems(f"{spec.key} {spec.label}")
+        out |= _stems(item.key)
+    for e in profile.elements:
+        el = k.elements.get(e.key)
+        if el and el.zone and e.status != ElementStatus.FORBIDDEN:
+            out |= _stems(f"{el.zone.key} {el.zone.label}")
+    return out
+
+
+def _known_family(k: Knowledge, raw: str) -> str | None:
+    """A model may answer with several families run together. Take the first known one."""
+    slug = slugify(raw)
+    if slug in k.families:
+        return slug
+    hits = sorted((slug.find(f), f) for f in k.families if f in slug)
+    return hits[0][1] if hits else None
 
 
 class _Cleaner:

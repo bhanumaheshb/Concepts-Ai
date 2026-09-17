@@ -2,20 +2,21 @@
 import { useEffect, useState } from "react";
 import {
   BriefInput,
-  CEREMONIAL_EVENTS,
-  EVENT_TYPES,
+  getKnowledge,
+  interpretBrief,
   PROJECT_TYPES,
   ReferenceHit,
   searchReferences,
+  SemanticReading,
   TRADITIONS,
   TREND_MODES,
   VENUE_TYPES,
 } from "../lib/api";
 
 const SAMPLES = [
-  "A 500-person luxury Sangeeth mandap with a dance floor and a bar counter, Jaipur.",
-  "A 40-cover restaurant with an open kitchen and a long bar, in a converted warehouse.",
-  "A garden pavilion for 150 guests that can be struck in a day.",
+  "A 500-person luxury Sangeet in Jaipur with a large dance floor, a live performance stage and a bar.",
+  "A minimalist technology product launch for 300 guests.",
+  "An immersive astronomy storytelling night for 350 people with projection surfaces, live narration and informal seating.",
 ];
 
 export function BriefForm({
@@ -26,9 +27,13 @@ export function BriefForm({
   busy: boolean;
 }) {
   const [brief, setBrief] = useState("");
-  const [projectType, setProjectType] = useState("WEDDING_MANDAP");
-  const [eventType, setEventType] = useState("SANGEETH");
+  // Nothing is pre-selected. A default here used to be sent as an explicit choice,
+  // which turned every brief — a concert, a Haldi — into a Sangeet in a mandap.
+  const [projectType, setProjectType] = useState("");
+  const [eventType, setEventType] = useState("");
   const [tradition, setTradition] = useState("UNSPECIFIED");
+  const [known, setKnown] = useState<{ key: string; label: string }[]>([]);
+  const [reading, setReading] = useState<SemanticReading | null>(null);
   const [venueType, setVenueType] = useState("CONVENTION_SPACE");
   const [location, setLocation] = useState("");
   const [dimensions, setDimensions] = useState("");
@@ -63,31 +68,41 @@ export function BriefForm({
     setRefHits([]);
   };
 
+  useEffect(() => {
+    getKnowledge()
+      .then((k) => setKnown(k.event_types.map((e) => ({ key: e.key, label: e.label }))))
+      .catch(() => setKnown([]));
+  }, []);
+
+  // Live reading of the brief: what the engine understands before it designs anything.
+  // Deterministic and fast, so it can follow typing.
+  useEffect(() => {
+    const text = brief.trim();
+    if (text.length < 8) {
+      setReading(null);
+      return;
+    }
+    let live = true;
+    const t = setTimeout(() => {
+      interpretBrief({ brief: text, event_type: eventType, tradition, project_type: projectType })
+        .then((r) => live && setReading(r))
+        .catch(() => live && setReading(null));
+    }, 450);
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+  }, [brief, eventType, tradition, projectType]);
+
   const ready = brief.trim().length >= 8;
-
-  // Tradition only changes anything for a ceremony: it picks the focal element.
-  // For a sangeeth or a reception the stage is the focus whatever the tradition.
-  const ceremonial = CEREMONIAL_EVENTS.includes(eventType);
+  const ident = reading?.profile.identity;
+  const zones = (reading?.programme || []).filter((z) => z.priority !== "optional");
+  const excluded = (reading?.profile.elements || []).filter(
+    (e) =>
+      e.status === "FORBIDDEN" &&
+      (e.provenance === "USER_EXPLICIT" || e.rationale.includes("neighbouring"))
+  );
   const focus = TRADITIONS.find((t) => t.value === tradition)?.focus;
-
-  // The areas the engine will photograph, mirroring EVENT_CATALOGUE on the server.
-  const areas = (() => {
-    const base = ["Entrance facade", "Pathway"];
-    const tail = ["Seating", "Lounge", "Bar counter", "Side wall ambience"];
-    if (ceremonial) return [...base, focus || "Ceremony focus", ...tail];
-    if (eventType === "MEHENDI" || eventType === "HALDI")
-      return [...base, "Seating", "Lounge", "Side wall ambience"];
-    if (eventType === "GENERIC_EVENT") return [];
-    return [
-      ...base,
-      "Performance stage",
-      "Seating",
-      ...(eventType === "SANGEETH" ? ["Dance floor"] : []),
-      "Lounge",
-      "Bar counter",
-      "Side wall ambience",
-    ];
-  })();
 
   return (
     <div className="stage">
@@ -103,7 +118,7 @@ export function BriefForm({
           id="brief"
           className="textarea"
           value={brief}
-          placeholder="e.g. A 500-person luxury Sangeeth mandap with a dance floor and a bar counter…"
+          placeholder="e.g. A 500-person Sangeet in Jaipur with a dance floor, a performance stage and a bar…"
           onChange={(e) => setBrief(e.target.value)}
         />
         <div style={{ marginTop: 8, display: "flex", gap: 14, flexWrap: "wrap" }}>
@@ -133,18 +148,19 @@ export function BriefForm({
         </div>
         <div className="field">
           <label htmlFor="etype">What is the event</label>
-          <select
+          <input
             id="etype"
-            className="select"
+            className="input"
+            list="event-suggestions"
             value={eventType}
+            placeholder="Detected from the brief — or type any event"
             onChange={(e) => setEventType(e.target.value)}
-          >
-            {EVENT_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
+          />
+          <datalist id="event-suggestions">
+            {known.map((e) => (
+              <option key={e.key} value={e.label} />
             ))}
-          </select>
+          </datalist>
         </div>
       </div>
 
@@ -155,7 +171,6 @@ export function BriefForm({
             id="tradition"
             className="select"
             value={tradition}
-            disabled={!ceremonial}
             onChange={(e) => setTradition(e.target.value)}
           >
             {TRADITIONS.map((t) => (
@@ -165,11 +180,9 @@ export function BriefForm({
             ))}
           </select>
           <div className="field-hint">
-            {ceremonial
-              ? focus
-                ? `The ceremony is built around a ${focus.toLowerCase()}.`
-                : "Sets the ceremonial focus of the space."
-              : "Only applies to a ceremony — this event is built around a stage."}
+            {focus
+              ? `Used only where the event has a rite: a ceremony is then built around a ${focus.toLowerCase()}.`
+              : "Never assumed. Rite-specific elements appear only when a tradition is stated."}
           </div>
         </div>
         <div className="field">
@@ -212,19 +225,44 @@ export function BriefForm({
         </div>
       </div>
 
-      {areas.length > 0 && (
-        <div className="field">
-          <label>Each concept will be drawn for</label>
-          <div className="chips" style={{ marginTop: 6 }}>
-            {areas.map((a) => (
-              <span key={a} className="chip" aria-disabled>
-                {a}
+      {ident && (
+        <div className="field reading">
+          <label>Understood as</label>
+          <div className="reading-head">
+            <strong>{ident.event_type_label}</strong>
+            {ident.event_family && <span> · {ident.event_family.replace(/_/g, " ")}</span>}
+            {ident.tradition && <span> · {ident.tradition}</span>}
+            {!ident.known_type && <span className="reading-tag">new event — inferred from its activities</span>}
+          </div>
+          {reading?.intent.primary_focus && (
+            <div className="field-hint">
+              Organised around the {reading.intent.primary_focus.toLowerCase()}
+              {reading.profile.audience_relationship !== "none" &&
+                ` · attention is ${reading.profile.audience_relationship}`}
+            </div>
+          )}
+          <div className="chips" style={{ marginTop: 8 }}>
+            {zones.map((z) => (
+              <span
+                key={z.key}
+                className="chip"
+                aria-disabled
+                title={`${z.priority} · ${z.provenance.toLowerCase().replace(/_/g, " ")} · ${z.rationale}`}
+              >
+                {z.label}
               </span>
             ))}
           </div>
-          <div className="field-hint">
-            Optional areas appear only when your brief mentions them.
-          </div>
+          {excluded.length > 0 && (
+            <div className="field-hint" style={{ marginTop: 8 }}>
+              Will not contain: {excluded.map((e) => e.label.toLowerCase()).join(", ")}
+            </div>
+          )}
+          {(reading?.intent.uncertainties || []).slice(0, 2).map((u) => (
+            <div key={u} className="field-hint reading-warn">
+              {u}
+            </div>
+          ))}
         </div>
       )}
 
@@ -332,9 +370,9 @@ export function BriefForm({
           onClick={() =>
             onSubmit({
               brief: brief.trim(),
-              project_type: projectType,
-              event_type: eventType,
-              tradition: ceremonial ? tradition : undefined,
+              project_type: projectType || undefined,
+              event_type: eventType || undefined,
+              tradition,
               venue_type: venueType,
               location: location.trim(),
               dimensions: dimensions.trim(),

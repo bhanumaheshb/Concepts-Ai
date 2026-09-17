@@ -9,7 +9,9 @@ import {
   Concept,
   createExploration,
   getConcepts,
+  getExploration,
   getSession,
+  SemanticReading,
   hasFailed,
   isSettled,
   isWritten,
@@ -32,7 +34,11 @@ export default function Page() {
   // How many concepts this run will produce. Known from the POST response, so
   // the grid can show that many placeholders before the first one lands.
   const [expected, setExpected] = useState(0);
+  // What the engine designed this run AS. Read from the run itself, so it shows what
+  // was actually used (including a reasoning model's contribution), not a re-guess.
+  const [semantic, setSemantic] = useState<SemanticReading | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const semanticFor = useRef<string | null>(null);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
@@ -49,6 +55,13 @@ export default function Page() {
         if (list.length) {
           setConcepts(list);
           setPhase("results");
+          if (semanticFor.current !== id) {
+            // the reading never changes during a run, so fetch it once, not every poll
+            semanticFor.current = id;
+            getExploration(id)
+              .then((ex) => ex.semantic && setSemantic(ex.semantic as SemanticReading))
+              .catch(() => { semanticFor.current = null; });
+          }
         }
         // A card is finished when it is written OR has failed. Waiting on
         // `synthesis` alone would poll forever whenever the model is unreachable.
@@ -71,6 +84,7 @@ export default function Page() {
     (input: BriefInput) => {
       setError("");
       setConcepts([]);
+      setSemantic(null);
       setDone(false);
         setBrief(input.brief);
       createExploration(input)
@@ -97,6 +111,7 @@ export default function Page() {
         .then((ex) => {
           const list: Concept[] = ex.concepts || [];
           setConcepts(list);
+          setSemantic((ex.semantic as SemanticReading) || null);
           setBrief(ex.brief?.raw_text || ex.brief?.text || "");
           setSessionId(id);
           setExpected(ex.k ?? list.length);
@@ -162,6 +177,17 @@ export default function Page() {
             <div className="results-head">
               <div>
                 <div className="results-brief">{brief}</div>
+                {semantic && (
+                  <div className="results-meta">
+                    Designed as <b>{semantic.profile.identity.event_type_label}</b>
+                    {semantic.profile.identity.event_family &&
+                      ` · ${semantic.profile.identity.event_family.replace(/_/g, " ")}`}
+                    {semantic.intent.primary_focus &&
+                      ` · around the ${semantic.intent.primary_focus.toLowerCase()}`}
+                    {semantic.reasoner.source !== "DETERMINISTIC" && semantic.reasoner.model &&
+                      ` · read by ${semantic.reasoner.model}`}
+                  </div>
+                )}
                 <div className="results-meta">
                   {done
                     ? `${written} concept${written === 1 ? "" : "s"}`

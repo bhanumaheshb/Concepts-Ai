@@ -124,6 +124,8 @@ def concept_summary(ont: Ontology, rec: ExplorationRecord, dna: ConceptDNA) -> d
             "coherence": {"score": ev.coherence.score, "pass": ev.coherence.passed} if ev else None,
             "feasibility": {"score": ev.feasibility.score, "pass": ev.feasibility.passed} if ev else None,
             "cultural": {"score": ev.cultural.score, "pass": ev.cultural.passed} if ev else None,
+            "semantic": ({"score": ev.semantic.score, "pass": ev.semantic.passed}
+                         if ev and ev.semantic else None),
             "gate_passed": ev.gate_passed if ev else False,
         },
         "reference": _reference_summary(ont, rec, dna),
@@ -196,6 +198,9 @@ def concept_detail(ont: Ontology, rec: ExplorationRecord, dna: ConceptDNA) -> di
                          for v in rec.view_prompts.get(dna.concept_id, [])],
         "validation": (rec.validations[dna.concept_id].model_dump(mode="json")
                        if dna.concept_id in rec.validations else None),
+        # What each image must communicate, decided before any prompt was written.
+        "visual_intents": [v.model_dump(mode="json")
+                           for v in rec.visual_intents.get(dna.concept_id, [])],
         "findings": [
             {"critic": r.critic.value, "code": f.code, "severity": f.severity.value,
              "statement": f.statement,
@@ -224,6 +229,9 @@ def exploration_payload(ont: Ontology, rec: ExplorationRecord) -> dict[str, Any]
         "started_at": rec.started_at,
         "brief": rec.brief.model_dump(mode="json"),
         "stages": rec.stage_status(),
+        # What the engine understood the brief to be, with a source for every decision.
+        "semantic": (rec.semantic.model_dump(mode="json") if rec.semantic is not None else None),
+        "llm_trace": [c.model_dump(mode="json") for c in rec.llm_trace],
         "degraded": rec.degraded,
         "llm_calls": rec.llm_calls,
         "elapsed_ms": int(((rec.finished_at or 0) - rec.started_at) * 1000) if rec.finished_at else None,

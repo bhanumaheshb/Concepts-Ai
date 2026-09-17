@@ -54,7 +54,9 @@ class BriefRequest(BaseModel):
     brief: str = Field(min_length=4)
     # What is happening, in whose tradition, in what kind of venue. All optional:
     # omitting them reproduces the pre-existing behaviour exactly.
-    event_type: str | None = None       # SANGEETH | WEDDING | RECEPTION | MEHENDI | ...
+    # Free text. A known value resolves against the knowledge base; anything else is
+    # kept as the event's own name and programmed from its activities.
+    event_type: str | None = None
     tradition: str | None = None        # HINDU | MUSLIM | CHRISTIAN | SIKH | SECULAR
     venue_type: str | None = None       # CONVENTION_SPACE (default) | LAWN | ...
     location: str | None = None
@@ -122,6 +124,95 @@ def config() -> dict:
     }
 
 
+class InterpretRequest(BaseModel):
+    brief: str = Field(min_length=4)
+    event_type: str | None = None
+    tradition: str | None = None
+    project_type: str | None = None
+    use_model: bool = False      # the reasoning model is slow on a local server; opt in
+
+
+@router.post("/semantics/interpret")
+def interpret(req: InterpretRequest) -> dict:
+    """Design Intelligence on its own: what the engine understands a brief to be,
+    without running the creative search. Deterministic unless `use_model` is set."""
+    from app.creative.program import estimate_capacity
+    from app.semantics.intelligence import DesignIntelligence
+    c = get_container()
+    try:
+        typology = Typology(req.project_type) if req.project_type else Typology.GENERIC_SPATIAL
+    except ValueError:
+        typology = Typology.GENERIC_SPATIAL
+    try:
+        tradition = Tradition(req.tradition) if req.tradition else Tradition.UNSPECIFIED
+    except ValueError:
+        tradition = Tradition.UNSPECIFIED
+    brief = DesignBrief(brief_id=new_id("bf"), raw_text=req.brief, typology=typology,
+                        event_type_text=(req.event_type or "").strip() or None,
+                        tradition=tradition)
+    intelligence = c.pipeline.intelligence if req.use_model else DesignIntelligence(
+        c.pipeline.intelligence.k)
+    sb = intelligence.understand(brief, capacity=estimate_capacity(brief))
+    return sb.model_dump(mode="json")
+
+
+@router.get("/semantics/knowledge")
+def knowledge_catalogue() -> dict:
+    """What the knowledge base knows. Unknown events are still accepted."""
+    from app.semantics.knowledge import load_knowledge
+    k = load_knowledge()
+    return {
+        "version": k.version,
+        "families": {key: f.label for key, f in k.families.items()},
+        "event_types": [{"key": e.key, "label": e.label, "family": e.family,
+                         "traditions": sorted(e.traditions)} for e in k.event_types.values()],
+        "activities": {key: a.label for key, a in k.activities.items()},
+        "traditions": {key: t.label for key, t in k.traditions.items()},
+    }
+
+
+@router.get("/explorations/{exploration_id}/why/{element}")
+def why(exploration_id: str, element: str) -> dict:
+    """Provenance for one decision: "why did the system add (or forbid) a mandap?"
+
+    Answers from the stored trace only — the semantic reading, the programme, the
+    invariants, the critic findings and the final prompts — never by re-running."""
+    from app.semantics.knowledge import load_knowledge
+    rec = _record_or_404(exploration_id)
+    sem = rec.semantic
+    if sem is None:
+        raise HTTPException(409, "this exploration predates semantic tracing")
+    k = load_knowledge()
+    hits = k.element_index.find(element.replace("_", " "))
+    key = hits[0].key if hits else element
+    el = sem.profile.element(key)
+    zones = [z.model_dump(mode="json") for z in sem.programme
+             if z.key == key or (k.elements.get(key) and k.elements[key].zone
+                                 and k.elements[key].zone.key == z.key)]
+    mentions = []
+    for cid, p in rec.arch_prompts.items():
+        found = [m.phrase for m in k.element_index.find(p.positive_prompt)
+                 if m.key == key and not m.negated]
+        if found:
+            mentions.append({"concept_id": cid, "phrases": sorted(set(found))})
+    findings = [
+        {"concept_id": c.concept_id, "code": f.code, "statement": f.statement}
+        for c in rec.all_concepts() if c.evaluation
+        for f in c.evaluation.all_findings() if key in f.statement.lower().replace(" ", "_")
+        or any(key in (e.excerpt or "").lower().replace(" ", "_") for e in f.evidence)
+    ]
+    return {
+        "element": key,
+        "decision": el.model_dump(mode="json") if el else None,
+        "neutral": el is None,
+        "explicitly_requested": key in sem.explicit_requests,
+        "programme_zones": zones,
+        "in_final_prompts": mentions,
+        "critic_findings": findings,
+        "reasoner_overrides": [o for o in sem.reasoner.overridden if key in o],
+    }
+
+
 @router.post("/explorations", status_code=202)
 def create_exploration(req: BriefRequest, background: BackgroundTasks) -> dict:
     c = get_container()
@@ -145,6 +236,7 @@ def create_exploration(req: BriefRequest, background: BackgroundTasks) -> dict:
         raw_text=" ".join(filter(None, [req.brief, req.constraints])),
         typology=typology,
         event_type=_enum(EventType, req.event_type, EventType.GENERIC_EVENT),
+        event_type_text=(req.event_type or "").strip() or None,
         tradition=_enum(Tradition, req.tradition, Tradition.UNSPECIFIED),
         venue_type=_enum(VenueType, req.venue_type, VenueType.UNSPECIFIED),
         location=req.location, dimensions_text=req.dimensions,
