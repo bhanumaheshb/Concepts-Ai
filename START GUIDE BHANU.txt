@@ -70,6 +70,8 @@ OSError [Errno 22] / "Permission denied" reading a project file
     DEFAULT_K                    10            (number of concepts)
     CREATIVE_COGNITION_ENABLED   true
     CREATIVE_COGNITION_BUDGET    8
+    SEMANTIC_REASONER_ENABLED    true          LM Studio reads the brief first (1 call, ~1 min)
+    VISUAL_REASONER_ENABLED      false         true = 1 extra call PER CONCEPT for image direction
 
 To change how many concepts are generated, edit DEFAULT_K in backend\.env
 AND the fallback in frontend\lib\api.ts (search for: input.k ?? 10).
@@ -77,6 +79,29 @@ AND the fallback in frontend\lib\api.ts (search for: input.k ?? 10).
 To switch the creative cognition layer OFF, comment out
 CREATIVE_COGNITION_ENABLED and restart the backend. The pipeline then behaves
 exactly as it did before that layer existed.
+
+
+--------------------------------------------------------------------------------
+  HOW THE ENGINE UNDERSTANDS A BRIEF   (Design Intelligence)
+--------------------------------------------------------------------------------
+
+The engine now reads WHAT the brief is before designing anything. The form
+pre-selects nothing: leave "Type of space" and "What is the event" empty and the
+brief is read as written. You can type ANY event name - "Poetry night",
+"Astronomy storytelling night" - it does not need to be in a list.
+
+While you type, the form shows "Understood as": the event, what it is organised
+around, the zones it needs, and what it will NOT contain (a Sangeet: no mandap,
+no ritual fire, no priest platform).
+
+Adding a new event type or ritual element is DATA, not code:
+
+    backend\app\semantics\knowledge\v1\events.yaml       event types + families
+    backend\app\semantics\knowledge\v1\activities.yaml   activity -> zones
+    backend\app\semantics\knowledge\v1\elements.yaml     elements + where they belong
+
+An event not in events.yaml still works: its programme is inferred from the
+activities the brief mentions (projection, narration, dining, runway...).
 
 
 --------------------------------------------------------------------------------
@@ -88,22 +113,19 @@ LM Studio, which takes roughly 2.5 minutes PER CONCEPT on a local model.
 At k=10 that is around 25 MINUTES for a full run. Lower DEFAULT_K while you
 are iterating.
 
-In the backend terminal you will see the stage trace, including two stages
-added by the creative cognition layer:
+In the backend terminal you will see the stage trace:
 
+    01   Design intelligence    Sangeet [sangeet] via merged: 12 zones, 15 forbidden
+         SEMANTIC INTERPRETATION block: event, activities, PROGRAMME, forbidden
+    04   Search space           ... (5 out of semantic scope), 5 semantic priors
     08   Phenotype synthesis    16 phenotypes
     08c  Creative cognition     +8 concepts from 8 operations
     09   Critics                24/24 passed all four gates
     09c  Creative evolution     +0 evolved from critic findings
     11   Diversity evaluation   vendi=... min=...
     12   Portfolio selection    10 selected, curriculum satisfied
-
-KNOWN ISSUE - the concept cards stay on "Writing this concept..."
-This is a frontend bug, not a failure. The concepts and all their image
-prompts reach the API well before the browser shows them. You can read them
-directly while you wait:
-
-    curl http://localhost:8001/api/explorations
+    14b  Creative synthesis     LM Studio writes each concept
+    14c  Visual direction       what each image must show, then the prompts
 
 
 --------------------------------------------------------------------------------
@@ -121,6 +143,11 @@ directly while you wait:
     /api/explorations/{id}/synthesis-debug           per-concept model chain
     /api/concepts/{id}/prompt                        the 21-section prompt
 
+    /api/semantics/knowledge                         every known event/activity
+    POST /api/semantics/interpret  {"brief": "..."}  what a brief is understood as
+    /api/explorations/{id}/why/mandap                why an element was added,
+                                                     forbidden, or kept out
+
 
 --------------------------------------------------------------------------------
   RUNNING THE TESTS
@@ -134,9 +161,11 @@ Just the creative cognition layer (about 25 seconds):
 
     C:\dev\concepts-ai\backend\.venv\Scripts\python.exe -m pytest tests/test_creative_cognition.py -q
 
-Expected: 399 passed, 1 failed.
-The single failure (test_canonical_is_the_literal_interpretation) is a known
-pre-existing order-dependent test. It fails on the original commit too.
+Just the semantic layer (about 15 seconds):
+
+    C:\dev\concepts-ai\backend\.venv\Scripts\python.exe -m pytest tests/test_semantics.py tests/test_semantic_isolation.py tests/test_structured_reasoning.py -q
+
+Tests never touch LM Studio and never write into your Sessions history.
 
 
 --------------------------------------------------------------------------------

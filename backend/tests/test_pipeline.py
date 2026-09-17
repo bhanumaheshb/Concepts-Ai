@@ -115,5 +115,6 @@ def test_scene_graphs_are_dimensioned(engine):
 
 def test_pipeline_records_every_stage(engine):
     rec = _run(engine, "stages", BRIEFS[0][1], BRIEFS[0][2], 42)
-    assert len(rec.stage_runs) == 15
+    # 15 original stages + 14c Visual direction (08c/09c/14b appear only when enabled)
+    assert len(rec.stage_runs) == 16
     assert all(s.status == "OK" for s in rec.stage_runs)

@@ -43,7 +43,11 @@ def shot(container):
 def test_a_concept_produces_a_prompt_for_each_area(shot):
     _, _, _, sets = shot
     keys = [v.view_key for v in sets[0][2]]
-    for expected in ("entrance", "walkway", "mandap", "seating"):
+    # The shot list is the programme. The brief asked for a mandap, so the ceremony
+    # focus is in it — labelled Mandap — alongside what makes this a Sangeet.
+    labels = {v.view_key: v.view_label for v in sets[0][2]}
+    assert labels.get("ceremony_focus") == "Mandap", labels
+    for expected in ("arrival", "circulation", "performance_stage"):
         assert expected in keys, f"no prompt for {expected}: got {keys}"
 
 
@@ -156,7 +160,9 @@ def test_an_optional_area_the_concept_never_mentions_is_omitted(container):
         constraints=r.constraints)
     views = ViewPromptCompiler().compile_views(
         hero=hero, dna=dna, concept=r.concept, program=program)
-    required = {"entrance", "walkway", "mandap", "seating"}
+    # a wedding ceremony's shot list is its programme: arrival, the ceremony focus
+    # (unnamed rite, so the generic focus), guest seating and the route to it
+    required = {"arrival", "ceremony_focus", "guest_seating", "processional_route"}
     assert required <= {v.view_key for v in views}
 
 

@@ -352,6 +352,22 @@ class DesignIntelligence:
         for key in g["excluded"]:
             put(key, ElementStatus.FORBIDDEN, Provenance.USER_EXPLICIT, "excluded in the brief",
                 "user_excluded")
+        # An explicit request carries the place it occupies with it. A requested mandap
+        # IS the ceremony focus of this plan, so the generic ceremony focus can no longer
+        # be forbidden by scope — otherwise the user's own request is rejected as a leak.
+        requested_zones = {k.elements[key].zone.key for key in g["requested"]
+                           if key in k.elements and k.elements[key].zone
+                           and elements.get(key) and elements[key].status == ElementStatus.REQUIRED}
+        for key, el in list(elements.items()):
+            spec = k.elements[key].zone if key in k.elements else None
+            # a rival rite's element (mandap vs a requested nikah stage) stays forbidden:
+            # only the generic element of that place is released
+            generic = not k.elements[key].scope.traditions if key in k.elements else False
+            if (el.status == ElementStatus.FORBIDDEN and el.provenance == Provenance.DETERMINISTIC_RULE
+                    and spec is not None and spec.key in requested_zones and generic):
+                put(key, ElementStatus.CONTEXTUAL, Provenance.USER_EXPLICIT,
+                    "occupies the same place as an element the brief requested",
+                    f"released by user_explicit request for the {spec.key.replace('_', ' ')}")
 
         # ---- descriptive semantics (knowledge first, model second, leak-checked)
         fam = k.families.get(identity.event_family or "")

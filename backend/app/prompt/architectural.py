@@ -32,6 +32,10 @@ SECTION_ORDER = [
     "CONSTRUCTION REALISM",
 ]
 
+# Sections that exist only when a VisualIntent is supplied. A prompt compiled without
+# the director is complete without them.
+VISUAL_SECTIONS = frozenset({"IMAGE STORY", "FOCAL POINT", "HUMAN ACTIVITY", "COMPOSITION"})
+
 STYLE = ("architectural visualisation, physically based rendering, accurate daylight "
          "and artificial light balance, correct perspective, believable construction "
          "detail, no illustration styling")

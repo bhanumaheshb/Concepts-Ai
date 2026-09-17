@@ -1,26 +1,8 @@
 {
   "mandap/1234": {
-    "genotypes": "733903f64eb2f28ad93239f6133503be54bb41634ba68ffdefb526a02d6442e6",
-    "min": 0.6833,
-    "prompts": "abf788a9031556448b71a574172051e80a46fcd8148aff47d28386ea97537868",
-    "roles": [
-      "CANONICAL",
-      "EXPLORATORY",
-      "EXPLORATORY",
-      "ADJACENT",
-      "ADJACENT",
-      "RADICAL",
-      "WILDCARD",
-      "EXPLORATORY",
-      "EXPLORATORY",
-      "ADJACENT"
-    ],
-    "vendi": 9.8474
-  },
-  "mandap/42": {
-    "genotypes": "2c021bdf027369bf89294901c273e9853d50fe77cb486f1a5dd9f4c55b19bcac",
-    "min": 0.6972,
-    "prompts": "78114714dbf43f18d68978ae08f281e419f09903dcd0c59973da2f9000acfb0a",
+    "genotypes": "c28b17e161106ce1f4b49cdc85a660362d4b35b5d8b12395e961fe8a48338735",
+    "min": 0.725,
+    "prompts": "12c5541341583163bf0c54ae2fcecce8c84136b48bb8559a1b56a00f56d48224",
     "roles": [
       "CANONICAL",
       "EXPLORATORY",
@@ -33,67 +15,86 @@
       "WILDCARD",
       "EXPLORATORY"
     ],
-    "vendi": 9.851
+    "vendi": 9.8474
+  },
+  "mandap/42": {
+    "genotypes": "b25960306753078e66f06a8185ba53e3f7768f820dc386d95e7f0075994eb4b6",
+    "min": 0.6972,
+    "prompts": "8ba6a11cd6881dc42f416a781bfa99051765bd3cc596f9872c7ccfbd09375536",
+    "roles": [
+      "CANONICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "ADJACENT",
+      "RADICAL",
+      "WILDCARD",
+      "EXPLORATORY",
+      "EXPLORATORY"
+    ],
+    "vendi": 9.8127
   },
   "mandap/7": {
-    "genotypes": "1dfccf92a8abd2f2a12597f00e6b4959aa083da255d6d34e1d8d71fea6d7396a",
-    "min": 0.6861,
-    "prompts": "3732d5ad6bc366429b5c02827bcce59f2613aa55d2e4c46f12d5a0f897961165",
+    "genotypes": "17c5ff6d025b018374cadfa3b0ab7f9d8b0022e18f48b478dbdae5df339bb13c",
+    "min": 0.725,
+    "prompts": "9de91280e7b709c50ebd8105d8855300e7cd55eb7d4a2bb1a084298a492e985c",
     "roles": [
       "EXPLORATORY",
       "EXPLORATORY",
       "ADJACENT",
       "ADJACENT",
-      "ADJACENT",
       "RADICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
       "WILDCARD",
-      "EXPLORATORY",
-      "EXPLORATORY",
       "CANONICAL"
     ],
-    "vendi": 9.8558
+    "vendi": 9.8569
   },
   "pavilion/1234": {
-    "genotypes": "f0f521235f91e9588c568453bfdb219c36cd8ac2e46d7a360d0375f93e75aa19",
-    "min": 0.6806,
-    "prompts": "6e2626ccd5c4ebbece28c237ae37e7b829f5c3aceeab1b496e65df01bda02ffc",
+    "genotypes": "1a1fbf82653fe221431ef61e6859bc07afb4eb0fcf2021687bab64348fabafd3",
+    "min": 0.6835,
+    "prompts": "34646a2b34e048545fb69d379cc88d12df168a4b83e2ac9ff3ed7bb53a0f753a",
     "roles": [
       "EXPLORATORY",
       "EXPLORATORY",
       "ADJACENT",
       "ADJACENT",
-      "ADJACENT",
-      "EXPLORATORY",
-      "EXPLORATORY",
       "RADICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
       "WILDCARD",
       "CANONICAL"
     ],
-    "vendi": 9.7868
+    "vendi": 9.7653
   },
   "pavilion/42": {
-    "genotypes": "f2a2ebf8c79a80922997b429b53f48e54b508b5b5fc89493d574e3ff2e8bf0a5",
-    "min": 0.6389,
-    "prompts": "66fb9f5eaad17bcc1af506826f850f0af9525282aa1ff3edea4214e13abe6170",
+    "genotypes": "28666abe5f23531341be47cc5df667fdad2e589c091547930ea09a632e8d49cc",
+    "min": 0.6917,
+    "prompts": "a947cd3f41aaac62b1488d5c4e7f31a237f52ebbd18883872c1bbad71cd20e35",
     "roles": [
+      "CANONICAL",
       "EXPLORATORY",
       "EXPLORATORY",
       "ADJACENT",
       "ADJACENT",
       "RADICAL",
-      "EXPLORATORY",
-      "EXPLORATORY",
-      "ADJACENT",
       "WILDCARD",
-      "CANONICAL"
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT"
     ],
-    "vendi": 9.7324
+    "vendi": 9.8016
   },
   "pavilion/7": {
-    "genotypes": "9f0d3bea7cbab90f930025e117b90fd34afe2707ad08b35fd49182554ae42cff",
-    "min": 0.6222,
-    "prompts": "467acfb8416fd8d5888830db71e9aafaffffea89cc6af957f02399feb1775ee1",
+    "genotypes": "f988d813cb25504d50af6e0aec347bfaca381bfebdf45420bc3fa4bd7601ab75",
+    "min": 0.6583,
+    "prompts": "c3e6e24a6a9555f7c567b24d4626cf4b37ce1ab7636501b5cdfb818f5c3d52f7",
     "roles": [
+      "CANONICAL",
       "EXPLORATORY",
       "EXPLORATORY",
       "ADJACENT",
@@ -102,33 +103,32 @@
       "EXPLORATORY",
       "EXPLORATORY",
       "ADJACENT",
-      "WILDCARD",
-      "CANONICAL"
+      "WILDCARD"
     ],
-    "vendi": 9.7491
+    "vendi": 9.7654
   },
   "restaurant/1234": {
-    "genotypes": "e548ff28ae46fc8c6843b665652f964435bcf32bf2486bd19652060da64f1d53",
-    "min": 0.6659,
-    "prompts": "23dfcb14ee74126259c0dfd385f3da17401c88789d983cdc2e8b7f1c4c7b5269",
+    "genotypes": "8f8c2d35949a5472934c8bafa013850afdbcba8c791d7488d5d66541be8c6e4b",
+    "min": 0.5807,
+    "prompts": "c8aebd823b414cb856826609b9a83d10fe973112e8373f8b88719014419b39fa",
     "roles": [
       "CANONICAL",
       "EXPLORATORY",
       "EXPLORATORY",
-      "ADJACENT",
-      "ADJACENT",
-      "EXPLORATORY",
       "EXPLORATORY",
       "ADJACENT",
-      "RADICAL",
-      "WILDCARD"
+      "ADJACENT",
+      "WILDCARD",
+      "EXPLORATORY",
+      "ADJACENT",
+      "RADICAL"
     ],
-    "vendi": 9.7182
+    "vendi": 9.6583
   },
   "restaurant/42": {
-    "genotypes": "c2ef9fe6b30934ea3604c492164326d0869a960cf1161f531b2759bd17b6b2a6",
-    "min": 0.6833,
-    "prompts": "611529e6c2f24c9aee728071e718964161b2a7de39dfda739914256586e3e62f",
+    "genotypes": "22bc2963701095f037f47ac459c31b20838679633e58565ba317a14dfeef96ea",
+    "min": 0.6333,
+    "prompts": "115fe2e83aeb5205609535f5045ce055a3c45b1d6a9b2ce53929a2f5735659d1",
     "roles": [
       "CANONICAL",
       "EXPLORATORY",
@@ -141,24 +141,24 @@
       "RADICAL",
       "WILDCARD"
     ],
-    "vendi": 9.7783
+    "vendi": 9.7548
   },
   "restaurant/7": {
-    "genotypes": "aead106bfea090131fcbf1f852ad2b4ec7acf3c5879c51e76b6bbe55f20aeff1",
-    "min": 0.6921,
-    "prompts": "351206ca6fec11303c4baa34dade9be2cd85458e04a0f80ede02ec287eaf9c0a",
+    "genotypes": "5723f63fba54e2e7f9763365b6a0c4753472bc6db14e8a396a73bf0430e41f35",
+    "min": 0.6889,
+    "prompts": "16f632ba04ea85f7d833d4f09cb6129852e9388145097faac471571392bbc37a",
     "roles": [
       "EXPLORATORY",
       "EXPLORATORY",
       "EXPLORATORY",
       "ADJACENT",
       "ADJACENT",
-      "RADICAL",
       "EXPLORATORY",
       "ADJACENT",
+      "RADICAL",
       "WILDCARD",
       "CANONICAL"
     ],
-    "vendi": 9.7885
+    "vendi": 9.7725
   }
 }

@@ -100,6 +100,26 @@ RATIONALE = {
 }
 
 
+# Which prior table an event FAMILY searches with. A Sangeet is staged like an event
+# but belongs to the wedding world, and that is where its current references live.
+FAMILY_PRIOR = {
+    "wedding_celebration": Typology.WEDDING_MANDAP,
+    "live_entertainment": Typology.EVENT_STAGE,
+    "corporate": Typology.EVENT_STAGE,
+    "fashion": Typology.EVENT_STAGE,
+    "hospitality": Typology.RESTAURANT,
+    "exhibition": Typology.EXHIBITION,
+    "architecture": Typology.PAVILION,
+    "installation": Typology.PAVILION,
+}
+
+
+def _prior_key(program: DesignProgram) -> Typology:
+    sem = getattr(program, "semantic", None)
+    family = sem.profile.identity.event_family if sem is not None else None
+    return FAMILY_PRIOR.get(family or "", program.typology)
+
+
 def select_domains(program: DesignProgram, brief_text: str, mode: TrendMode,
                    custom: list[D] | None = None, seed: int = 42) -> list[TrendDomainPlan]:
     if mode is TrendMode.CUSTOM and custom:
@@ -107,7 +127,7 @@ def select_domains(program: DesignProgram, brief_text: str, mode: TrendMode,
                 for d in custom[:MAX_DOMAINS]]
 
     scores: dict[D, float] = dict(
-        TYPOLOGY_PRIORS.get(program.typology, TYPOLOGY_PRIORS[Typology.GENERIC_SPATIAL]))
+        TYPOLOGY_PRIORS.get(_prior_key(program), TYPOLOGY_PRIORS[Typology.GENERIC_SPATIAL]))
     why: dict[D, str] = {d: RATIONALE["prior"] for d in scores}
 
     low = brief_text.lower()
@@ -123,6 +143,12 @@ def select_domains(program: DesignProgram, brief_text: str, mode: TrendMode,
         for d in DESIGN_CLUSTER:
             scores[d] = min(1.0, scores.get(d, 0.40) + 0.20)
             why.setdefault(d, RATIONALE["mode"])
+        # "Design trends" means looking at design disciplines rather than at the event's
+        # own industry. Lifting the cluster alone changes nothing for an event whose core
+        # domains are already design ones, so everything outside it steps back a little.
+        for d in list(scores):
+            if d not in DESIGN_CLUSTER:
+                scores[d] = scores[d] * 0.7
     elif mode is TrendMode.CULTURAL_MOMENT:
         for d in CULTURE_CLUSTER:
             scores[d] = min(1.0, scores.get(d, 0.35) + 0.22)
@@ -139,7 +165,13 @@ def select_domains(program: DesignProgram, brief_text: str, mode: TrendMode,
         # argues for, applied to domains. Two of five slots go to the LEAST likely
         # domains that are still plausible, which is where genuine discovery lives.
         rng = SeededRandom(seed, "surprise", program.program_id)
-        far_pool = [d for d, s in ranked if 0.10 <= s <= 0.55] or [d for d, _ in ranked[-6:]]
+        # Distant means outside the event's own world: a domain its prior table already
+        # names (culture for a wedding) is familiar however low it scores.
+        own = set(TYPOLOGY_PRIORS.get(_prior_key(program), {}))
+        plausible = [d for d, s in ranked if 0.10 <= s <= 0.55]
+        far_pool = ([d for d in plausible if d not in own]
+                    if len([d for d in plausible if d not in own]) >= SURPRISE_FAR_DOMAINS
+                    else plausible) or [d for d, _ in ranked[-6:]]
         far = rng.sample_without_replacement(far_pool, [1.0] * len(far_pool),
                                              SURPRISE_FAR_DOMAINS)
         chosen = chosen[: MAX_DOMAINS - len(far)] + far

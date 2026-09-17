@@ -45,6 +45,11 @@ class CreativeSearchSpace(Frozen):
     tensions: list[TensionPair] = []
     relaxations_applied: list[str] = []
     effective_dimensionality: float = 0.0
+    # What the understood brief leans toward: value -> multiplier. Kept OUT of the
+    # legal weights on purpose — it describes the conventional reading of the event,
+    # so the allocator applies it fully to canonical niches and not at all to the
+    # radical ones. Baked into the weights it narrowed every niche at once.
+    semantic_priors: dict[str, float] = {}
 
     def domain(self, facet: FacetId) -> FacetDomain:
         for d in self.domains:

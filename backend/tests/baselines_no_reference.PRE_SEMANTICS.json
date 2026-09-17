@@ -1,0 +1,164 @@
+{
+  "mandap/1234": {
+    "genotypes": "733903f64eb2f28ad93239f6133503be54bb41634ba68ffdefb526a02d6442e6",
+    "min": 0.6833,
+    "prompts": "abf788a9031556448b71a574172051e80a46fcd8148aff47d28386ea97537868",
+    "roles": [
+      "CANONICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "RADICAL",
+      "WILDCARD",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT"
+    ],
+    "vendi": 9.8474
+  },
+  "mandap/42": {
+    "genotypes": "2c021bdf027369bf89294901c273e9853d50fe77cb486f1a5dd9f4c55b19bcac",
+    "min": 0.6972,
+    "prompts": "78114714dbf43f18d68978ae08f281e419f09903dcd0c59973da2f9000acfb0a",
+    "roles": [
+      "CANONICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "ADJACENT",
+      "RADICAL",
+      "WILDCARD",
+      "EXPLORATORY"
+    ],
+    "vendi": 9.851
+  },
+  "mandap/7": {
+    "genotypes": "1dfccf92a8abd2f2a12597f00e6b4959aa083da255d6d34e1d8d71fea6d7396a",
+    "min": 0.6861,
+    "prompts": "3732d5ad6bc366429b5c02827bcce59f2613aa55d2e4c46f12d5a0f897961165",
+    "roles": [
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "ADJACENT",
+      "RADICAL",
+      "WILDCARD",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "CANONICAL"
+    ],
+    "vendi": 9.8558
+  },
+  "pavilion/1234": {
+    "genotypes": "f0f521235f91e9588c568453bfdb219c36cd8ac2e46d7a360d0375f93e75aa19",
+    "min": 0.6806,
+    "prompts": "6e2626ccd5c4ebbece28c237ae37e7b829f5c3aceeab1b496e65df01bda02ffc",
+    "roles": [
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "ADJACENT",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "RADICAL",
+      "WILDCARD",
+      "CANONICAL"
+    ],
+    "vendi": 9.7868
+  },
+  "pavilion/42": {
+    "genotypes": "f2a2ebf8c79a80922997b429b53f48e54b508b5b5fc89493d574e3ff2e8bf0a5",
+    "min": 0.6389,
+    "prompts": "66fb9f5eaad17bcc1af506826f850f0af9525282aa1ff3edea4214e13abe6170",
+    "roles": [
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "RADICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "WILDCARD",
+      "CANONICAL"
+    ],
+    "vendi": 9.7324
+  },
+  "pavilion/7": {
+    "genotypes": "9f0d3bea7cbab90f930025e117b90fd34afe2707ad08b35fd49182554ae42cff",
+    "min": 0.6222,
+    "prompts": "467acfb8416fd8d5888830db71e9aafaffffea89cc6af957f02399feb1775ee1",
+    "roles": [
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "RADICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "WILDCARD",
+      "CANONICAL"
+    ],
+    "vendi": 9.7491
+  },
+  "restaurant/1234": {
+    "genotypes": "e548ff28ae46fc8c6843b665652f964435bcf32bf2486bd19652060da64f1d53",
+    "min": 0.6659,
+    "prompts": "23dfcb14ee74126259c0dfd385f3da17401c88789d983cdc2e8b7f1c4c7b5269",
+    "roles": [
+      "CANONICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "RADICAL",
+      "WILDCARD"
+    ],
+    "vendi": 9.7182
+  },
+  "restaurant/42": {
+    "genotypes": "c2ef9fe6b30934ea3604c492164326d0869a960cf1161f531b2759bd17b6b2a6",
+    "min": 0.6833,
+    "prompts": "611529e6c2f24c9aee728071e718964161b2a7de39dfda739914256586e3e62f",
+    "roles": [
+      "CANONICAL",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "ADJACENT",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "RADICAL",
+      "WILDCARD"
+    ],
+    "vendi": 9.7783
+  },
+  "restaurant/7": {
+    "genotypes": "aead106bfea090131fcbf1f852ad2b4ec7acf3c5879c51e76b6bbe55f20aeff1",
+    "min": 0.6921,
+    "prompts": "351206ca6fec11303c4baa34dade9be2cd85458e04a0f80ede02ec287eaf9c0a",
+    "roles": [
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "EXPLORATORY",
+      "ADJACENT",
+      "ADJACENT",
+      "RADICAL",
+      "EXPLORATORY",
+      "ADJACENT",
+      "WILDCARD",
+      "CANONICAL"
+    ],
+    "vendi": 9.7885
+  }
+}

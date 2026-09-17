@@ -313,7 +313,8 @@ class Pipeline:
             with self._stage(rec, "04", "Search space") as st:
                 priors = semantic_priors(semantic)
                 space = instantiate_with_relaxation(
-                    ont, program, (list(injection.prior_bias) if injection else []) + priors)
+                    ont, program, list(injection.prior_bias) if injection else None,
+                    semantic_priors=priors)
                 rec.space = space
                 scoped = sum(1 for d in space.domains for e in d.excluded
                              if e.rule_id == "semantic_scope")

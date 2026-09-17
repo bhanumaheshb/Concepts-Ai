@@ -48,6 +48,18 @@ class Allocation:
     degraded: list[str]
 
 
+# How strongly the understood brief's conventions steer each role. The canonical
+# concept IS the conventional reading; a radical or wildcard concept exists to leave
+# it, so it gets none — the same logic by which the cliche bonus is role-dependent.
+SEMANTIC_STRENGTH = {
+    NicheRole.CANONICAL: 1.0,
+    NicheRole.ADJACENT: 0.75,
+    NicheRole.EXPLORATORY: 0.35,
+    NicheRole.RADICAL: 0.0,
+    NicheRole.WILDCARD: 0.0,
+}
+
+
 def expand_pool(k: int) -> list[NicheRole]:
     """Allocate MORE niches than the portfolio needs.
 
@@ -204,6 +216,7 @@ def allocate(
                     ont, space, rng.substream("canonical", slot, attempt),
                     skeleton=antibrief.canonical_seed,
                     cliche_values=cliche_values, cliche_bonus=1.2,
+                    semantic_strength=SEMANTIC_STRENGTH[NicheRole.CANONICAL],
                 )
                 break
             except SolveFailed:
@@ -265,6 +278,7 @@ def allocate(
                         cliche_values=cliche_values,
                         cliche_bonus=0.0 if role == NicheRole.WILDCARD else -0.6,
                         uniform=uniform, max_attempts=3,
+                        semantic_strength=SEMANTIC_STRENGTH.get(role, 0.0),
                     )
                 except SolveFailed:
                     continue

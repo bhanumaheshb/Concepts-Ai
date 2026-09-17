@@ -15,7 +15,7 @@ from app.creative.validator import ConceptLLMValidator
 from app.domain.brief import DesignBrief
 from app.domain.providers.protocols import CreativeSynthesisProvider
 from app.domain.synthesis import StructuredArchitecturalConcept
-from app.prompt.architectural import SECTION_ORDER, ArchitecturalPromptCompiler
+from app.prompt.architectural import SECTION_ORDER, VISUAL_SECTIONS, ArchitecturalPromptCompiler
 from app.providers.llm.mock_synthesis import MockCreativeProvider
 
 BRIEF = "Create a 500-person luxury Sangeeth mandap."
@@ -115,7 +115,10 @@ def test_hard_constraints_carry_the_briefs_own_numbers(setup):
     cons = build_constraints(ont, program, brief, rec.concepts[0].genotype)
     assert cons.capacity == 500, "the brief said 500"
     assert any("500" in h for h in cons.hard)
-    assert cons.typology == "WEDDING_MANDAP"
+    # A Sangeet is staged, not solemnised: its space form is an event stage even when
+    # the brief asks for a mandap. The mandap itself is an explicit element (see
+    # test_semantics); the typology used to carry the ceremony, which was the leak.
+    assert cons.typology == "EVENT_STAGE"
 
 
 def test_adjectival_capacity_is_parsed(container):
@@ -310,7 +313,7 @@ def test_the_compiler_emits_every_required_section(setup):
         dna=rec.concepts[0], concept=r.concept, brief=brief, program=program,
         constraints=r.constraints)
     names = {s.name for s in p.sections}
-    for required in SECTION_ORDER:
+    for required in [s for s in SECTION_ORDER if s not in VISUAL_SECTIONS]:
         assert required in names, f"missing section {required}"
     assert p.missing_sections == []
 
@@ -323,8 +326,10 @@ def test_the_compiler_does_not_just_echo_the_model(setup):
         dna=rec.concepts[0], concept=r.concept, brief=brief, program=program,
         constraints=r.constraints)
     subject = next(s for s in p.sections if s.name == "SUBJECT")
-    assert subject.source == "brief"
-    assert "500" in subject.text and "wedding mandap" in subject.text
+    assert subject.source in ("brief", "semantic")   # never the model
+    # the subject names the EVENT; it used to say "wedding mandap" for a Sangeet
+    assert "500" in subject.text and "Sangeet" in subject.text
+    assert "wedding" not in subject.text.lower()
 
 
 def test_a_prompt_is_still_complete_with_no_llm_concept_at_all(setup):
@@ -335,8 +340,8 @@ def test_a_prompt_is_still_complete_with_no_llm_concept_at_all(setup):
         dna=rec.concepts[0], concept=None, brief=brief, program=program,
         constraints=r.constraints)
     assert p.degraded is True
-    assert {s.name for s in p.sections} >= set(SECTION_ORDER)
-    assert {s.source for s in p.sections} <= {"brief", "dna", "compiler"}
+    assert {s.name for s in p.sections} >= set(SECTION_ORDER) - VISUAL_SECTIONS
+    assert {s.source for s in p.sections} <= {"brief", "semantic", "dna", "compiler"}
 
 
 def test_negative_prompt_combines_every_source(setup):

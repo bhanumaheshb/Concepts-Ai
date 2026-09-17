@@ -48,6 +48,7 @@ def _pool(
     cliche_values: set[str],
     cliche_bonus: float,
     uniform: bool,
+    semantic_strength: float = 0.0,
 ) -> tuple[list[str], list[float]]:
     """Build the candidate pool for one facet.
 
@@ -75,6 +76,8 @@ def _pool(
             w *= boosts.get(ref, 1.0)
             if ref in cliche_values:
                 w *= (1.0 + cliche_bonus)
+            if semantic_strength and not uniform and ref in space.semantic_priors:
+                w *= space.semantic_priors[ref] ** semantic_strength
             values.append(ref)
             weights.append(max(0.0001, w))
         return values, weights
@@ -181,7 +184,10 @@ def solve_genotype(
     cliche_bonus: float = 0.0,
     uniform: bool = False,
     max_attempts: int = 6,
+    semantic_strength: float = 0.0,
 ) -> ConceptGenotype:
+    """`semantic_strength` scales the space's semantic priors: 1.0 applies them as
+    stated, 0.0 ignores them. The allocator sets it from the niche role."""
     skeleton = skeleton or PartialGenotype()
     forbidden = set(forbidden or ())
     overrides = dict(domain_override or {})
@@ -204,7 +210,8 @@ def solve_genotype(
                 _apply_implies(ont, ref, boosts)
                 continue
             values, weights = _pool(
-                ont, space, facet, chosen, forbidden, overrides, boosts, cliches, cliche_bonus, uniform
+                ont, space, facet, chosen, forbidden, overrides, boosts, cliches, cliche_bonus, uniform,
+                semantic_strength=semantic_strength,
             )
             if not values:
                 ok, last_error = False, f"no legal value for {facet}"

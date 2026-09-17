@@ -285,6 +285,11 @@ class ViewPromptCompiler:
         # With the Visual Director's intents, the shot list IS the programme: one view
         # per zone worth rendering, framed for what that zone does. No event catalogue
         # is consulted, so an event nobody catalogued still gets a complete set.
+        if not visual_intents and getattr(program, "semantic", None) is not None:
+            from app.ontology.graph import load_ontology
+            from app.visual.director import VisualDirector
+            visual_intents = VisualDirector(load_ontology()).direct(
+                dna=dna, program=program, concept=concept, scene=scene)
         if visual_intents:
             return self._compile_from_intents(hero=hero, dna=dna, concept=concept,
                                               program=program, scene=scene,

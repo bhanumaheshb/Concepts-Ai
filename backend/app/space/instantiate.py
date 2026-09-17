@@ -68,7 +68,7 @@ def _prunes(rule: dict, node, program: DesignProgram) -> bool:
 
 def instantiate_space(
     ont: Ontology, program: DesignProgram, disabled_rules: frozenset[str] = frozenset(),
-    prior_bias: list | None = None,
+    prior_bias: list | None = None, semantic_priors: list | None = None,
 ) -> CreativeSearchSpace:
     domains: list[FacetDomain] = []
     relaxations: list[str] = []
@@ -122,18 +122,26 @@ def instantiate_space(
         tensions=tensions,
         relaxations_applied=relaxations,
         effective_dimensionality=round(dim, 3),
+        semantic_priors={p.value: float(p.multiplier) for p in (semantic_priors or [])
+                         if any(d.facet_id == p.facet_id and space_has(d, p.value) for d in domains)},
     )
 
 
+def space_has(domain: FacetDomain, value: str) -> bool:
+    return any(v.value == value for v in domain.legal)
+
+
 def instantiate_with_relaxation(ont: Ontology, program: DesignProgram,
-                                prior_bias: list | None = None) -> CreativeSearchSpace:
+                                prior_bias: list | None = None,
+                                semantic_priors: list | None = None) -> CreativeSearchSpace:
     """If a facet domain empties, relax rules in the declared order and record it,
     rather than failing the exploration."""
     disabled: set[str] = set()
     order = ont.relaxation_order()
     for attempt in range(len(order) + 1):
         try:
-            space = instantiate_space(ont, program, frozenset(disabled), prior_bias)
+            space = instantiate_space(ont, program, frozenset(disabled), prior_bias,
+                                      semantic_priors)
             if disabled:
                 space = space.model_copy(update={"relaxations_applied": sorted(disabled)})
             return space

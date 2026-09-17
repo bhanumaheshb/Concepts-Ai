@@ -284,3 +284,14 @@ def test_ontology_scope_prunes_wedding_values_only_outside_their_scope(ont):
     nikah = excluded("500-person Muslim wedding nikah")
     assert "spatial_narrative:pheras" in nikah
     assert "occupation_staging:family_flanking" not in nikah     # family-scoped, still in scope
+
+
+def test_explicit_request_releases_elements_sharing_its_place():
+    """'A Sangeeth mandap': the requested mandap IS the ceremony focus of the plan, so the
+    generic ceremony focus cannot stay forbidden — or every concept is rejected as leaking."""
+    sb = read("Create a 500-person luxury Sangeeth mandap.")
+    assert sb.profile.identity.event_type == "sangeet"
+    assert status(sb, "mandap") == S.REQUIRED
+    assert status(sb, "ceremony_focus") == S.CONTEXTUAL
+    assert sb.zone("ceremony_focus").label == "Mandap"
+    assert status(sb, "ritual_fire") == S.FORBIDDEN          # not requested, still forbidden

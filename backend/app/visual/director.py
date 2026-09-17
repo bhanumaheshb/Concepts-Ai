@@ -183,7 +183,8 @@ class VisualDirector:
                            f"{display_label(ident)} for {program.capacity.guests} people",
             story_of_image=area or f"{z.label}: {z.rationale}",
             camera_position=t["position"], camera_height_m=float(t["height_m"]),
-            lens_mm=int(t["lens_mm"]), view_direction=t.get("direction", ""),
+            lens_mm=int(t["lens_mm"]),
+            view_direction=f"{t.get('direction', '')}, framing the {z.label.lower()}".strip(", "),
             composition=t.get("composition", ""),
             foreground=human, midground=f"the {z.label.lower()}",
             background=(f"the {focus.label.lower()}" if focus and not is_primary
@@ -210,7 +211,7 @@ class VisualDirector:
         return VisualIntent(
             concept_id=dna.concept_id, view_key=f"drawing_{axis}", view_label=label,
             render_intent="orthographic_drawing",
-            visual_subject=f"{label} of {_article(display_label(sem.profile.identity))} "
+            visual_subject=f"The {label.lower()} of {_article(display_label(sem.profile.identity))} "
                            f"{display_label(sem.profile.identity)}",
             story_of_image="a measured drawing of how the programme is organised",
             camera_position="orthographic, no perspective", composition="flat, centred, to scale",
