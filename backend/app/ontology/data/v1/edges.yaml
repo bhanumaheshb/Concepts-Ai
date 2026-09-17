@@ -165,3 +165,45 @@ edges:
 - {src: structural_logic:compression_mass, dst: material:sandstone, type: implies, weight: 0.5}
 - {src: lighting_philosophy:emissive_surface, dst: material:emissive_light, type: implies, weight: 0.8}
 - {src: lighting_philosophy:oil_lamp_field, dst: material:brass, type: implies, weight: 0.5}
+
+# ── celebration set: what cannot coexist ────────────────────────────────────
+# Suspended floral and hung fabric need something overhead to hang FROM. A canopy
+# carved from solid stone or cast monolithically has no rigging, so the two
+# tectonics are mutually exclusive rather than merely unusual.
+- {src: tectonic_logic:suspended_floral, dst: tectonic_logic:carved, type: excludes, weight: 1.0}
+- {src: tectonic_logic:suspended_floral, dst: tectonic_logic:cast_monolithic, type: excludes, weight: 1.0}
+- {src: tectonic_logic:swagged, dst: tectonic_logic:cast_monolithic, type: excludes, weight: 1.0}
+# Fresh flower walls and massed marigold cannot span; they dress a frame.
+- {src: material:fresh_flower_wall, dst: structural_logic:cantilever, type: excludes, weight: 1.0}
+- {src: material:marigold_mass, dst: structural_logic:compression_mass, type: excludes, weight: 1.0}
+# Floor seating and a raised thrust runway are opposite occupations of one room.
+- {src: occupation_staging:floor_seated, dst: occupation_staging:thrust_runway, type: excludes, weight: 1.0}
+
+# ── celebration set: entailments ────────────────────────────────────────────
+- {src: tectonic_logic:suspended_floral, dst: structural_logic:suspended_net, type: requires, weight: 1.0}
+- {src: tectonic_logic:truss_dressed, dst: structural_logic:space_frame, type: requires, weight: 1.0}
+- {src: material:mirror_mosaic, dst: lighting_philosophy:pin_spot_floral, type: implies, weight: 0.6}
+
+# ── celebration set: soft co-occurrence ─────────────────────────────────────
+- {src: occupation_staging:baraat_arrival, dst: spatial_narrative:procession, type: implies, weight: 0.8}
+- {src: occupation_staging:varmala_platform, dst: spatial_narrative:varmala, type: implies, weight: 0.8}
+- {src: occupation_staging:floor_seated, dst: lighting_philosophy:diya_field, type: implies, weight: 0.6}
+- {src: occupation_staging:mehfil_intimate, dst: lighting_philosophy:darkness_pools, type: implies, weight: 0.6}
+- {src: material:marigold_mass, dst: occupation_staging:processional_axis, type: implies, weight: 0.5}
+- {src: material:jaali_screen, dst: lighting_philosophy:direct_sun_shafts, type: implies, weight: 0.7}
+- {src: tectonic_logic:jaali_screened, dst: material:jaali_screen, type: implies, weight: 0.8}
+- {src: lighting_philosophy:string_canopy, dst: tectonic_logic:swagged, type: implies, weight: 0.5}
+- {src: lighting_philosophy:chandelier_cluster, dst: material:mirror_mosaic, type: implies, weight: 0.5}
+
+# ── celebration set: productive tensions ────────────────────────────────────
+# Each is buildable but needs an argument, which is exactly what pushes a concept
+# off the obvious answer instead of banning it outright.
+- {src: material:khadi_cotton, dst: material:zari_brocade, type: tensions_with, weight: -0.5}
+- {src: occupation_staging:floor_seated, dst: lighting_philosophy:chandelier_cluster, type: tensions_with, weight: -0.4}
+- {src: material:marigold_mass, dst: lighting_philosophy:darkness_pools, type: tensions_with, weight: -0.4}
+
+# ── celebration set: inversions, used by RADICAL niches ─────────────────────
+- {src: occupation_staging:floor_seated, dst: occupation_staging:centred_raised, type: inverse_of, weight: 1.0}
+- {src: occupation_staging:mehfil_intimate, dst: occupation_staging:thrust_runway, type: inverse_of, weight: 1.0}
+- {src: material:khadi_cotton, dst: material:zari_brocade, type: inverse_of, weight: 1.0}
+- {src: lighting_philosophy:diya_field, dst: lighting_philosophy:emissive_surface, type: inverse_of, weight: 1.0}

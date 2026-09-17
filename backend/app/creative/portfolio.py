@@ -14,6 +14,7 @@ from app.domain.common import NicheRole
 from app.domain.concept import ConceptDNA
 from app.domain.diversity import DiversityMatrix
 from app.domain.portfolio import Portfolio, PortfolioMember, SelectionStep
+from app.niche.allocator import expand_curriculum
 from app.ontology.graph import Ontology
 
 MANDATORY = (NicheRole.CANONICAL, NicheRole.RADICAL, NicheRole.WILDCARD)
@@ -56,11 +57,14 @@ def select_portfolio(
 
     # Role quotas are EXACT, not soft. The acceptance criterion is a specific
     # histogram, so a soft penalty that usually gets there is not good enough.
-    scale = k / 10.0
-    quotas = {r: max(0, round(n * scale)) for r, n in TARGET_HISTOGRAM.items()}
-    while sum(quotas.values()) > k:
-        biggest = max(quotas, key=lambda r: (quotas[r], r.value))
-        quotas[biggest] -= 1
+    #
+    # They are counted off the SAME curriculum the allocator built, not re-derived by
+    # scaling the k=10 histogram. Scaling disagrees with the allocator below k=6 —
+    # at k=3 it rounds the canonical quota to zero and then demands an ADJACENT that
+    # was never allocated, so the portfolio dropped the canonical and reported a gap
+    # for a role the curriculum does not contain.
+    curriculum = expand_curriculum(k)
+    quotas = {r: curriculum.count(r) for r in TARGET_HISTOGRAM}
     while sum(quotas.values()) < k:
         quotas[NicheRole.EXPLORATORY] += 1
 

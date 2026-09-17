@@ -4,7 +4,10 @@ from typing import Literal
 
 from pydantic import Field
 
-from app.domain.common import ConstraintId, FacetId, Frozen, OntologyRef, Score, Typology
+from app.domain.common import (
+    ConstraintId, EventType, FacetId, Frozen, OntologyRef, Score, Tradition, Typology,
+    VenueType,
+)
 
 
 class Measurable(Frozen):
@@ -101,6 +104,11 @@ class DesignBrief(Frozen):
     project_id: str | None = None
     raw_text: str
     typology: Typology = Typology.GENERIC_SPATIAL
+    # WHAT / FOR WHOM / WHERE. All default to UNSPECIFIED so an existing brief that
+    # names none of them behaves exactly as it did before this field existed.
+    event_type: EventType = EventType.GENERIC_EVENT
+    tradition: Tradition = Tradition.UNSPECIFIED
+    venue_type: VenueType = VenueType.UNSPECIFIED
     location: str | None = None
     dimensions_text: str | None = None
     budget_text: str | None = None
@@ -115,6 +123,11 @@ class DesignProgram(Frozen):
     program_id: str
     brief_id: str
     typology: Typology
+    # Carried through from the brief so the view compiler and the anti-brief can
+    # resolve the focal element and the cliche set without re-reading the brief.
+    event_type: EventType = EventType.GENERIC_EVENT
+    tradition: Tradition = Tradition.UNSPECIFIED
+    venue_type: VenueType = VenueType.CONVENTION_SPACE
     invariants: list[Constraint] = []      # all kind == HARD
     soft_intents: list[SoftIntent] = []
     open_variables: list[FacetId] = []

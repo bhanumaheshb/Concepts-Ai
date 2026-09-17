@@ -1,0 +1,173 @@
+================================================================================
+  CREATIVE SPATIAL INTELLIGENCE ENGINE - START GUIDE
+  Project: C:\dev\concepts-ai
+================================================================================
+
+
+--------------------------------------------------------------------------------
+  QUICK START - two terminals
+--------------------------------------------------------------------------------
+
+TERMINAL 1  (backend)
+
+    C:\dev\concepts-ai\backend\.venv\Scripts\python.exe -m uvicorn app.main:app --port 8001 --reload --app-dir C:\dev\concepts-ai\backend
+
+    Wait for:  Application startup complete.
+
+
+TERMINAL 2  (frontend)
+
+    npm --prefix C:\dev\concepts-ai\frontend run dev
+
+
+THEN OPEN:  http://localhost:3000
+
+
+--------------------------------------------------------------------------------
+  BEFORE YOU START
+--------------------------------------------------------------------------------
+
+LM Studio must be running with a model loaded, or concept writing fails
+per concept (the engine still produces all concepts and prompts).
+
+    1. Open LM Studio
+    2. Load a model  (currently: google/gemma-4-e4b)
+    3. Developer tab -> Start Server   (port 1234)
+
+Check it:
+
+    curl http://127.0.0.1:1234/v1/models
+
+
+--------------------------------------------------------------------------------
+  IF SOMETHING DOES NOT START
+--------------------------------------------------------------------------------
+
+"npm is not recognized"
+    Your terminal is older than the PATH change. Open a NEW terminal, or use:
+    "C:\Users\Bhanu Mahesh Bathula\AppData\Local\Programs\nodejs\npm.cmd" --prefix C:\dev\concepts-ai\frontend run dev
+
+"Port already in use"
+    Something is still holding 8001 or 3000. In PowerShell:
+    Get-NetTCPConnection -LocalPort 8001 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+
+"Failed to fetch" in the browser
+    Backend is not running, or is on the wrong port.
+    Check:  curl http://localhost:8001/api/health
+
+OSError [Errno 22] / "Permission denied" reading a project file
+    This means the files are being read from a OneDrive-synced folder.
+    ALWAYS work in C:\dev\concepts-ai - never the old OneDrive copy.
+
+
+--------------------------------------------------------------------------------
+  CURRENT CONFIGURATION   (backend\.env)
+--------------------------------------------------------------------------------
+
+    API_PORT                     8001
+    LLM_PROVIDER                 lmstudio      -> 127.0.0.1:1234
+    MOCK_MODE                    false
+    DEFAULT_K                    10            (number of concepts)
+    CREATIVE_COGNITION_ENABLED   true
+    CREATIVE_COGNITION_BUDGET    8
+
+To change how many concepts are generated, edit DEFAULT_K in backend\.env
+AND the fallback in frontend\lib\api.ts (search for: input.k ?? 10).
+
+To switch the creative cognition layer OFF, comment out
+CREATIVE_COGNITION_ENABLED and restart the backend. The pipeline then behaves
+exactly as it did before that layer existed.
+
+
+--------------------------------------------------------------------------------
+  WHAT TO EXPECT WHEN YOU PRESS "GENERATE CONCEPTS"
+--------------------------------------------------------------------------------
+
+The deterministic engine finishes in well under a second. Then it waits on
+LM Studio, which takes roughly 2.5 minutes PER CONCEPT on a local model.
+At k=10 that is around 25 MINUTES for a full run. Lower DEFAULT_K while you
+are iterating.
+
+In the backend terminal you will see the stage trace, including two stages
+added by the creative cognition layer:
+
+    08   Phenotype synthesis    16 phenotypes
+    08c  Creative cognition     +8 concepts from 8 operations
+    09   Critics                24/24 passed all four gates
+    09c  Creative evolution     +0 evolved from critic findings
+    11   Diversity evaluation   vendi=... min=...
+    12   Portfolio selection    10 selected, curriculum satisfied
+
+KNOWN ISSUE - the concept cards stay on "Writing this concept..."
+This is a frontend bug, not a failure. The concepts and all their image
+prompts reach the API well before the browser shows them. You can read them
+directly while you wait:
+
+    curl http://localhost:8001/api/explorations
+
+
+--------------------------------------------------------------------------------
+  USEFUL URLS
+--------------------------------------------------------------------------------
+
+    http://localhost:3000                            the app
+    http://localhost:8001/api/health                 is the backend alive
+    http://localhost:8001/api/config                 providers + valid options
+    http://localhost:8001/docs                       full API browser
+
+    /api/explorations                                list runs
+    /api/explorations/{id}                           one run, all stages
+    /api/explorations/{id}/debug                     creative debug
+    /api/explorations/{id}/synthesis-debug           per-concept model chain
+    /api/concepts/{id}/prompt                        the 21-section prompt
+
+
+--------------------------------------------------------------------------------
+  RUNNING THE TESTS
+--------------------------------------------------------------------------------
+
+Full suite (about 15 minutes):
+
+    C:\dev\concepts-ai\backend\.venv\Scripts\python.exe -m pytest -q
+
+Just the creative cognition layer (about 25 seconds):
+
+    C:\dev\concepts-ai\backend\.venv\Scripts\python.exe -m pytest tests/test_creative_cognition.py -q
+
+Expected: 399 passed, 1 failed.
+The single failure (test_canonical_is_the_literal_interpretation) is a known
+pre-existing order-dependent test. It fails on the original commit too.
+
+
+--------------------------------------------------------------------------------
+  ENVIRONMENT NOTES
+--------------------------------------------------------------------------------
+
+Python   3.13.15   %LOCALAPPDATA%\Programs\Python\Python313
+Node     24.20.0   %LOCALAPPDATA%\Programs\nodejs
+venv               C:\dev\concepts-ai\backend\.venv
+
+Both are user-scope installs - no administrator rights needed.
+
+DO NOT move this project back into OneDrive. OneDrive turns .venv and
+node_modules into cloud placeholder files that cannot be read, which breaks
+pip, pytest and npm in ways that look like unrelated dependency corruption.
+
+
+--------------------------------------------------------------------------------
+  GIT
+--------------------------------------------------------------------------------
+
+Remote:  https://github.com/bhanumaheshb/Concepts-Ai
+Branch:  main
+
+    cd C:\dev\concepts-ai
+    git status
+    git add -A
+    git commit -m "your message"
+    git push
+
+Note: backend\.env is intentionally NOT tracked - it holds local config.
+If you set up on a new machine, copy backend\.env.example to backend\.env.
+
+================================================================================

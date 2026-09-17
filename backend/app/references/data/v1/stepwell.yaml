@@ -36,7 +36,8 @@ traits:
     abstraction: 0.90
     salience: 0.85
     maps_to: [tectonic_logic, material_palette]
-    suggests: [tectonic_logic:excavated, tectonic_logic:carved, material:sandstone]
+    suggests: [tectonic_logic:excavated, tectonic_logic:carved, material:sandstone,
+               tectonic_logic:jaali_screened]
     evidence: "Nothing is erected; the volume is cut."
   - id: t_stw_narr
     dimension: NARRATIVE_STRUCTURE

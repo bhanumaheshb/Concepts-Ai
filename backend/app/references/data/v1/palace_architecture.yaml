@@ -35,7 +35,8 @@ traits:
     abstraction: 0.86
     salience: 0.85
     maps_to: [material_palette, tectonic_logic]
-    suggests: [material:marble, material:sandstone, tectonic_logic:carved]
+    suggests: [material:marble, material:sandstone, tectonic_logic:carved,
+               material:jaali_screen, tectonic_logic:jaali_screened]
     evidence: "Mass is present structurally and denied visually."
   - id: t_pal_culture
     dimension: CULTURAL_CONTEXT

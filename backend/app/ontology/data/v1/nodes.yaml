@@ -214,6 +214,32 @@ nodes:
 - {id: material:polished_steel, label: Polished steel, parent: material:metal_g, cost: 5, span: 24, phrase: "mirror-polished steel"}
 - {id: material:anodised_aluminium, label: Anodised aluminium, parent: material:metal_g, cost: 3, span: 14, phrase: "anodised aluminium"}
 - {id: material:silk_drape, label: Silk drape, parent: material:textile_g, cost: 4, span: 6, climate_bad: [monsoon], phrase: "silk drapery"}
+# ── celebration materials ────────────────────────────────────────────────────
+# span is short for all of these: they dress structure, they never carry it. The
+# climate flags are real — fresh flower and mirror work genuinely fail in heat and
+# rain, which is what lets the feasibility critic reject them honestly.
+- {id: material:marigold_mass, label: Marigold mass, parent: material:plant_g, cost: 2, span: 2,
+   climate_bad: [hot_dry], phrase: "dense massed marigold in saturated orange and gold"}
+- {id: material:fresh_flower_wall, label: Fresh flower wall, parent: material:plant_g, cost: 4, span: 3,
+   climate_bad: [hot_dry, monsoon], phrase: "a continuous wall of fresh blooms"}
+- {id: material:foliage_canopy, label: Foliage canopy, parent: material:plant_g, cost: 3, span: 4,
+   phrase: "a canopy of suspended greenery and hanging vine"}
+- {id: material:banana_stem, label: Banana stem, parent: material:plant_g, cost: 1, span: 2,
+   climate_bad: [hot_dry], phrase: "cut banana stems flanking the threshold"}
+- {id: material:mirror_mosaic, label: Mirror mosaic, parent: material:glass_g, cost: 4, span: 2,
+   phrase: "faceted mirror mosaic that multiplies every light source"}
+- {id: material:kundan_inlay, label: Kundan inlay, parent: material:metal_g, cost: 5, span: 1,
+   phrase: "jewel-set inlay catching light at close range"}
+- {id: material:brass_repousse, label: Brass repoussé, parent: material:metal_g, cost: 5, span: 3,
+   phrase: "hammered brass relief in low warm sheen"}
+- {id: material:mango_wood, label: Mango wood, parent: material:wood_g, cost: 2, span: 5,
+   phrase: "turned and carved mango wood"}
+- {id: material:jaali_screen, label: Jaali screen, parent: material:stone_g, cost: 4, span: 3,
+   phrase: "pierced stone jaali casting patterned shade"}
+- {id: material:khadi_cotton, label: Khadi cotton, parent: material:textile_g, cost: 2, span: 6,
+   climate_bad: [monsoon], phrase: "undyed handwoven khadi in wide unbroken runs"}
+- {id: material:zari_brocade, label: Zari brocade, parent: material:textile_g, cost: 5, span: 4,
+   climate_bad: [monsoon], phrase: "metallic zari brocade with visible weight"}
 - {id: material:canvas_membrane, label: Canvas membrane, parent: material:textile_g, cost: 2, span: 14, phrase: "tensioned canvas"}
 - {id: material:ptfe_membrane, label: PTFE membrane, parent: material:textile_g, cost: 4, span: 28, phrase: "translucent PTFE membrane"}
 - {id: material:woven_jute, label: Woven jute, parent: material:textile_g, cost: 1, span: 5, phrase: "coarse woven jute"}
@@ -239,6 +265,15 @@ nodes:
 - {id: spatial_narrative:transformation, label: Transformation, phrase: "a visible transformation over time"}
 - {id: spatial_narrative:suspension, label: Suspension, phrase: "a suspension of weight and time"}
 - {id: spatial_narrative:circumambulation, label: Circumambulation, phrase: "a circling route around the centre"}
+# The beats an Indian wedding is actually sequenced by. spatial_narrative is an
+# ORDERED_SEQ facet, so the order these appear in is itself a design decision the
+# distance metric can measure — welcome→varmala→pheras reads differently from
+# welcome→pheras→varmala, and now the engine can tell.
+- {id: spatial_narrative:welcome, phrase: "a held welcome before the space opens", label: Welcome}
+- {id: spatial_narrative:varmala, phrase: "the exchange staged as the room's first peak", label: Varmala}
+- {id: spatial_narrative:pheras, phrase: "the binding circuit at the ceremonial centre", label: Pheras}
+- {id: spatial_narrative:vidaai, phrase: "a departure the whole room turns to watch", label: Vidaai}
+- {id: spatial_narrative:performance, phrase: "a performance the room reconfigures around", label: Performance}
 
 # ──────────────────────── occupation_staging ────────────────────────
 - {id: occupation_staging:centred, label: Centred, abstract: true}
@@ -264,6 +299,22 @@ nodes:
    phrase: "layered terraces of seating"}
 - {id: occupation_staging:concealed_reveal, label: Concealed reveal, parent: occupation_staging:distributed, cost: 4,
    phrase: "the gathering concealed until a reveal"}
+# ── celebration staging ──────────────────────────────────────────────────────
+# How an Indian wedding actually occupies a room. These are staging patterns, not
+# decoration: each puts the guests, the couple and the families in a different
+# relationship, which is what makes two concepts genuinely different events.
+- {id: occupation_staging:baraat_arrival, label: Baraat arrival, parent: occupation_staging:directional, cost: 3,
+   phrase: "a moving arrival procession that becomes the first performance"}
+- {id: occupation_staging:varmala_platform, label: Varmala platform, parent: occupation_staging:centred, cost: 3,
+   phrase: "a raised exchange platform the whole room can see into"}
+- {id: occupation_staging:family_flanking, label: Family flanking, parent: occupation_staging:directional, cost: 2,
+   phrase: "two families seated facing one another across the ceremonial centre"}
+- {id: occupation_staging:thrust_runway, label: Thrust runway, parent: occupation_staging:directional, cost: 3,
+   phrase: "a stage thrust into the guests, performers surrounded on three sides"}
+- {id: occupation_staging:floor_seated, label: Floor seated, parent: occupation_staging:centred, cost: 2,
+   phrase: "guests seated at floor level around a low ceremonial centre"}
+- {id: occupation_staging:mehfil_intimate, label: Mehfil intimate, parent: occupation_staging:distributed, cost: 2,
+   phrase: "low cushioned clusters gathered close around performers"}
 
 # ─────────────────────── lighting_philosophy ───────────────────────
 - {id: lighting_philosophy:natural, label: Natural, abstract: true}
@@ -292,6 +343,16 @@ nodes:
    phrase: "warm light grazing across texture"}
 - {id: lighting_philosophy:silhouette_backlight, label: Silhouette backlight, parent: lighting_philosophy:artificial, cost: 2,
    phrase: "figures read as silhouettes against backlight"}
+- {id: lighting_philosophy:diya_field, label: Diya field, parent: lighting_philosophy:flame, cost: 2,
+   phrase: "hundreds of small oil lamps at and below knee height"}
+- {id: lighting_philosophy:chandelier_cluster, label: Chandelier cluster, parent: lighting_philosophy:artificial, cost: 5,
+   phrase: "clustered pendant chandeliers dropped low over the gathering"}
+- {id: lighting_philosophy:pin_spot_floral, label: Pin-spot floral, parent: lighting_philosophy:artificial, cost: 3,
+   phrase: "narrow pin spots picking out individual floral arrangements from darkness"}
+- {id: lighting_philosophy:uplit_canopy, label: Uplit canopy, parent: lighting_philosophy:artificial, cost: 2,
+   phrase: "the canopy underlit so its structure glows from beneath"}
+- {id: lighting_philosophy:string_canopy, label: String canopy, parent: lighting_philosophy:artificial, cost: 1,
+   phrase: "a dense overhead field of warm string lights"}
 - {id: lighting_philosophy:darkness_pools, label: Darkness and pools, parent: lighting_philosophy:absence, cost: 1,
    phrase: "mostly darkness, with small pools of light"}
 
@@ -323,6 +384,20 @@ nodes:
 - {id: tectonic_logic:inflated, label: Inflated, parent: tectonic_logic:formed, cost: 3, phrase: "pneumatically inflated volumes"}
 - {id: tectonic_logic:grown_living, label: Grown living, parent: tectonic_logic:formed, cost: 4, phrase: "grown from living material"}
 - {id: tectonic_logic:tensioned, label: Tensioned, parent: tectonic_logic:formed, cost: 3, phrase: "tensioned taut surfaces"}
+# ── event construction ───────────────────────────────────────────────────────
+# How a celebration set is actually BUILT: hired truss, dressed scaffold, hung
+# florals and swagged fabric. Naming these lets the engine reason about a set that
+# is installed in two days and struck in one, rather than a permanent building.
+- {id: tectonic_logic:suspended_floral, label: Suspended floral, parent: tectonic_logic:additive, cost: 4,
+   phrase: "dense floral mass hung overhead from concealed rigging"}
+- {id: tectonic_logic:swagged, label: Swagged, parent: tectonic_logic:additive, cost: 2,
+   phrase: "fabric swagged in catenary loops between fixed points"}
+- {id: tectonic_logic:truss_dressed, label: Truss dressed, parent: tectonic_logic:additive, cost: 2,
+   phrase: "a hired truss grid dressed so the structure reads as designed, not rented"}
+- {id: tectonic_logic:clad_scaffold, label: Clad scaffold, parent: tectonic_logic:additive, cost: 2,
+   phrase: "scaffold framing clad in printed or carved panels"}
+- {id: tectonic_logic:jaali_screened, label: Jaali screened, parent: tectonic_logic:subtractive, cost: 3,
+   phrase: "perforated screen panels that filter light and view"}
 
 # ───────────────────────── scale_strategy ─────────────────────────
 - {id: scale_strategy:miniature, label: Miniature, cost: 1, phrase: "intimate miniature scale"}

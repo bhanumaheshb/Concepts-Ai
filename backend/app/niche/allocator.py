@@ -72,16 +72,38 @@ def expand_pool(k: int) -> list[NicheRole]:
         return target + spares
     base = expand_curriculum(k)
     extra = [NicheRole.ADJACENT, NicheRole.EXPLORATORY][: max(0, k // 4)]
+    if k < 6:
+        # A spanning curriculum has one niche per role, so ANY gate failure costs a
+        # role outright. Insure each of the roles actually used, cheapest-first.
+        return base + [r for r in (NicheRole.EXPLORATORY, NicheRole.RADICAL,
+                                   NicheRole.ADJACENT, NicheRole.WILDCARD)
+                       if r in base]
     mandatory_spare = [NicheRole.RADICAL, NicheRole.WILDCARD] if k >= 6 else []
     return base + extra + mandatory_spare
 
 
+# Below k=6 the proportional split degenerates: rounding hands every slot after the
+# canonical to ADJACENT, so a small run never leaves the 0.0-0.45 band and reads as
+# "the engine keeps producing the same idea". A small set exists to show RANGE, so
+# these are spanning curricula, chosen rather than derived.
+SMALL_K_CURRICULUM: dict[int, list[NicheRole]] = {
+    1: [NicheRole.CANONICAL],
+    2: [NicheRole.CANONICAL, NicheRole.EXPLORATORY],
+    3: [NicheRole.CANONICAL, NicheRole.EXPLORATORY, NicheRole.RADICAL],
+    4: [NicheRole.CANONICAL, NicheRole.ADJACENT, NicheRole.EXPLORATORY, NicheRole.RADICAL],
+    5: [NicheRole.CANONICAL, NicheRole.ADJACENT, NicheRole.EXPLORATORY,
+        NicheRole.RADICAL, NicheRole.WILDCARD],
+}
+
+
 def expand_curriculum(k: int) -> list[NicheRole]:
     """1 canonical / 3 adjacent / 4 exploratory / 1 radical / 1 wildcard at k=10,
-    scaled proportionally for other k."""
+    a spanning curriculum below k=6, scaled proportionally in between."""
     if k == 10:
         return ([NicheRole.CANONICAL] + [NicheRole.ADJACENT] * 3 + [NicheRole.EXPLORATORY] * 4
                 + [NicheRole.RADICAL, NicheRole.WILDCARD])
+    if k in SMALL_K_CURRICULUM:
+        return list(SMALL_K_CURRICULUM[k])
     roles = [NicheRole.CANONICAL]
     remaining = max(0, k - 1)
     n_adj = max(1, round(remaining * 0.375)) if remaining >= 3 else remaining

@@ -228,6 +228,56 @@ def op_scale_up(ont, space, g, rng, pinned, magnitude) -> MutationOutcome:
     return MutationOutcome("APPLIED", _set_facet(g, "scale_strategy", cand), ["scale_strategy"], "scaled up")
 
 
+def op_resequence(ont, space, g, rng, pinned, magnitude) -> MutationOutcome:
+    """Change the ORDER of the spatial narrative, not its membership.
+
+    spatial_narrative is an ORDERED_SEQ facet, so arrival→compression→reveal and
+    arrival→reveal→compression are measurably different buildings that use the same
+    moments. Nothing else in the registry touches this facet on its own: hybridise
+    copies a whole sequence from the other parent, which is a different move.
+
+    At higher magnitude a legal beat may be substituted, so a sequence can gain a
+    moment it did not have rather than only reshuffle the ones it did.
+    """
+    if "spatial_narrative" in pinned:
+        return MutationOutcome("BLOCKED_BY_PIN", None, [], "narrative pinned")
+    seq = list(g.spatial_narrative)
+    if len(seq) < 2:
+        return MutationOutcome("NO_OP", None, [], "sequence too short to reorder")
+
+    legal = [v for v in space.values("spatial_narrative") if v not in seq] \
+        if hasattr(space, "values") else []
+    new_seq = list(seq)
+    if magnitude >= 0.6 and legal:
+        new_seq[rng.randint(0, len(new_seq) - 1)] = rng.choice(sorted(legal))
+    # rotate rather than shuffle: a rotation is a different reading of the same
+    # journey, and it is stable for a given rng draw.
+    cut = 1 + rng.randint(0, len(new_seq) - 2)
+    new_seq = new_seq[cut:] + new_seq[:cut]
+    if new_seq == seq:
+        return MutationOutcome("NO_OP", None, [], "rotation produced the same order")
+    return MutationOutcome("APPLIED", g.model_copy(update={"spatial_narrative": new_seq}),
+                           ["spatial_narrative"], "resequenced")
+
+
+def op_remove(ont, space, g, rng, pinned, magnitude) -> MutationOutcome:
+    """Drop a beat from the spatial narrative and let the rest compensate.
+
+    REMOVE is not deletion of geometry — the genotype stays complete and legal. It
+    takes away one moment of the experience so the remaining moments must carry it,
+    which is what forces a different organisation rather than a thinner one.
+    """
+    if "spatial_narrative" in pinned:
+        return MutationOutcome("BLOCKED_BY_PIN", None, [], "narrative pinned")
+    seq = list(g.spatial_narrative)
+    if len(seq) < 2:
+        return MutationOutcome("NO_OP", None, [], "nothing removable without emptying the sequence")
+    drop = rng.randint(0, len(seq) - 1)
+    new_seq = seq[:drop] + seq[drop + 1:]
+    return MutationOutcome("APPLIED", g.model_copy(update={"spatial_narrative": new_seq}),
+                           ["spatial_narrative"], f"removed {seq[drop].split(':')[-1]}")
+
+
 def op_hybridise(ont, space, a, b, rng, pinned) -> MutationOutcome:
     """FORM group from A, EXPERIENCE group from B; materials union-then-trim."""
     new = a.model_copy(update={
@@ -271,6 +321,10 @@ REGISTRY: dict[str, OperatorSpec] = {
     "re_ritualise": OperatorSpec("re_ritualise", frozenset({"occupation_staging"}), (0.20, 0.30),
                                  "MEDIUM", op_re_ritualise),
     "scale_up": OperatorSpec("scale_up", frozenset({"scale_strategy"}), (0.03, 0.06), "LOW", op_scale_up),
+    "resequence": OperatorSpec("resequence", frozenset({"spatial_narrative"}), (0.06, 0.12),
+                               "LOW", op_resequence),
+    "remove": OperatorSpec("remove", frozenset({"spatial_narrative"}), (0.05, 0.10),
+                           "MEDIUM", op_remove),
 }
 
 

@@ -10,16 +10,64 @@ typologies:
       - {zone: ceremony, min_area_m2: 60, capacity: 0}
       - {zone: seating, min_area_m2: 180, capacity: 200}
       - {zone: arrival, min_area_m2: 30, capacity: 0}
+    # Tradition-neutral. Only what is true of ANY wedding lives here; everything
+    # ceremony-specific is under `traditions` and selected by brief.tradition.
     ritual:
-      tradition: hindu_north_indian
-      required_elements: [ritual:agni_kund, ritual:four_posts, ritual:seating_sightline]
+      tradition: unspecified
+      required_elements: [ritual:seating_sightline]
     invariants:
-      - {id: c_ritual_agni, category: RITUAL, sacred: true,
-         statement: "A fire vessel must be present at the ceremonial centre with 1.5 m radial and 4 m overhead clearance."}
-      - {id: c_ritual_four_posts, category: RITUAL, sacred: true,
-         statement: "The ceremonial canopy is defined by four supports."}
       - {id: c_sightline_all, category: PROGRAM,
          statement: "Every seated guest must have an unobstructed sightline to the ceremonial centre."}
+    # ── per-tradition ceremony ───────────────────────────────────────────────
+    # `sacred: true` means UNREACHABLE BY EVERY MUTATION OPERATOR, FOREVER. It is
+    # therefore reserved for what the rite genuinely requires. A convention — however
+    # common — is expressed as a normal invariant so the radical and wildcard roles
+    # can still argue with it. Locking convention at sacred level is what made every
+    # wedding resolve to a four-column pavilion regardless of its architecture.
+    traditions:
+      HINDU:
+        ritual:
+          tradition: hindu_north_indian
+          required_elements: [ritual:agni_kund, ritual:seating_sightline]
+        invariants:
+          - {id: c_ritual_agni, category: RITUAL, sacred: true,
+             statement: "A fire vessel must be present at the ceremonial centre, open to the sky, with 1.5 m radial and 4 m overhead clearance."}
+          - {id: c_ritual_canopy, category: RITUAL,
+             statement: "The ceremonial centre is marked by a distinct canopy or covering condition. Four posts are the common resolution, not the only one."}
+      MUSLIM:
+        ritual:
+          tradition: muslim_nikah
+          required_elements: [ritual:seating_sightline]
+        invariants:
+          - {id: c_ritual_nikah_seating, category: RITUAL, sacred: true,
+             statement: "The couple and the officiant are seated at the ceremonial centre; no fire element is present."}
+          - {id: c_ritual_nikah_approach, category: RITUAL,
+             statement: "The ceremonial platform has a controlled approach and a defined degree of screening from the general seating."}
+      CHRISTIAN:
+        ritual:
+          tradition: christian_ceremony
+          required_elements: [ritual:seating_sightline]
+        invariants:
+          - {id: c_ritual_altar, category: RITUAL, sacred: true,
+             statement: "The ceremony terminates on an altar or equivalent standing focus; no fire element is present."}
+          - {id: c_ritual_aisle, category: RITUAL,
+             statement: "A single processional axis runs from the entrance to the altar, wide enough to walk two abreast."}
+      SIKH:
+        ritual:
+          tradition: sikh_anand_karaj
+          required_elements: [ritual:seating_sightline]
+        invariants:
+          - {id: c_ritual_palki, category: RITUAL, sacred: true,
+             statement: "The Guru Granth Sahib rests on a raised, canopied dais; nothing is placed above it and no fire element is present."}
+          - {id: c_ritual_floor_seating, category: RITUAL,
+             statement: "Guests are seated at floor level facing the dais, with a clear circumambulation route around it."}
+      SECULAR:
+        ritual:
+          tradition: secular_ceremony
+          required_elements: [ritual:seating_sightline]
+        invariants:
+          - {id: c_ritual_focus, category: RITUAL,
+             statement: "The ceremony has one unambiguous spatial focus that every guest can see."}
   EVENT_STAGE:
     capacity: {guests: 500, seated: 400, principals: 6}
     site: {kind: COVERED, width_m: 40, depth_m: 28, ground: HARD}

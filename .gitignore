@@ -11,3 +11,7 @@ node_modules/
 out/
 .DS_Store
 tsconfig.tsbuildinfo
+
+# local run history and scratch logs
+backend/.sessions/
+_c.log

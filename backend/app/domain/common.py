@@ -47,6 +47,41 @@ class Typology(StrEnum):
     GENERIC_SPATIAL = "GENERIC_SPATIAL"
 
 
+class EventType(StrEnum):
+    """WHAT is happening in the venue. Distinct from Typology, which is what the
+    venue IS. One convention space hosts a sangeeth on Friday and the wedding on
+    Saturday: same room, different programme, different shot list."""
+    SANGEETH = "SANGEETH"
+    WEDDING = "WEDDING"
+    RECEPTION = "RECEPTION"
+    MEHENDI = "MEHENDI"
+    HALDI = "HALDI"
+    ENGAGEMENT = "ENGAGEMENT"
+    GENERIC_EVENT = "GENERIC_EVENT"
+
+
+class Tradition(StrEnum):
+    """The ceremonial tradition. This decides the FOCAL element of a wedding —
+    a mandap, a nikah stage, an altar and a palki are not interchangeable — and it
+    selects which clichés the anti-brief must push against."""
+    HINDU = "HINDU"
+    MUSLIM = "MUSLIM"
+    CHRISTIAN = "CHRISTIAN"
+    SIKH = "SIKH"
+    SECULAR = "SECULAR"
+    UNSPECIFIED = "UNSPECIFIED"
+
+
+class VenueType(StrEnum):
+    """The host envelope the design is fitted into."""
+    CONVENTION_SPACE = "CONVENTION_SPACE"      # the default
+    BANQUET_HALL = "BANQUET_HALL"
+    LAWN = "LAWN"
+    HERITAGE = "HERITAGE"
+    BEACH = "BEACH"
+    UNSPECIFIED = "UNSPECIFIED"
+
+
 class CriticName(StrEnum):
     ALIGNMENT = "ALIGNMENT"
     COHERENCE = "COHERENCE"

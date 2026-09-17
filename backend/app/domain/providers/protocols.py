@@ -174,6 +174,38 @@ class CreativeSynthesisProvider(Protocol):
         ...
 
 
+@runtime_checkable
+class ConceptualMutationProvider(Protocol):
+    """Proposes conceptual transformations. Deliberately narrower than
+    CreativeSynthesisProvider: it never writes a concept, only says what move to make.
+
+    Note what is absent, as with every other provider protocol here: no sampling
+    parameter. Exploration breadth is a property of the OPERATIONS and the budget,
+    not of decoding noise (critical rule 3). A provider that wants one configures
+    it at construction.
+
+    The contract is a single OPERATION per call — never "be creative". Everything the
+    provider returns is verified downstream by deterministic code, so it is trusted
+    for conceptual relationships and for nothing else: not dimensions, not capacity,
+    not feasibility, not diversity.
+    """
+    name: str
+    model: str
+
+    def is_configured(self) -> bool: ...
+
+    def propose_transformations(
+        self,
+        *,
+        operation: str,
+        context: Any,
+        n: int = 1,
+        seed: int = 0,
+    ) -> Any:
+        """-> list[CreativeTransformation]. May return fewer than n, or none."""
+        ...
+
+
 class SearchError(RuntimeError):
     """A search backend could not answer.
 

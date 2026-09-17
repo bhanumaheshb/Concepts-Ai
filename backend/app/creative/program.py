@@ -13,7 +13,7 @@ from app.domain.brief import (
     BudgetBand, CapacitySpec, ClimateSpec, Constraint, DesignBrief, DesignProgram,
     RequiredZone, RitualProfile, ScheduleSpec, SiteSpec, SoftIntent,
 )
-from app.domain.common import Typology
+from app.domain.common import Typology, VenueType
 from app.ontology.graph import Ontology
 
 TYPOLOGY_KEYWORDS: list[tuple[Typology, tuple[str, ...]]] = [
@@ -116,6 +116,10 @@ def build_program(ont: Ontology, brief: DesignBrief) -> DesignProgram:
     ]))
     typology = brief.typology if brief.typology != Typology.GENERIC_SPATIAL else classify_typology(text)
     defaults = ont.typology_defaults.get(typology.value, ont.typology_defaults["GENERIC_SPATIAL"])
+    # A typology may carry a per-tradition ceremony. Selecting one REPLACES the
+    # neutral ritual profile and ADDS that rite's invariants; selecting none leaves
+    # the typology tradition-neutral rather than defaulting to any one rite.
+    tradition_block = (defaults.get("traditions") or {}).get(brief.tradition.value)
 
     d_cap = defaults.get("capacity", {})
     guests = parse_capacity(text, int(d_cap.get("guests", 100)))
@@ -145,7 +149,8 @@ def build_program(ont: Ontology, brief: DesignBrief) -> DesignProgram:
     )
 
     invariants: list[Constraint] = []
-    for c in defaults.get("invariants", []):
+    for c in (list(defaults.get("invariants", []))
+              + list((tradition_block or {}).get("invariants", []))):
         invariants.append(Constraint(
             constraint_id=c["id"], kind="HARD", category=c["category"], statement=c["statement"],
             source="TYPOLOGY", sacred=bool(c.get("sacred", False)),
@@ -184,8 +189,8 @@ def build_program(ont: Ontology, brief: DesignBrief) -> DesignProgram:
         ))
 
     ritual = None
-    if defaults.get("ritual"):
-        r = defaults["ritual"]
+    r = (tradition_block or {}).get("ritual") or defaults.get("ritual")
+    if r:
         ritual = RitualProfile(tradition=r.get("tradition"), region=brief.location,
                                required_elements=list(r.get("required_elements", [])))
 
@@ -201,6 +206,9 @@ def build_program(ont: Ontology, brief: DesignBrief) -> DesignProgram:
     return DesignProgram(
         program_id=deterministic_id("pg", brief.brief_id, typology.value),
         brief_id=brief.brief_id, typology=typology,
+        event_type=brief.event_type, tradition=brief.tradition,
+        venue_type=(brief.venue_type if brief.venue_type != VenueType.UNSPECIFIED
+                    else VenueType.CONVENTION_SPACE),
         invariants=invariants, soft_intents=[], open_variables=[],
         site=site, budget=BudgetBand(band=band), schedule=schedule, capacity=capacity,
         ritual=ritual, required_zones=zones,

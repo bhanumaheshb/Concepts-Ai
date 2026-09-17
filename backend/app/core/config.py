@@ -34,6 +34,7 @@ class Settings(BaseModel):
     mock_mode: bool = True
     llm_provider: str = "mock"
     embedding_provider: str = "mock"
+    semantic_dedupe_enabled: bool = False   # channel 2; see Settings.semantic_dedupe
     image_provider: str = "none"
     engine_seed: int = 42
     ontology_version: str = "v1"
@@ -57,6 +58,18 @@ class Settings(BaseModel):
     llm_timeout: float = 300.0            # a local model on CPU can take minutes
     llm_max_output_tokens: int = 8192   # the full concept schema does not fit in 3072
     synthesis_repairs: int = 1
+    # --- creative cognition (conceptual exploration layer) ---
+    # OFF by default: enabling it adds candidates and LLM calls, so every
+    # recorded baseline was captured with it disabled.
+    creative_cognition_enabled: bool = False
+    creative_cognition_budget: int = 8
+    creative_max_mutations_per_candidate: int = 2
+    creative_max_generations: int = 1
+    # No sampling-noise knob by design: the repository forbids plumbing
+    # temperature/top_p/top_k through engine interfaces (critical rule 3, enforced
+    # by tests/test_architecture.py). Exploration breadth is set by the operations
+    # and the budget above; a concrete provider may configure decoding internally.
+    creative_novelty_threshold: float = 0.6
     creative_synthesis: bool | None = None   # None => derived from llm_provider
 
     @property
@@ -93,6 +106,16 @@ class Settings(BaseModel):
         return self.embedding_provider != "none"
 
     @property
+    def semantic_dedupe(self) -> bool:
+        """Duplicate-detection channel 2 — "the same idea in different facets".
+
+        Defaults OFF even when an embedding provider exists, because switching it on
+        can only ADD rejections (spec R-DIV-02) and would therefore move the recorded
+        no-reference baselines. Set SEMANTIC_DEDUPE=true to enable.
+        """
+        return self.semantic_dedupe_enabled and self.embeddings_enabled
+
+    @property
     def image_configured(self) -> bool:
         return self.image_provider not in ("", "none", "mock")
 
@@ -105,6 +128,7 @@ def get_settings() -> Settings:
         mock_mode=_b("MOCK_MODE", True),
         llm_provider=e("LLM_PROVIDER", "mock"),
         embedding_provider=e("EMBEDDING_PROVIDER", "mock"),
+        semantic_dedupe_enabled=_b("SEMANTIC_DEDUPE", False),
         image_provider=e("IMAGE_PROVIDER", "none"),
         engine_seed=int(e("ENGINE_SEED", "42")),
         ontology_version=e("ONTOLOGY_VERSION", "v1"),
@@ -123,6 +147,11 @@ def get_settings() -> Settings:
         llm_timeout=float(e("LLM_TIMEOUT", "300")),
         llm_max_output_tokens=int(e("LLM_MAX_OUTPUT_TOKENS", "8192")),
         synthesis_repairs=int(e("SYNTHESIS_REPAIRS", "1")),
+        creative_cognition_enabled=_b("CREATIVE_COGNITION_ENABLED", False),
+        creative_cognition_budget=int(e("CREATIVE_COGNITION_BUDGET", "8")),
+        creative_max_mutations_per_candidate=int(e("CREATIVE_MAX_MUTATIONS_PER_CANDIDATE", "2")),
+        creative_max_generations=int(e("CREATIVE_MAX_GENERATIONS", "1")),
+        creative_novelty_threshold=float(e("CREATIVE_NOVELTY_THRESHOLD", "0.6")),
         # A blank CREATIVE_SYNTHESIS= line means "not set", not "off". `.env.example`
         # ships the key empty, and reading that as False would silently disable
         # synthesis for anyone who copied it — the failure this layer exists to avoid.

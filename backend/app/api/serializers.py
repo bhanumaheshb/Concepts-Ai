@@ -221,6 +221,7 @@ def exploration_payload(ont: Ontology, rec: ExplorationRecord) -> dict[str, Any]
         "error": rec.error,
         "seed": rec.seed,
         "k": rec.k,
+        "started_at": rec.started_at,
         "brief": rec.brief.model_dump(mode="json"),
         "stages": rec.stage_status(),
         "degraded": rec.degraded,

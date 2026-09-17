@@ -1,13 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ConceptDetail, Shot, getConcept } from "../lib/api";
+import { ConceptDetail, Shot, getConcept, getSessionConcept } from "../lib/api";
 
 export function ConceptPanel({
   conceptId,
+  sessionId,
   onClose,
   onToast,
 }: {
   conceptId: string;
+  /** Set when the concept belongs to a past session. The live store is in-memory,
+   *  so after a backend restart only the archive has it. */
+  sessionId?: string | null;
   onClose: () => void;
   onToast: (m: string) => void;
 }) {
@@ -16,13 +20,21 @@ export function ConceptPanel({
 
   useEffect(() => {
     let alive = true;
+    // Try the live store first — it has the freshest record. Fall back to the
+    // session archive, which is the only source once the backend has restarted.
     getConcept(conceptId)
       .then((d) => alive && setData(d))
-      .catch((e) => alive && setError(String(e.message || e)));
+      .catch(() =>
+        sessionId
+          ? getSessionConcept(sessionId, conceptId)
+              .then((d) => alive && setData(d))
+              .catch((e) => alive && setError(String(e.message || e)))
+          : undefined
+      );
     return () => {
       alive = false;
     };
-  }, [conceptId]);
+  }, [conceptId, sessionId]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();

@@ -16,7 +16,10 @@ class Lineage(Frozen):
     magnitude: float | None = None
     pinned_facets: list[FacetId] = []
     generation: int = 0
-    origin: Literal["ALLOCATED", "MUTATED", "HYBRIDISED", "REPAIRED"] = "ALLOCATED"
+    # COGNITION: produced by the Creative Cognition layer. Still a genotype mutation
+    # performed by the deterministic operators — the origin records who ASKED for it.
+    origin: Literal["ALLOCATED", "MUTATED", "HYBRIDISED", "REPAIRED",
+                    "COGNITION"] = "ALLOCATED"
 
 
 class RejectionRecord(Frozen):

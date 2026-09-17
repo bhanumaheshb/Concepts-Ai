@@ -11,18 +11,24 @@ from app.api.serializers import (
     comparison_rows, concept_detail, debug_payload, exploration_payload,
 )
 from app.composition import get_container
+from app.core import logging as elog
+from app.persistence.sessions import SessionArchive
 from app.core.ids import new_id
 from app.core.seeded import SeededRandom
 from app.creative.phenotype import synthesise_phenotype
 from app.critics.runner import evaluate
 from app.diversity.metric import genotype_distance
 from app.domain.brief import DesignBrief
-from app.domain.common import NicheRole, Typology, ViewRole
+from app.domain.common import (
+    EventType, NicheRole, Tradition, Typology, VenueType, ViewRole,
+)
 from app.domain.concept import ConceptDNA, Lineage
 from app.mutation.operators import apply_operator, op_hybridise
 from app.prompt.compiler import compile_prompt
 
 router = APIRouter(prefix="/api", tags=["engine"])
+
+_sessions = SessionArchive()
 _lock = threading.Lock()
 
 
@@ -46,6 +52,11 @@ class TrendBlock(BaseModel):
 class BriefRequest(BaseModel):
     project_type: str | None = None
     brief: str = Field(min_length=4)
+    # What is happening, in whose tradition, in what kind of venue. All optional:
+    # omitting them reproduces the pre-existing behaviour exactly.
+    event_type: str | None = None       # SANGEETH | WEDDING | RECEPTION | MEHENDI | ...
+    tradition: str | None = None        # HINDU | MUSLIM | CHRISTIAN | SIKH | SECULAR
+    venue_type: str | None = None       # CONVENTION_SPACE (default) | LAWN | ...
     location: str | None = None
     dimensions: str | None = None
     budget: str | None = None
@@ -105,6 +116,9 @@ def config() -> dict:
         "defaults": {"k": c.settings.default_k, "seed": c.settings.engine_seed},
         "image_generation_required": False,
         "typologies": [t.value for t in Typology],
+        "event_types": [e.value for e in EventType],
+        "traditions": [t.value for t in Tradition],
+        "venue_types": [v.value for v in VenueType],
     }
 
 
@@ -118,10 +132,22 @@ def create_exploration(req: BriefRequest, background: BackgroundTasks) -> dict:
             typology = Typology(req.project_type)
         except ValueError:
             typology = Typology.GENERIC_SPATIAL
+    def _enum(cls, raw, fallback):
+        """An unrecognised value falls back rather than 422-ing: a new tradition in
+        the UI must never be able to take the engine down."""
+        try:
+            return cls(raw) if raw else fallback
+        except ValueError:
+            return fallback
+
     brief = DesignBrief(
         brief_id=new_id("bf"),
         raw_text=" ".join(filter(None, [req.brief, req.constraints])),
-        typology=typology, location=req.location, dimensions_text=req.dimensions,
+        typology=typology,
+        event_type=_enum(EventType, req.event_type, EventType.GENERIC_EVENT),
+        tradition=_enum(Tradition, req.tradition, Tradition.UNSPECIFIED),
+        venue_type=_enum(VenueType, req.venue_type, VenueType.UNSPECIFIED),
+        location=req.location, dimensions_text=req.dimensions,
         budget_text=req.budget, constraints_text=req.constraints,
     )
     rec_id = None
@@ -160,18 +186,91 @@ def create_exploration(req: BriefRequest, background: BackgroundTasks) -> dict:
                 trend_result, influence=req.trend.influence,
                 candidate_ids=req.trend.candidate_ids or None, seed=seed)
 
-    def _run():
-        with _lock:
-            c.pipeline.run(brief, k=req.k, seed=seed, injection=injection,
-                           trend_result=trend_result)
-
     # create a placeholder synchronously so the UI can poll immediately
     from app.core.ids import deterministic_id
     rec_id = deterministic_id("ex", brief.brief_id, str(seed), str(req.k),
                               *([injection.injection_id] if injection else []))
+
+    def _snapshot() -> None:
+        """Write the run to the session archive as it currently stands.
+
+        The store holds the live record by reference, so this sees concepts the
+        moment stage 12 selects them and each one's prose the moment stage 14b
+        writes it. Serialising a record another thread is mutating can raise; a
+        failed tick is simply skipped, and the next one — or the final save —
+        supersedes it. Archiving must never disturb the run it is watching.
+        """
+        rec = c.store.get(rec_id)
+        if rec is None:
+            return
+        try:
+            from app.api.serializers import concept_detail, exploration_payload
+            _sessions.save(
+                rec.exploration_id,
+                exploration_payload(c.ontology, rec),
+                {x.concept_id: concept_detail(c.ontology, rec, x) for x in rec.concepts},
+            )
+        except Exception as exc:                       # pragma: no cover
+            elog.warn(f"session snapshot skipped ({type(exc).__name__}) — run unaffected")
+
+    def _run():
+        # Synthesis is minutes per concept. Snapshotting on a timer is what lets the
+        # UI show concept 1 the moment it is written instead of after all k of them,
+        # and what lets a reloaded page — or a restarted backend — find the run again.
+        stop = threading.Event()
+
+        def _watch() -> None:
+            while not stop.wait(4.0):
+                _snapshot()
+
+        watcher = threading.Thread(target=_watch, name=f"archive:{rec_id}", daemon=True)
+        watcher.start()
+        try:
+            with _lock:
+                c.pipeline.run(brief, k=req.k, seed=seed, injection=injection,
+                               trend_result=trend_result)
+        finally:
+            stop.set()
+            watcher.join(timeout=5.0)
+            _snapshot()          # authoritative: the completed run, or the failed one
+
     background.add_task(_run)
     return {"exploration_id": rec_id, "status": "RUNNING", "seed": seed, "k": req.k,
             "reference": bool(injection), "trend": bool(trend_result)}
+
+
+@router.get("/sessions")
+def list_sessions() -> dict:
+    """Past runs, newest first, numbered oldest-first so Session 1 stays Session 1.
+
+    Read from disk rather than from the store: the store is in-memory and empties on
+    every restart, which is exactly the history this endpoint exists to keep.
+    """
+    return {"sessions": _sessions.list()}
+
+
+@router.get("/sessions/{exploration_id}")
+def get_session(exploration_id: str) -> dict:
+    doc = _sessions.get(exploration_id)
+    if doc is None:
+        raise HTTPException(404, f"session {exploration_id} not found")
+    return doc["exploration"]
+
+
+@router.get("/sessions/{exploration_id}/concepts/{concept_id}")
+def get_session_concept(exploration_id: str, concept_id: str) -> dict:
+    doc = _sessions.get(exploration_id)
+    if doc is None:
+        raise HTTPException(404, f"session {exploration_id} not found")
+    detail = (doc.get("concepts") or {}).get(concept_id)
+    if detail is None:
+        raise HTTPException(404, f"concept {concept_id} not in session {exploration_id}")
+    return detail
+
+
+# There is deliberately no delete route. Sessions are the only record of a run that
+# survives a restart, and a stray click on a delete control already destroyed one.
+# Removing a session is a filesystem operation on backend/.sessions/, on purpose.
 
 
 @router.get("/explorations")

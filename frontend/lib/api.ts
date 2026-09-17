@@ -1,4 +1,8 @@
-export const API = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+// Empty by default: requests go to the page's own origin and next.config.mjs
+// rewrites /api/* to the engine. That keeps the app working unchanged whether it
+// is opened at localhost or through a tunnel. Set NEXT_PUBLIC_API_BASE only to
+// point the UI at an engine somewhere else.
+export const API = process.env.NEXT_PUBLIC_API_BASE ?? "";
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const r = await fetch(`${API}${path}`, {
@@ -108,12 +112,69 @@ export type Exploration = {
 export type BriefInput = {
   brief: string;
   project_type?: string;
+  event_type?: string; // what is happening — decides the shot list
+  tradition?: string; // decides the ceremonial focus: mandap / nikah / altar / palki
+  venue_type?: string;
   location?: string;
   dimensions?: string;
   budget?: string;
   k?: number;
   inspiration?: string; // trend mode, "OFF" when unused
+  references?: string[]; // curated references to work in, by display name
+  influence?: number; // 0..1, how strongly they push
 };
+
+export type ReferenceHit = {
+  reference_id: string;
+  display_name: string;
+  kind: string;
+  resolved_by: string;
+  confidence: number;
+  blurb: string;
+};
+
+export function searchReferences(q: string): Promise<{ results: ReferenceHit[] }> {
+  return req(`/api/references/search?q=${encodeURIComponent(q)}`);
+}
+
+/** How literally a reference is taken. The engine transfers principles, never props. */
+export const REFERENCE_PRESETS = [
+  { value: "INSPIRED_BY", label: "Inspired by", hint: "Takes the underlying idea only." },
+  { value: "IN_THE_STYLE_OF", label: "In the style of", hint: "Leans harder on its language." },
+  { value: "ECHOES_OF", label: "Echoes of", hint: "A trace, barely legible." },
+];
+
+export const EVENT_TYPES = [
+  { value: "SANGEETH", label: "Sangeeth" },
+  { value: "WEDDING", label: "Wedding ceremony" },
+  { value: "RECEPTION", label: "Reception" },
+  { value: "ENGAGEMENT", label: "Engagement" },
+  { value: "MEHENDI", label: "Mehendi" },
+  { value: "HALDI", label: "Haldi" },
+  { value: "GENERIC_EVENT", label: "Other event" },
+];
+
+// The ceremonial focus is not a dressing choice — a mandap, a nikah stage, an
+// altar and a palki differ in axis, enclosure and what must stay open to the sky.
+export const TRADITIONS = [
+  { value: "UNSPECIFIED", label: "Not specified" },
+  { value: "HINDU", label: "Hindu", focus: "Mandap" },
+  { value: "MUSLIM", label: "Muslim", focus: "Nikah stage" },
+  { value: "CHRISTIAN", label: "Christian", focus: "Altar" },
+  { value: "SIKH", label: "Sikh", focus: "Palki Sahib" },
+  { value: "SECULAR", label: "Secular", focus: "Ceremony focus" },
+];
+
+export const VENUE_TYPES = [
+  { value: "CONVENTION_SPACE", label: "Convention space" },
+  { value: "BANQUET_HALL", label: "Banquet hall" },
+  { value: "LAWN", label: "Lawn / outdoor" },
+  { value: "HERITAGE", label: "Heritage property" },
+  { value: "BEACH", label: "Beach" },
+];
+
+/** Events whose focal area the tradition decides. Others ignore it. */
+export const CEREMONIAL_EVENTS = ["WEDDING", "ENGAGEMENT"];
 
 export const TREND_MODES = [
   { value: "CURRENT_INSPIRATION", label: "Current inspiration" },
@@ -137,13 +198,24 @@ export function createExploration(input: BriefInput): Promise<Exploration> {
   const body: Record<string, unknown> = {
     brief: input.brief,
     project_type: input.project_type || undefined,
+    event_type: input.event_type || undefined,
+    tradition: input.tradition || undefined,
+    venue_type: input.venue_type || undefined,
     location: input.location || undefined,
     dimensions: input.dimensions || undefined,
     budget: input.budget || undefined,
-    k: input.k ?? 3,
+    k: input.k ?? 10,
   };
   if (input.inspiration && input.inspiration !== "OFF") {
     body.trend = { mode: input.inspiration, influence: 0.55, max_selected: 3 };
+  }
+  if (input.references?.length) {
+    body.reference = {
+      references: input.references.slice(0, 4), // the API caps at four
+      influence: input.influence ?? 0.55,
+      preset: "INSPIRED_BY",
+      synthesis: true,
+    };
   }
   return req<Exploration>("/api/explorations", {
     method: "POST",
@@ -157,6 +229,42 @@ export function getConcepts(id: string): Promise<{ concepts: Concept[] }> {
 
 export function getExploration(id: string): Promise<{ status?: string } & Record<string, any>> {
   return req(`/api/explorations/${id}`);
+}
+
+/* ── session history ─────────────────────────────────────────────── */
+
+/** A past run, kept on disk so it survives a backend restart. */
+export type Session = {
+  exploration_id: string;
+  session_no: number;
+  saved_at: number;
+  started_at: number;
+  status: string;
+  brief: string;
+  concepts: number;
+  /** How many the writer has finished. Below `k` while a run is still going. */
+  written: number;
+  seed: number | null;
+  k: number | null;
+};
+
+/** A run still in flight. Its row keeps updating instead of waiting for the end. */
+export const isRunning = (s: Session) => s.status !== "COMPLETE" && s.status !== "FAILED";
+
+export function listSessions(): Promise<{ sessions: Session[] }> {
+  return req("/api/sessions");
+}
+
+/** The saved exploration payload — same shape the live endpoint returns. */
+export function getSession(id: string): Promise<{ concepts: Concept[] } & Record<string, any>> {
+  return req(`/api/sessions/${id}`);
+}
+
+export function getSessionConcept(
+  explorationId: string,
+  conceptId: string
+): Promise<ConceptDetail> {
+  return req(`/api/sessions/${explorationId}/concepts/${conceptId}`);
 }
 
 export function getConcept(id: string): Promise<ConceptDetail> {

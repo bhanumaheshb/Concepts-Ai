@@ -9,6 +9,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 
+from app.core import logging as elog
 from app.core.hashing import short_hash
 from app.core.ids import deterministic_id, new_id
 from app.core.seeded import SeededRandom
@@ -21,7 +22,7 @@ from app.creative.portfolio import select_portfolio
 from app.creative.program import attach_soft_intents, build_program
 from app.creative.schemas import ProgramProposal
 from app.critics.runner import evaluate
-from app.diversity.matrix import build_matrix
+from app.diversity.matrix import build_matrix, is_duplicate
 from app.diversity.metric import D_MIN, genotype_distance
 from app.domain.antibrief import AntiBrief, AntiBriefProposal
 from app.domain.brief import DesignBrief, DesignProgram
@@ -83,6 +84,7 @@ class ExplorationRecord:
     injection: object | None = None          # CreativePrincipleInjection, or None
     trend_result: object | None = None       # TrendDiscoveryResult, for the trace only
     principle_index: object | None = None
+    cognition: object | None = None          # CreativeMemory, when the layer ran
     stage_runs: list[StageRun] = field(default_factory=list)
     repairs: list[RepairRecord] = field(default_factory=list)
     degraded: list[str] = field(default_factory=list)
@@ -114,7 +116,8 @@ class ExplorationRecord:
 
 class Pipeline:
     def __init__(self, ont: Ontology, llm: LLMProvider, store, use_llm_critics: bool = True,
-                 synthesizer=None, arch_compiler=None, view_compiler=None) -> None:
+                 synthesizer=None, arch_compiler=None, view_compiler=None,
+                 embeddings=None, cognition=None) -> None:
         self.ont = ont
         self.llm = llm
         self.store = store
@@ -124,6 +127,51 @@ class Pipeline:
         self.synthesizer = synthesizer
         self.arch_compiler = arch_compiler
         self.view_compiler = view_compiler
+        # Channel 2 of duplicate detection. None => genotype distance alone, which is
+        # the behaviour every existing baseline was recorded against.
+        self.embeddings = embeddings
+        # Creative Cognition. None => no conceptual expansion, no extra candidates,
+        # no extra provider calls, no extra randomness drawn.
+        self.cognition = cognition
+
+    def _drop_duplicates(self, ont: Ontology, pool: list[ConceptDNA]):
+        """Two concepts that are the same idea in different words are one concept.
+
+        Channel 1 (genotype distance) always runs. Channel 2 (thesis embedding) runs
+        only when an embedding provider is configured, and per spec R-DIV-02 it may
+        only ADD rejections, never remove one — so a run without embeddings is a
+        strict behavioural subset of a run with them, and existing baselines hold.
+
+        Deterministic: the pool is already ordered by niche_index, and of any duplicate
+        pair the LATER concept is the one dropped.
+        """
+        if len(pool) < 2:
+            return pool, []
+        vecs: list[list[float]] | list[None] = [None] * len(pool)
+        if self.embeddings is not None and self.embeddings.is_configured():
+            vecs = self.embeddings.embed_text([c.phenotype.design_thesis for c in pool])
+
+        keep: list[ConceptDNA] = []
+        kept_idx: list[int] = []
+        dropped: list[ConceptDNA] = []
+        for i, cand in enumerate(pool):
+            dup_reason = None
+            for j in kept_idx:
+                is_dup, reason = is_duplicate(ont, pool[j], cand, vecs[j], vecs[i])
+                if is_dup:
+                    dup_reason = reason
+                    break
+            if dup_reason:
+                dropped.append(cand.model_copy(update={
+                    "status": "REJECTED",
+                    "rejection": RejectionRecord(
+                        stage="11", reason_code=dup_reason,
+                        detail="duplicate of an already-selected concept"),
+                }))
+            else:
+                keep.append(cand)
+                kept_idx.append(i)
+        return keep, dropped
 
     @staticmethod
     def _reference_statements(rec: "ExplorationRecord", dna) -> list[str]:
@@ -152,13 +200,17 @@ class Pipeline:
                 self.t0 = time.perf_counter()
                 return self
             def __exit__(self, exc_type, exc, tb):
+                ms = int((time.perf_counter() - self.t0) * 1000)
+                calls = self.rec.llm_calls - self.calls_before
+                status = "FAILED" if exc_type else "OK"
+                detail = self.detail if not exc_type else f"{exc_type.__name__}: {exc}"
                 self.rec.stage_runs.append(StageRun(
-                    stage=self.code, label=self.label,
-                    status="FAILED" if exc_type else "OK",
-                    llm_calls=self.rec.llm_calls - self.calls_before,
-                    latency_ms=int((time.perf_counter() - self.t0) * 1000),
-                    detail=self.detail if not exc_type else f"{exc_type.__name__}: {exc}",
+                    stage=self.code, label=self.label, status=status,
+                    llm_calls=calls, latency_ms=ms, detail=detail,
                 ))
+                # The live trace mirrors the recorded StageRun exactly, so what you
+                # watch and what you later read back from the API cannot disagree.
+                elog.stage(self.code, self.label, status, ms, detail, calls)
                 return False
         return _Ctx(self, rec, code, label)
 
@@ -187,6 +239,20 @@ class Pipeline:
             status="RUNNING", seed=seed, k=k, brief=brief, versions=versions,
             injection=injection, trend_result=trend_result,
         )
+        elog.note("=" * 78)
+        elog.note(f"RUN {rec.exploration_id}  k={k} seed={seed} "
+                  f"ontology={ont.version}")
+        elog.note(f"     brief: {brief.raw_text[:70]!r}")
+        elog.note(f"     event={brief.event_type.value} tradition={brief.tradition.value} "
+                  f"venue={brief.venue_type.value}")
+        # State the optional layers UP FRONT, present or absent. Reading "why did
+        # nothing happen" out of an absence is the slowest kind of debugging.
+        elog.note(f"     layers: reference={'on' if injection else 'off'} "
+                  f"trend={'on' if trend_result else 'off'} "
+                  f"cognition={'on' if self.cognition else 'off'} "
+                  f"synthesis={'on' if self.synthesizer else 'off'} "
+                  f"dedupe_ch2={'on' if self.embeddings else 'off'}")
+        elog.note("=" * 78)
         ref_dnas = list(injection.reference_dnas) if injection else []
         ref_blocked = injection.blocked_tokens() if injection else []
         rec.principle_index = index_for(ont, injection.principles if injection else [])
@@ -270,6 +336,38 @@ class Pipeline:
                     fidelity_by_concept[dna.concept_id] = fidelity
                 st.detail = f"{len(candidates)} phenotypes"
 
+            # 08c creative cognition — conceptual expansion of the candidate set.
+            # Runs AFTER phenotype because each operation reads the concept's actual
+            # thesis, and BEFORE the scene graph and critics so every child faces the
+            # same deterministic verification as an allocated concept. With
+            # cognition=None nothing below executes and the run is unchanged.
+            if self.cognition is None:
+                elog.skip("08c", "Creative cognition",
+                          "disabled (CREATIVE_COGNITION_ENABLED=false)")
+            else:
+                with self._stage(rec, "08c", "Creative cognition") as st:
+                    before = len(candidates)
+                    expanded = self.cognition.expand(
+                        concepts=candidates, program=program, antibrief=antibrief,
+                        space=space, exploration_id=rec.exploration_id, seed=seed,
+                        principle_statements=tuple(
+                            s for p in alloc.principles if p for s in p.statements)[:4],
+                    )
+                    for j, dna in enumerate(expanded[before:], start=before):
+                        ph, fidelity, calls = synthesise_phenotype(
+                            self.llm, ont, program, dna.genotype, role=dna.role,
+                            seed=seed + j, principle_statements=[],
+                            forbidden_tokens=sorted(set(ref_blocked)), sibling_titles=titles,
+                        )
+                        rec.llm_calls += calls
+                        titles.append(ph.title)
+                        child = dna.model_copy(update={"phenotype": ph})
+                        candidates.append(child)
+                        fidelity_by_concept[child.concept_id] = fidelity
+                    rec.cognition = self.cognition.memory
+                    st.detail = (f"+{len(candidates) - before} concepts from "
+                                 f"{len(self.cognition.memory.records)} operations")
+
             # 13 scene graph (before critics: alignment + feasibility read it)
             with self._stage(rec, "13", "Scene graph") as st:
                 for dna in candidates:
@@ -305,6 +403,41 @@ class Pipeline:
                     }))
                 passed = sum(1 for c in evaluated if c.evaluation.gate_passed)
                 st.detail = f"{passed}/{len(evaluated)} passed all four gates"
+
+            # 09c creative evolution — a failing concept may come back as a DIFFERENT
+            # answer rather than a patched one. Repair still runs below and still fixes
+            # defects while holding identity exactly; evolution is allowed to move a
+            # conceptual variable instead, which repair by design is not.
+            if self.cognition is None:
+                elog.skip("09c", "Creative evolution", "cognition layer disabled")
+            else:
+                with self._stage(rec, "09c", "Creative evolution") as st:
+                    before = len(evaluated)
+                    grown = self.cognition.evolve(
+                        concepts=evaluated, program=program, antibrief=antibrief,
+                        space=space, exploration_id=rec.exploration_id, seed=seed)
+                    for j, dna in enumerate(grown[before:], start=1000):
+                        ph, fidelity, calls = synthesise_phenotype(
+                            self.llm, ont, program, dna.genotype, role=dna.role,
+                            seed=seed + j, principle_statements=[],
+                            forbidden_tokens=sorted(set(ref_blocked)), sibling_titles=titles)
+                        rec.llm_calls += calls
+                        titles.append(ph.title)
+                        child = dna.model_copy(update={"phenotype": ph})
+                        scene, scalls = build_scene_graph(
+                            self.llm, ont, child.concept_id, child.genotype, program, seed)
+                        rec.llm_calls += scalls
+                        rec.scenes[child.concept_id] = scene
+                        ev, ecalls = evaluate(
+                            self.llm, ont, child, program, scene, fidelity, seed,
+                            novelty=novelty(ont, child.genotype, archive),
+                            use_llm=self.use_llm_critics)
+                        rec.llm_calls += ecalls
+                        evaluated.append(child.model_copy(update={
+                            "evaluation": ev, "status": "EVALUATED",
+                            "scene_graph_id": scene.scene_graph_id}))
+                        fidelity_by_concept[child.concept_id] = fidelity
+                    st.detail = f"+{len(evaluated) - before} evolved from critic findings"
 
             # 10 repair
             with self._stage(rec, "10", "Repair") as st:
@@ -360,6 +493,9 @@ class Pipeline:
             # 11 diversity
             with self._stage(rec, "11", "Diversity evaluation") as st:
                 pool = accepted or repaired
+                pool, dupes = self._drop_duplicates(ont, pool)
+                if dupes:
+                    rec.rejected = rec.rejected + dupes
                 matrix = build_matrix(ont, rec.exploration_id, pool)
                 rec.matrix = matrix
                 st.detail = (f"vendi={matrix.vendi_score:.2f} mean={matrix.mean_pairwise:.2f} "
@@ -374,6 +510,9 @@ class Pipeline:
                                 for c in pool if c.concept_id in member_ids]
                 rec.matrix = build_matrix(ont, rec.exploration_id, rec.concepts)
                 rec.portfolio = portfolio.model_copy(update={"diversity": rec.matrix})
+                if self.cognition is not None:
+                    # close the provenance loop: which proposed ideas survived
+                    self.cognition.memory.mark_selected(member_ids)
                 st.detail = (f"{len(rec.concepts)} selected, curriculum "
                              f"{'satisfied' if portfolio.curriculum_satisfied else 'DEGRADED'}")
 
@@ -390,10 +529,15 @@ class Pipeline:
                 degraded_n = sum(1 for p in rec.prompts.values() if p.degraded)
                 st.detail = f"{len(rec.prompts)} prompts compiled ({degraded_n} degraded)"
 
+
             # 14b LLM creative synthesis + architectural prompt compilation.
             # Runs AFTER portfolio selection so exactly k concepts are synthesised:
             # one bounded call each, never a call for a concept that was rejected.
-            if self.synthesizer is not None:
+            if self.synthesizer is None:
+                elog.skip("14b", "Creative synthesis",
+                          "no writer configured (LLM_PROVIDER=mock) — the 21-section "
+                          "prompts are still complete, marked degraded")
+            else:
                 with self._stage(rec, "14b", "Creative synthesis") as st:
                     forbidden = sorted(antibrief.surface_tokens_excluding(set()))
                     for dna in rec.concepts:
@@ -420,13 +564,18 @@ class Pipeline:
                                 rec.view_prompts[dna.concept_id] = (
                                     self.view_compiler.compile_views(
                                         hero=hero, dna=dna, concept=result.concept,
-                                        program=program, brief_text=brief.raw_text))
+                                        program=program, brief_text=brief.raw_text,
+                                        scene=rec.scenes.get(dna.concept_id)))
                     ok = sum(1 for v in rec.validations.values() if v.passed)
                     st.detail = (f"{len(rec.structured)}/{len(rec.concepts)} synthesised, "
                                  f"{ok} valid, {rec.synthesis_repairs} repaired, "
                                  f"{rec.synthesis_calls} model calls")
 
             # 15 archive
+            # The prompt IS the product, so print it. Logged here rather than at
+            # stage 14 because the 21-section architectural prompt is built in 14b.
+            self._log_prompts(rec)
+
             with self._stage(rec, "15", "Trace & archive") as st:
                 self.store.add_to_archive(
                     program.typology.value, rec.exploration_id,
@@ -437,10 +586,73 @@ class Pipeline:
         except Exception as exc:                      # pragma: no cover - surfaced to the API
             rec.status = "FAILED"
             rec.error = f"{type(exc).__name__}: {exc}"
+            elog.error(f"RUN FAILED {rec.exploration_id}: {rec.error}")
         finally:
             rec.finished_at = time.time()
             self.store.put(rec)
+            self._log_summary(rec)
         return rec
+
+    def _log_prompts(self, rec: ExplorationRecord) -> None:
+        """The compiled image prompt for each selected concept.
+
+        Prefers the 21-section architectural prompt when a writer ran; falls back to
+        the deterministic compilation, whose segments are typed by `kind` rather than
+        named — so the two shapes are normalised here.
+
+        Wrapped: observability must never be able to fail a run. A logging defect
+        that turns a COMPLETE exploration into a FAILED one is worse than no log.
+        """
+        try:
+            elog.note("")
+            elog.note("PROMPTS")
+            for i, c in enumerate(rec.concepts, 1):
+                arch = rec.arch_prompts.get(c.concept_id)
+                if arch is not None:
+                    elog.prompt(i, c.phenotype.title,
+                                [(x.name, x.text) for x in arch.sections],
+                                arch.prompt_hash, arch.positive_prompt)
+                    continue
+                pc = rec.prompts.get(c.concept_id)
+                if pc is None:
+                    continue
+                elog.prompt(i, c.phenotype.title,
+                            [(str(seg.kind).upper(), seg.text) for seg in pc.segments],
+                            pc.prompt_hash, pc.positive_prompt)
+        except Exception as exc:                       # pragma: no cover
+            elog.warn(f"prompt logging failed ({type(exc).__name__}) — run unaffected")
+
+    def _log_summary(self, rec: ExplorationRecord) -> None:
+        """Closing block. Everything that was LOST is named with its reason —
+        rejected concepts, unmet role quotas, degraded stages — so a short
+        portfolio never has to be explained by re-reading the whole trace."""
+        total = int(((rec.finished_at or time.time()) - rec.started_at) * 1000)
+        elog.note("-" * 78)
+        elog.note(f"{rec.status} {rec.exploration_id}  {total}ms  "
+                  f"{len(rec.concepts)}/{rec.k} concepts  {rec.llm_calls} llm calls")
+        if rec.matrix:
+            elog.note(f"     diversity: vendi={rec.matrix.vendi_score} "
+                      f"mean={rec.matrix.mean_pairwise} min={rec.matrix.min_pairwise}")
+        if rec.rejected:
+            by_reason: dict[str, int] = {}
+            for c in rec.rejected:
+                code = c.rejection.reason_code if c.rejection else "UNKNOWN"
+                by_reason[code] = by_reason.get(code, 0) + 1
+            elog.warn(f"     rejected {len(rec.rejected)}: "
+                      + ", ".join(f"{k}={v}" for k, v in sorted(by_reason.items())))
+        if rec.portfolio is not None and rec.portfolio.curriculum_gap:
+            elog.warn(f"     curriculum GAP: {rec.portfolio.curriculum_gap} "
+                      "(a role quota went unmet and was backfilled)")
+        if rec.degraded:
+            elog.warn(f"     degraded: {', '.join(rec.degraded[:5])}")
+        if rec.cognition is not None:
+            elog.note(f"     cognition: {rec.cognition.summary()}")
+        if rec.validations:
+            bad = [cid for cid, v in rec.validations.items() if not v.passed]
+            if bad:
+                elog.warn(f"     synthesis validation FAILED for {len(bad)}/"
+                          f"{len(rec.validations)} concepts")
+        elog.note("-" * 78)
 
     # ---------- reference scoring ----------
     def _reference_context(self, dna, injection, ref_dnas, space, alloc, is_canonical: bool):

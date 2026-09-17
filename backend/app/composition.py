@@ -142,6 +142,29 @@ def build_synthesis_provider(settings, ont):
     return MockCreativeProvider(ont)
 
 
+def build_cognition(settings, ont):
+    """The ONLY place a conceptual-mutation provider is constructed.
+
+    Returns None when the layer is disabled, which makes the pipeline branch a
+    single `is None` check and keeps every recorded baseline reproducible.
+
+    `mock_cognition` is used whenever no synthesis-capable provider is configured:
+    it performs the real operations deterministically, so the layer is exercisable
+    with no key and no network — the same bargain the rest of mock mode makes.
+    """
+    if not settings.creative_cognition_enabled:
+        return None
+    from app.creative_cognition import CognitionConfig, CreativeCognition
+    from app.providers.llm.mock_cognition import MockCognitionProvider
+    cfg = CognitionConfig(
+        budget=settings.creative_cognition_budget,
+        max_per_candidate=settings.creative_max_mutations_per_candidate,
+        max_generations=settings.creative_max_generations,
+        novelty_threshold=settings.creative_novelty_threshold,
+    )
+    return CreativeCognition(ont, MockCognitionProvider(), cfg)
+
+
 def build_trend_provider(settings):
     """The single replacement point for trend discovery (§3 of the plan).
 
@@ -186,7 +209,12 @@ def get_container() -> Container:
             arch_compiler=(ArchitecturalPromptCompiler(ont)
                            if settings.synthesis_enabled else None),
             view_compiler=(ViewPromptCompiler()
-                           if settings.synthesis_enabled else None)),
+                           if settings.synthesis_enabled else None),
+            # Duplicate detection channel 2. Off by default so existing baselines
+            # are reproduced exactly; EMBEDDING_PROVIDER=mock turns it on.
+            embeddings=(_build_embeddings(settings)
+                        if settings.semantic_dedupe else None),
+            cognition=build_cognition(settings, ont)),
         references=ReferenceService(ont, CuratedReferenceAnalyzer(ont)),
         trends=TrendService(ont, build_trend_provider(settings)),
     )

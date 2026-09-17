@@ -3,22 +3,53 @@ version: v1
 # not a test fixture — it is why stage 03 cannot fail (spec R-ANTI-01).
 typologies:
   WEDDING_MANDAP:
-    - label: "gilded palace courtyard"
-      prevalence: 0.85
-      facet_values: [architectural_language:mughal_courtyard, geometry_system:charbagh_orthogonal,
-                     material:marble, material:cut_flower, lighting_philosophy:grazing_wash,
-                     structural_logic:post_and_beam, tectonic_logic:stacked,
-                     occupation_staging:centred_raised, site_relationship:grounded_mass]
-      surface_tokens: [gold, gilded, marigold, chandelier, arches, red carpet, ornate]
-    - label: "draped fabric canopy"
+    # Drawn from the actual market, not from imagination. Six unrelated real mandaps
+    # differ in surface — gold vs white, roses vs marigolds, Dravidian vs Mughal — and
+    # are nonetheless ONE ROOM. What repeats is the CONFIGURATION, so that is what is
+    # named here. Banning the materials would only strip a wedding of its vocabulary;
+    # banning the configuration is what makes a different answer possible.
+    - label: "gilded object on a backdrop wall"
+      prevalence: 0.92
+      # The dominant cliche: the mandap is an OBJECT you look AT, frontally and
+      # symmetrically, against a decorated wall — never a space you stand inside.
+      facet_values: [occupation_staging:centred_raised, occupation_staging:frontal_stage,
+                     geometry_system:charbagh_orthogonal, structural_logic:post_and_beam,
+                     tectonic_logic:stacked, site_relationship:grounded_mass,
+                     lighting_philosophy:grazing_wash, scale_strategy:heroic]
+      surface_tokens: [backdrop wall, symmetrical backdrop, throne chairs, two thrones,
+                       gilded, gold leaf, carved columns, ornate carving, elephant statues,
+                       peacock motif, temple pastiche, gopuram]
+    - label: "ornament applied to every surface"
+      prevalence: 0.88
+      # Decoration as the design move: whatever the structure is, carve it and gild it.
+      # The tell is that ornament is uniform — it describes no hierarchy and answers
+      # no condition.
+      facet_values: [architectural_language:mughal_courtyard,
+                     architectural_language:dravidian_temple,
+                     tectonic_logic:stacked, material:marble]
+      surface_tokens: [uniform ornament, all-over carving, applied filigree,
+                       gold on every surface, encrusted, jewelled surface]
+    - label: "flat frontal uplight"
+      prevalence: 0.80
+      # Everything lit evenly from below so nothing has shadow, depth or a focus.
+      # Light stops being a design decision and becomes a coating.
+      facet_values: [lighting_philosophy:grazing_wash, occupation_staging:centred_raised]
+      surface_tokens: [flat frontal lighting, even uplighting, no shadow,
+                       shadowless, evenly lit throughout]
+    - label: "draped fabric ceiling"
       prevalence: 0.78
-      facet_values: [tectonic_logic:draped, material:silk_drape, structural_logic:post_and_beam,
-                     occupation_staging:centred_raised]
-      surface_tokens: [drapes, swags, fairy lights, tulle, ceiling drape]
-    - label: "floral arch spectacle"
-      prevalence: 0.72
-      facet_values: [material:cut_flower, geometry_system:radial_concentric, scale_strategy:heroic]
-      surface_tokens: [flower wall, floral arch, rose petals, garland]
+      facet_values: [tectonic_logic:draped, material:silk_drape,
+                     structural_logic:post_and_beam, occupation_staging:centred_raised]
+      surface_tokens: [ceiling drape, swags, tenting, tulle, fairy lights,
+                       pleated ceiling, fabric canopy]
+    - label: "floral wall spectacle"
+      prevalence: 0.75
+      # Flowers used as CLADDING for a flat plane, rather than as mass, scent, decay
+      # or a structural idea.
+      facet_values: [material:cut_flower, material:fresh_flower_wall,
+                     geometry_system:radial_concentric, scale_strategy:heroic]
+      surface_tokens: [flower wall, floral arch, rose wall, hanging garland curtain,
+                       flower cladding, red and gold roses]
   EVENT_STAGE:
     - label: "LED wall and truss"
       prevalence: 0.82

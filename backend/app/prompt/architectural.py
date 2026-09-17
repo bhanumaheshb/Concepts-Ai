@@ -25,7 +25,8 @@ COMPILER_VERSION = "2.0.0"
 SECTION_ORDER = [
     "SUBJECT", "ARCHITECTURAL CONCEPT", "SITE", "PROGRAM", "SPATIAL ORGANIZATION",
     "ARRIVAL / CIRCULATION", "FOCAL SPACE", "SEATING", "WALKWAY", "STRUCTURE",
-    "GEOMETRY", "MASSING", "MATERIALS", "MATERIAL BEHAVIOUR", "LIGHTING", "LANDSCAPE",
+    "GEOMETRY", "MASSING", "MATERIALS", "MATERIAL BEHAVIOUR", "LIGHTING", "PALETTE",
+    "LANDSCAPE",
     "ATMOSPHERE", "HUMAN SCALE", "CAMERA", "ARCHITECTURAL VISUALIZATION STYLE",
     "CONSTRUCTION REALISM",
 ]
@@ -33,6 +34,105 @@ SECTION_ORDER = [
 STYLE = ("architectural visualisation, physically based rendering, accurate daylight "
          "and artificial light balance, correct perspective, believable construction "
          "detail, no illustration styling")
+
+# A single fixed style string made every concept render in one photographic idiom,
+# so ten genuinely different buildings came back as ten variations of the same
+# civic stone hall. The register follows the concept's OWN emotional_register and
+# lighting_philosophy — a scenographic concept and a vernacular one should not be
+# photographed the same way.
+STYLE_BY_REGISTER: dict[str, str] = {
+    # keys are the ontology's own emotional_register labels — all twelve, so no
+    # concept silently falls back to the neutral architectural idiom
+    "euphoric":      "celebratory event photography, saturated colour, crowd mid-celebration",
+    "playful":       "lively event photography, colour-rich, movement visible in the frame",
+    "ceremonial":    "formal ceremonial photography, composed symmetry, deep saturated colour",
+    "theatrical":    "stage photography, dramatic directional light, strong colour contrast",
+    "reverent":      "quiet ceremonial photography, warm restrained colour, still figures",
+    "tender":        "soft intimate photography, gentle warm light, close human scale",
+    "intimate":      "close intimate photography, shallow depth, warm low-level light",
+    "contemplative": "calm architectural photography, soft even light, restrained palette",
+    "sublime":       "wide dramatic photography, vast scale, atmospheric depth",
+    "melancholic":   "muted photography, desaturated palette, overcast diffuse light",
+    "austere":       "spare architectural photography, hard light, minimal colour",
+    "unsettling":    "cinematic photography, high contrast, deep shadow, cold accents",
+}
+
+# Colour is the single biggest thing missing from a purely architectural prompt: an
+# image model given no palette defaults to neutral stone. Each lighting philosophy
+# implies a colour world, stated explicitly so the render has one.
+PALETTE_BY_LIGHTING: dict[str, str] = {
+    "diya field":          "deep amber and ochre against near-black, hundreds of small flame points",
+    "candle scatter":      "warm amber pools against dark ground",
+    "oil-lamp field":      "amber and umber, flame-lit, darkness between the lights",
+    "open flame":          "orange and deep red, firelight falling on faces",
+    "chandelier cluster":  "warm gold and crystal white against a darker field",
+    "string canopy":       "warm honey overhead, deep blue-black sky beyond",
+    "pin-spot floral":     "saturated flower colour picked out of darkness, black between",
+    "uplit canopy":        "the structure glowing warm from beneath, cool sky above",
+    "emissive surface":    "cool white and cyan light emitted by the surfaces themselves",
+    "projected light":     "shifting projected colour across a neutral ground",
+    "grazing wash":        "warm sand and cream, low raking light, long shadows",
+    "silhouette backlight": "figures dark against a bright saturated field",
+    "darkness and pools":  "near-black with isolated warm pools of light",
+    "filtered daylight":   "soft daylight broken into pattern, cool shadow, warm sunlight",
+    "direct sun shafts":   "hard white sun shafts against deep shade",
+    "skylight well":       "one bright overhead source, walls falling to shadow",
+    "reflected daylight":  "soft bounced daylight, low contrast, pale tones",
+}
+
+
+# What each material actually LOOKS like. The palette was previously keyed to
+# lighting alone, so two concepts sharing a light source got the same colour world
+# however different their materials — corten steel and PTFE membrane both came back
+# as "warm amber". Colour is a property of the material; light only modifies it.
+COLOUR_BY_MATERIAL: dict[str, str] = {
+    # stone + earth
+    "marble": "cool white with grey veining",
+    "limestone": "pale bone and cream",
+    "sandstone": "warm pink-ochre",
+    "granite": "flecked grey-black",
+    "dry_stack_stone": "dry grey and buff, shadowed joints",
+    "rammed_earth": "banded ochre, umber and sand",
+    "terracotta": "burnt orange-red",
+    "brick": "deep red-brown, mortar grey",
+    "lime_plaster": "chalk white, faintly warm",
+    "jaali_screen": "pale stone, pierced, shadow-patterned",
+    # metal
+    "brass": "warm yellow metal, darkening at the edges",
+    "brass_repousse": "hammered gold-brown with dark relief",
+    "corten_steel": "oxidised rust orange-brown",
+    "polished_steel": "cold mirror silver",
+    "anodised_aluminium": "matte grey with a coloured sheen",
+    "kundan_inlay": "jewel green, ruby and gold points",
+    "mirror_mosaic": "fractured silver, throwing coloured light",
+    "mirror_polymer": "liquid silver, distorted reflection",
+    # wood
+    "teak": "deep honey brown",
+    "laminated_timber": "pale blond timber, visible lamination",
+    "mango_wood": "mid golden brown, open grain",
+    "charred_wood": "matte black, cracked, silver-edged",
+    "bamboo": "green-gold culms, pale nodes",
+    # textile
+    "silk_drape": "lustrous, catching light along the fold",
+    "zari_brocade": "deep colour shot through with metallic thread",
+    "khadi_cotton": "undyed oatmeal and ecru",
+    "woven_jute": "coarse straw brown",
+    "canvas_membrane": "off-white, warm where light passes through",
+    "ptfe_membrane": "translucent white, glowing when lit",
+    # glass + light + water
+    "clear_glass": "colourless, taking colour from behind it",
+    "fritted_glass": "milky white, softening whatever is beyond",
+    "emissive_light": "the surface itself is the light source",
+    "still_water": "black mirror holding the sky",
+    "moving_water": "broken silver and white",
+    # plant
+    "living_plant": "deep green, many tones",
+    "foliage_canopy": "layered green, light filtering through",
+    "cut_flower": "massed saturated colour",
+    "marigold_mass": "dense saturated orange and gold",
+    "fresh_flower_wall": "packed blooms, one dominant hue",
+    "banana_stem": "pale green-white, wet-cut",
+}
 
 GLOBAL_NEGATIVES = [
     "generic palace", "generic wedding stage", "excessive floral decoration",
@@ -187,7 +287,26 @@ class ArchitecturalPromptCompiler:
             (camera, "concept"),
             ("three-quarter view at 1.6 m eye height, 35 mm lens", "dna")))
 
-        add("ARCHITECTURAL VISUALIZATION STYLE", STYLE, "compiler")
+        # PALETTE is composed, not looked up: the concept's own materials give the
+        # colour, its lighting philosophy gives the light that falls on them. Two
+        # concepts can now only share a palette if they share both.
+        lighting_label = self._label(g.lighting_philosophy.value)
+        mat_colours = []
+        for m in g.material_palette[:3]:
+            key = m.material.split(":")[-1]
+            c_txt = COLOUR_BY_MATERIAL.get(key)
+            if c_txt and c_txt not in mat_colours:
+                mat_colours.append(c_txt)
+        light_txt = PALETTE_BY_LIGHTING.get(lighting_label, "")
+        palette = "; ".join(mat_colours)
+        if light_txt:
+            palette = f"{palette} — lit as {light_txt}" if palette else light_txt
+        add("PALETTE", palette or f"colour led by {prim}", "dna")
+
+        register = self._label(g.emotional_register.value)
+        add("ARCHITECTURAL VISUALIZATION STYLE",
+            f"{STYLE_BY_REGISTER.get(register, STYLE)}, correct perspective, "
+            "believable construction detail", "dna")
         add("CONSTRUCTION REALISM", *pick(
             ((c.construction_character if c else ""), "concept"),
             (f"assembled as {self._label(g.tectonic_logic.value)} with a believable "
@@ -203,7 +322,9 @@ class ArchitecturalPromptCompiler:
                                         if s.name in SECTION_ORDER else 99))
         positive = "\n".join(f"{s.name}: {s.text}" for s in ordered)
 
-        negatives = self._negatives(constraints, concept, extra_negatives)
+        palette_text = next((x.text for x in sections if x.name == "PALETTE"), "")
+        negatives = self._negatives(constraints, concept, extra_negatives,
+                                    self._affirmed_words(dna, concept, palette_text))
         return ArchitecturalVisualizationPrompt(
             prompt_id=deterministic_id("avp", dna.concept_id, COMPILER_VERSION),
             concept_id=dna.concept_id,
@@ -217,8 +338,22 @@ class ArchitecturalPromptCompiler:
 
     def _negatives(self, constraints: ConstraintEnvelope,
                    concept: StructuredArchitecturalConcept | None,
-                   extra: list[str] | None) -> list[str]:
-        """Concept DNA + anti-brief + reference lexicon + the concept's own (§16)."""
+                   extra: list[str] | None,
+                   affirmed: set[str] | None = None) -> list[str]:
+        """Concept DNA + anti-brief + reference lexicon + the concept's own (§16).
+
+        NEVER NEGATE WHAT THE CONCEPT AFFIRMED. The anti-brief's surface tokens exist
+        to steer FACET SELECTION away from the obvious answer; carried unfiltered into
+        an image prompt they mean something else entirely — they delete the subject's
+        own vocabulary. A wedding whose palette genuinely contains massed marigold was
+        being rendered with "marigold" in its negative prompt, so the engine
+        contradicted its own decision and every concept came back as bare stone.
+
+        A cliché is a whole configuration, not a word. If this concept chose the
+        material, the word describes what it IS and cannot also describe what it must
+        avoid.
+        """
+        affirmed = affirmed or set()
         out: list[str] = []
         out += [t.lower() for t in constraints.forbidden_tokens]
         out += [t.lower() for t in (extra or [])]
@@ -228,7 +363,37 @@ class ArchitecturalPromptCompiler:
         seen, ordered = set(), []
         for t in out:
             t = " ".join(t.split())
-            if t and t not in seen:
-                seen.add(t)
-                ordered.append(t)
+            if not t or t in seen:
+                continue
+            # drop a negative that names something this concept actually uses
+            if any(w in affirmed for w in t.split()):
+                continue
+            seen.add(t)
+            ordered.append(t)
         return ordered
+
+    def _affirmed_words(self, dna, concept, palette: str = "") -> set[str]:
+        """Every word the concept's own materials, lighting and tectonic name.
+
+        Taken from the SOLVED genotype rather than from prose, so it is exactly the
+        set of decisions the engine committed to.
+        """
+        words: set[str] = set()
+        g = dna.genotype
+
+        def eat(label: str) -> None:
+            words.update(w for w in label.lower().replace("-", " ").split() if len(w) > 2)
+
+        for m in g.material_palette:
+            eat(self._label(m.material))
+        for facet in ("lighting_philosophy", "tectonic_logic", "architectural_language",
+                      "geometry_system", "occupation_staging"):
+            v = g.facet_value(facet)
+            if v:
+                eat(self._label(v))
+        if concept is not None:
+            eat(getattr(concept.materials, "primary", "") or "")
+        # The PALETTE section is an affirmation too: a prompt that says "warm gold"
+        # and then bans "gold" is arguing with itself in the same breath.
+        eat(palette)
+        return words

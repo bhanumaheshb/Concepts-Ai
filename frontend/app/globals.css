@@ -98,6 +98,12 @@ button, input, textarea, select { font: inherit; color: inherit; }
   box-shadow: 0 0 0 3px var(--accent-sft);
 }
 .input::placeholder, .textarea::placeholder { color: var(--ink-3); }
+.select:disabled {
+  opacity: .5; cursor: not-allowed;
+}
+.field-hint {
+  margin-top: 6px; font-size: 12px; line-height: 1.5; color: var(--ink-3);
+}
 
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
@@ -149,6 +155,30 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .chip[aria-pressed="true"] {
   background: var(--accent); border-color: var(--accent); color: #fff;
 }
+/* read-only chips: the areas that will be drawn, not a control */
+.chip[aria-disabled] {
+  cursor: default; border-style: dashed; color: var(--ink-3);
+}
+
+/* ── reference lookup ─────────────────────────────────────── */
+.ref-hits {
+  list-style: none; margin: 6px 0 0; padding: 0;
+  border: 1px solid var(--line-2); border-radius: var(--radius-sm);
+  background: var(--card); overflow: hidden;
+}
+.ref-hits li + li { border-top: 1px solid var(--line-2); }
+.ref-hits button {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  background: none; border: 0; padding: 10px 14px; color: inherit;
+}
+.ref-hits button:hover, .ref-hits button:focus-visible {
+  background: var(--accent-sft); outline: none;
+}
+.ref-name { display: block; font-size: 14px; color: var(--ink); }
+.ref-blurb {
+  display: block; font-size: 12px; line-height: 1.45; color: var(--ink-3); margin-top: 2px;
+}
+.chip[aria-disabled]:hover { border-color: var(--line-2); color: var(--ink-3); }
 
 /* ── working state ────────────────────────────────────────── */
 .working { text-align: center; padding: 56px 0 20px; }
@@ -341,3 +371,103 @@ button, input, textarea, select { font: inherit; color: inherit; }
 }
 
 .empty { text-align: center; color: var(--ink-3); padding: 60px 0; }
+
+/* ── session history ──────────────────────────────────────── */
+/* Fixed to the left edge rather than in the flow: the results grid is already
+   centred in .shell, and a real sidebar would push it off-centre. */
+.sessions {
+  position: fixed; left: 0; top: 0; bottom: 0; width: 244px; z-index: 40;
+  display: flex; flex-direction: column;
+  background: var(--card); border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+.sessions-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 16px 12px; border-bottom: 1px solid var(--line);
+  font-size: 12px; font-weight: 600; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.sessions-hide, .sessions-reopen {
+  background: none; border: 0; color: var(--ink-3); cursor: pointer;
+  font-size: 13px; padding: 4px 6px; border-radius: var(--radius-sm);
+}
+.sessions-hide:hover, .sessions-reopen:hover { color: var(--ink); }
+.sessions-reopen {
+  position: fixed; left: 14px; bottom: 18px; z-index: 40;
+  border: 1px solid var(--line-2); background: var(--card);
+  padding: 8px 14px; font-size: 12.5px; border-radius: 999px;
+  box-shadow: var(--shadow);
+}
+.sessions-empty {
+  padding: 18px 16px; font-size: 12.5px; line-height: 1.55; color: var(--ink-3);
+}
+.sessions-list { list-style: none; margin: 0; padding: 6px 0; }
+
+.session-row {
+  position: relative; display: block; width: 100%; text-align: left;
+  background: none; border: 0; cursor: pointer;
+  padding: 11px 32px 12px 16px; border-bottom: 1px solid var(--line);
+  color: inherit;
+}
+.session-row:hover { background: var(--accent-sft); }
+.session-row.is-active { background: var(--accent-sft); box-shadow: inset 3px 0 0 var(--accent); }
+.session-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.session-no {
+  display: block; font-size: 11px; font-weight: 600; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--accent);
+}
+.session-brief {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; margin-top: 3px;
+  font-size: 13px; line-height: 1.45; color: var(--ink);
+}
+.session-meta { display: block; margin-top: 4px; font-size: 11.5px; color: var(--ink-3); }
+
+/* A run still in flight. The row updates every few seconds; this says why. */
+.session-live {
+  display: inline-block; width: 6px; height: 6px; margin-left: 7px;
+  border-radius: 50%; background: var(--accent); vertical-align: middle;
+  animation: session-pulse 1.4s ease-in-out infinite;
+}
+@keyframes session-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .session-live { animation: none; } }
+
+/* Give the centred content room so the sidebar never overlaps it. */
+@media (min-width: 1100px) {
+  body:has(.sessions) .shell { padding-left: 268px; }
+}
+@media (max-width: 1099px) {
+  .sessions { width: 210px; }
+  body:has(.sessions) .shell { padding-left: 232px; }
+}
+@media (max-width: 760px) {
+  .sessions { position: static; width: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  body:has(.sessions) .shell { padding-left: 28px; }
+}
+
+
+/* ── skeleton cards ───────────────────────────────────────── */
+/* Shown from the moment a run starts, so the wait has shape: you can see how
+   many concepts are coming and which ones have landed. */
+.card-skeleton {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--card); padding: 20px 22px 18px; min-height: 208px;
+  display: flex; flex-direction: column;
+}
+.sk-no {
+  font-size: 11px; font-weight: 600; letter-spacing: .12em;
+  color: var(--ink-3); margin-bottom: 14px;
+}
+.sk-line {
+  height: 11px; border-radius: 5px; margin-bottom: 9px;
+  background: linear-gradient(90deg, var(--line) 25%, var(--paper-2) 37%, var(--line) 63%);
+  background-size: 400% 100%;
+  animation: sk 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .sk-line { animation: none; } }
+@keyframes sk { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+.sk-foot {
+  margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line);
+  font-size: 12.5px; color: var(--ink-3);
+}

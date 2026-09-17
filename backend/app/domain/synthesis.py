@@ -118,6 +118,23 @@ class SpatialSequenceStep(Frozen):
     description: str = ""
 
 
+class StageState(Frozen):
+    """One condition of the SAME geometry.
+
+    An event venue is not a single image: it opens in one state and transforms into
+    another, and the transformation is often the concept itself. Every state shares
+    the built structure — only dressing, light and palette change — which is what
+    lets two renders read as one venue rather than two designs. `site_relationship:
+    mirroring` is the facet this exists to express.
+    """
+    key: str                        # stable id, e.g. "primary" / "transformed"
+    label: str = ""                 # what the concept calls this moment
+    condition: str = ""             # what the space looks like now
+    lighting: str = ""              # source, colour temperature, direction
+    palette: str = ""               # the colours this state collapses to
+    changed_from_previous: str = ""  # REQUIRED for any state after the first
+
+
 class StructuredArchitecturalConcept(Frozen):
     """What the model must return. Prose alone is not acceptable (§4)."""
     concept_title: str = ""
@@ -139,6 +156,9 @@ class StructuredArchitecturalConcept(Frozen):
     construction_character: str = ""
     distinctive_elements: list[str] = []
     anti_cliches: list[str] = []
+    # Optional. Empty means a single-condition venue, which is the normal case for a
+    # building; a transforming event set names two or three.
+    stage_states: list[StageState] = []
     rationale: str = ""
 
     # provenance — filled by the synthesizer, never by the model
