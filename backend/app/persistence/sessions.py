@@ -15,16 +15,24 @@ Read-only history. Nothing here feeds back into the engine.
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 from typing import Any
 
+# SESSIONS_DIR relocates the archive. The test suite points it at a temporary
+# directory: a user's history is real data and a test run must never write into it.
 ROOT = Path(__file__).resolve().parents[2] / ".sessions"
+
+
+def _root() -> Path:
+    override = os.environ.get("SESSIONS_DIR")
+    return Path(override) if override else ROOT
 
 
 class SessionArchive:
     def __init__(self, root: Path | None = None) -> None:
-        self.root = Path(root) if root else ROOT
+        self.root = Path(root) if root else _root()
         self.root.mkdir(parents=True, exist_ok=True)
 
     def _path(self, exploration_id: str) -> Path:

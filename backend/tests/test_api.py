@@ -96,3 +96,11 @@ def test_rate_attributes_feedback_to_facets(client):
     cid = data["concepts"][0]["concept_id"]
     r = client.post(f"/api/concepts/{cid}/rate", json={"kind": "boring", "reason_code": "too_expected"})
     assert r.json()["ok"] and r.json()["facets_attributed"] > 5
+
+
+def test_tests_never_write_into_the_users_session_history():
+    """A test run once filled a real user's sidebar with fixture briefs."""
+    import os
+    from app.persistence.sessions import ROOT, SessionArchive
+    assert os.environ.get("SESSIONS_DIR")
+    assert SessionArchive().root != ROOT

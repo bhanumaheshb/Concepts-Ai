@@ -104,8 +104,15 @@ class EventIdentity(Frozen):
     culture: str | None = None             # regional / cultural context in words
     venue_type: Slug | None = None
     known_type: bool = False               # resolved against the knowledge base?
+    proper_name: bool = False              # a name (Sangeet, Nikah) rather than a common noun
     provenance: Provenance = Provenance.DETERMINISTIC_RULE
     confidence: Score = 0.5
+
+
+def display_label(identity: "EventIdentity") -> str:
+    """The event as it reads inside a sentence: 'a Sangeet', 'a product launch'."""
+    label = identity.event_type_label or "event"
+    return label if identity.proper_name else label[:1].lower() + label[1:]
 
 
 class EventProfile(Frozen):

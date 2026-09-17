@@ -113,6 +113,7 @@ class DesignBrief(Frozen):
     event_type_text: str | None = None
     tradition: Tradition = Tradition.UNSPECIFIED
     venue_type: VenueType = VenueType.UNSPECIFIED
+    venue_text: str | None = None          # a venue the enum cannot hold, e.g. ROOFTOP
     location: str | None = None
     dimensions_text: str | None = None
     budget_text: str | None = None

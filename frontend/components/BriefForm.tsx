@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BriefInput,
   getKnowledge,
   interpretBrief,
+  KnowledgeCatalogue,
   PROJECT_TYPES,
   ReferenceHit,
   searchReferences,
@@ -32,9 +33,9 @@ export function BriefForm({
   const [projectType, setProjectType] = useState("");
   const [eventType, setEventType] = useState("");
   const [tradition, setTradition] = useState("UNSPECIFIED");
-  const [known, setKnown] = useState<{ key: string; label: string }[]>([]);
+  const [catalogue, setCatalogue] = useState<KnowledgeCatalogue | null>(null);
   const [reading, setReading] = useState<SemanticReading | null>(null);
-  const [venueType, setVenueType] = useState("CONVENTION_SPACE");
+  const [venueType, setVenueType] = useState("");
   const [location, setLocation] = useState("");
   const [dimensions, setDimensions] = useState("");
   const [openInspo, setOpenInspo] = useState(false);
@@ -70,9 +71,34 @@ export function BriefForm({
 
   useEffect(() => {
     getKnowledge()
-      .then((k) => setKnown(k.event_types.map((e) => ({ key: e.key, label: e.label }))))
-      .catch(() => setKnown([]));
+      .then(setCatalogue)
+      .catch(() => setCatalogue(null));
   }, []);
+
+  // "Type of space" narrows what is worth suggesting next. It never decides what the
+  // event is — the brief does — so an empty space type narrows nothing.
+  const space = catalogue?.spaces.find((s) => s.value === projectType);
+  const eventOptions = useMemo(() => {
+    const all = (catalogue?.event_types || []).map((e) => ({ key: e.key, label: e.label, family: e.family }));
+    if (!space || space.families.length === 0) return all;
+    return all.filter((e) => space.families.includes(e.family));
+  }, [catalogue, space]);
+  const venueOptions = useMemo(() => {
+    if (!catalogue) return VENUE_TYPES;
+    const keys = space && space.venues.length ? space.venues : Object.keys(catalogue.venues);
+    return keys.map((k) => ({ value: k, label: catalogue.venues[k] || k }));
+  }, [catalogue, space]);
+
+  // Changing the space clears choices that no longer belong to it. A typed event that
+  // is not in the catalogue is the user's own and is always kept.
+  useEffect(() => {
+    if (!catalogue) return;
+    const typed = eventType.trim().toLowerCase();
+    const knownEvent = catalogue.event_types.find((e) => e.label.toLowerCase() === typed);
+    if (knownEvent && !eventOptions.some((e) => e.key === knownEvent.key)) setEventType("");
+    if (venueType && !venueOptions.some((v) => v.value === venueType)) setVenueType("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectType, catalogue]);
 
   // Live reading of the brief: what the engine understands before it designs anything.
   // Deterministic and fast, so it can follow typing.
@@ -148,19 +174,12 @@ export function BriefForm({
         </div>
         <div className="field">
           <label htmlFor="etype">What is the event</label>
-          <input
-            id="etype"
-            className="input"
-            list="event-suggestions"
-            value={eventType}
-            placeholder="Detected from the brief — or type any event"
-            onChange={(e) => setEventType(e.target.value)}
-          />
-          <datalist id="event-suggestions">
-            {known.map((e) => (
-              <option key={e.key} value={e.label} />
-            ))}
-          </datalist>
+          <EventCombo value={eventType} options={eventOptions} onChange={setEventType} />
+          {space && space.families.length > 0 && (
+            <div className="field-hint">
+              Suggestions for {space.label.toLowerCase()} — any other event can still be typed.
+            </div>
+          )}
         </div>
       </div>
 
@@ -193,7 +212,8 @@ export function BriefForm({
             value={venueType}
             onChange={(e) => setVenueType(e.target.value)}
           >
-            {VENUE_TYPES.map((t) => (
+            <option value="">Not specified</option>
+            {venueOptions.map((t) => (
               <option key={t.value} value={t.value}>
                 {t.label}
               </option>
@@ -373,7 +393,7 @@ export function BriefForm({
               project_type: projectType || undefined,
               event_type: eventType || undefined,
               tradition,
-              venue_type: venueType,
+              venue_type: venueType || undefined,
               location: location.trim(),
               dimensions: dimensions.trim(),
               inspiration,
@@ -389,6 +409,94 @@ export function BriefForm({
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Free-text event field with suggestions. Replaces a native <datalist>, whose popup
+ *  the browser draws detached from the field and outside the page's styling. */
+function EventCombo({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: { key: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  const q = value.trim().toLowerCase();
+  const matches = (q ? options.filter((o) => o.label.toLowerCase().includes(q)) : options).slice(0, 8);
+  const exact = options.some((o) => o.label.toLowerCase() === q);
+  const show = open && matches.length > 0 && !exact;
+
+  const pick = (label: string) => {
+    onChange(label);
+    setOpen(false);
+    setActive(-1);
+  };
+
+  return (
+    <div className="combo">
+      <input
+        id="etype"
+        className="input"
+        role="combobox"
+        aria-expanded={show}
+        aria-controls="etype-list"
+        aria-autocomplete="list"
+        autoComplete="off"
+        value={value}
+        placeholder="Auto-detect, or type any event"
+        onChange={(e) => {
+          onChange(e.target.value);
+          setOpen(true);
+          setActive(-1);
+        }}
+        onFocus={() => setOpen(true)}
+        // delay so a click on an option lands before the list unmounts
+        onBlur={() => setTimeout(() => setOpen(false), 120)}
+        onKeyDown={(e) => {
+          if (!show) return;
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setActive((i) => Math.min(matches.length - 1, i + 1));
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setActive((i) => Math.max(0, i - 1));
+          } else if (e.key === "Enter" && active >= 0) {
+            e.preventDefault();
+            pick(matches[active].label);
+          } else if (e.key === "Escape") {
+            setOpen(false);
+          }
+        }}
+      />
+      {value && (
+        <button type="button" className="combo-clear" aria-label="Clear event" onClick={() => onChange("")}>
+          ✕
+        </button>
+      )}
+      {show && (
+        <ul className="combo-list" id="etype-list" role="listbox">
+          {matches.map((o, i) => (
+            <li
+              key={o.key}
+              role="option"
+              aria-selected={i === active}
+              className={`combo-item${i === active ? " is-active" : ""}`}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                pick(o.label);
+              }}
+              onMouseEnter={() => setActive(i)}
+            >
+              {o.label}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

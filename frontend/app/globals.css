@@ -480,3 +480,25 @@ button, input, textarea, select { font: inherit; color: inherit; }
   font-size: 11px; color: var(--accent); border: 1px solid var(--line);
 }
 .reading-warn { color: var(--accent); }
+
+/* Event field: suggestions anchored to the input, in the page's own styling. */
+.combo { position: relative; }
+.combo .input { padding-right: 36px; }
+.combo-clear {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  background: none; border: 0; color: var(--ink-3); cursor: pointer;
+  font-size: 12px; padding: 4px 6px; border-radius: var(--radius-sm);
+}
+.combo-clear:hover { color: var(--ink); background: var(--line); }
+.combo-list {
+  position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 6px);
+  margin: 0; padding: 6px; list-style: none;
+  background: var(--card); border: 1px solid var(--line-2);
+  border-radius: var(--radius-sm); box-shadow: var(--shadow-lg);
+  max-height: 264px; overflow-y: auto;
+}
+.combo-item {
+  padding: 8px 10px; border-radius: 7px; font-size: 14px; color: var(--ink-2);
+  cursor: pointer;
+}
+.combo-item.is-active { background: var(--accent-sft); color: var(--ink); }

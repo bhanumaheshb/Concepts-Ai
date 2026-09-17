@@ -1,0 +1,68 @@
+version: v1
+# SPACE TYPES — what the form's "Type of space" offers, and what each one narrows.
+#
+# A space type does not decide what the event IS (Design Intelligence does that from
+# the brief); it only narrows what is worth SUGGESTING next: which event families fit
+# it, and which venues it is usually built in. "Detect from the brief" narrows nothing.
+#
+#   families  event families whose events are suggested for this space
+#   venues    venue keys (below) offered for this space, most common first
+spaces:
+  WEDDING_MANDAP:
+    label: Wedding / Mandap
+    families: [wedding_celebration]
+    venues: [CONVENTION_SPACE, BANQUET_HALL, LAWN, HERITAGE, HOTEL_BALLROOM, FARMHOUSE, RESORT, BEACH]
+  EVENT_STAGE:
+    label: Event stage
+    families: [live_entertainment, corporate, fashion, social_celebration, cultural_programme, wedding_celebration]
+    venues: [CONVENTION_SPACE, HOTEL_BALLROOM, AUDITORIUM, ARENA, OPEN_GROUND, BANQUET_HALL, WAREHOUSE, ROOFTOP]
+  RESTAURANT:
+    label: Restaurant
+    families: [hospitality]
+    venues: [STANDALONE_BUILDING, MALL_UNIT, HOTEL, ROOFTOP, HERITAGE, STREET_FRONT]
+  INTERIOR:
+    label: Interior
+    families: [hospitality, retail, workplace]
+    venues: [OFFICE_FLOOR, MALL_UNIT, HOTEL, STANDALONE_BUILDING, HERITAGE, RESIDENCE]
+  PAVILION:
+    label: Pavilion
+    families: [architecture, installation, cultural_programme]
+    venues: [PARK, LAWN, WATERFRONT, PLAZA, CAMPUS, BEACH]
+  EXHIBITION:
+    label: Exhibition
+    families: [exhibition, installation, corporate]
+    venues: [EXHIBITION_HALL, CONVENTION_SPACE, GALLERY, MUSEUM, WAREHOUSE, MALL_UNIT]
+  GENERIC_SPATIAL:
+    label: Other space
+    families: []        # empty = every family
+    venues: []          # empty = every venue
+
+# Venue keys. The first five are the engine's original venue types; the rest are
+# accepted as free text and recorded on the brief's identity.
+venues:
+  CONVENTION_SPACE: Convention space
+  BANQUET_HALL: Banquet hall
+  LAWN: Lawn / outdoor
+  HERITAGE: Heritage property
+  BEACH: Beach
+  HOTEL_BALLROOM: Hotel ballroom
+  FARMHOUSE: Farmhouse
+  RESORT: Resort
+  AUDITORIUM: Auditorium
+  ARENA: Arena / stadium
+  OPEN_GROUND: Open ground
+  WAREHOUSE: Warehouse
+  ROOFTOP: Rooftop
+  STANDALONE_BUILDING: Standalone building
+  MALL_UNIT: Mall unit
+  HOTEL: Hotel
+  STREET_FRONT: Street-front unit
+  OFFICE_FLOOR: Office floor
+  RESIDENCE: Residence
+  PARK: Park
+  WATERFRONT: Waterfront
+  PLAZA: Public plaza
+  CAMPUS: Campus
+  EXHIBITION_HALL: Exhibition hall
+  GALLERY: Gallery
+  MUSEUM: Museum

@@ -25,7 +25,9 @@ from app.core import logging as elog
 from app.domain.brief import DesignProgram
 from app.domain.concept import ConceptDNA
 from app.domain.providers.protocols import StructuredGenerator
-from app.domain.semantics import ElementStatus, LLMCallRecord, ProgramZone, SemanticBrief
+from app.domain.semantics import (
+    ElementStatus, LLMCallRecord, ProgramZone, SemanticBrief, display_label,
+)
 from app.domain.visual import VisualIntent
 from app.ontology.graph import Ontology
 from app.semantics.knowledge import load_knowledge
@@ -103,15 +105,22 @@ class VisualDirector:
         light = self._label(g.lighting_philosophy.value)
         signature = f"{mat} {struct}"
 
-        subject = f"{_article(ident.event_type_label).capitalize()} {ident.event_type_label} for {cap} people"
+        label = display_label(ident)
+        subject = f"{_article(label).capitalize()} {label} for {cap} people"
         if sem.location:
             subject += f", {sem.location}"
         story = "; ".join(sem.intent.must_communicate[:2]) or sem.profile.focal_relationship
-        story = f"{story}, held within {dna.phenotype.title}: {dna.phenotype.one_line}"
+        # the title the client will see: the writer's when it wrote one, else the engine's
+        title = (concept.concept_title if concept and concept.concept_title else dna.phenotype.title)
+        story = f"{story}, held within {title}: {dna.phenotype.one_line}"
 
         human = _human_activity(k, [a.key for a in sem.profile.primary_activities])
-        time_of_day = ((concept.camera_recommendation.time_of_day if concept else "")
-                       or _time_of_day(k, sem))
+        # WHEN the event happens is a fact about the event — a Haldi is a morning, a
+        # concert is a night. The writer's camera time is a stylistic choice and only
+        # fills in when the semantics have nothing to say.
+        time_of_day = (_time_of_day(k, sem, strict=True)
+                       or (concept.camera_recommendation.time_of_day if concept else "")
+                       or "evening")
         lighting = light
         if concept and concept.lighting.lighting_sources:
             lighting = "; ".join(concept.lighting.lighting_sources[:2])
@@ -151,7 +160,7 @@ class VisualDirector:
                 "foreground": "semantic", "midground": "semantic+genotype",
                 "background": "genotype", "human_activity": "semantic",
                 "lighting": "concept" if concept and concept.lighting.lighting_sources else "genotype",
-                "time_of_day": "concept" if concept and concept.camera_recommendation.time_of_day else "semantic",
+                "time_of_day": "semantic" if _time_of_day(k, sem, strict=True) else "concept",
                 "elements_to_avoid": "semantic",
             })
         if self.reasoner is not None and self.reasoner.is_configured():
@@ -170,8 +179,8 @@ class VisualDirector:
         human = _zone_people(k, z)
         return VisualIntent(
             concept_id=dna.concept_id, view_key=z.key, view_label=z.label, zone_key=z.key,
-            visual_subject=f"The {z.label.lower()} of {_article(ident.event_type_label)} "
-                           f"{ident.event_type_label} for {program.capacity.guests} people",
+            visual_subject=f"The {z.label.lower()} of {_article(display_label(ident))} "
+                           f"{display_label(ident)} for {program.capacity.guests} people",
             story_of_image=area or f"{z.label}: {z.rationale}",
             camera_position=t["position"], camera_height_m=float(t["height_m"]),
             lens_mm=int(t["lens_mm"]), view_direction=t.get("direction", ""),
@@ -201,8 +210,8 @@ class VisualDirector:
         return VisualIntent(
             concept_id=dna.concept_id, view_key=f"drawing_{axis}", view_label=label,
             render_intent="orthographic_drawing",
-            visual_subject=f"{label} of {_article(sem.profile.identity.event_type_label)} "
-                           f"{sem.profile.identity.event_type_label}",
+            visual_subject=f"{label} of {_article(display_label(sem.profile.identity))} "
+                           f"{display_label(sem.profile.identity)}",
             story_of_image="a measured drawing of how the programme is organised",
             camera_position="orthographic, no perspective", composition="flat, centred, to scale",
             visible_program_zones=zones if axis == "plan" else [],
@@ -339,12 +348,13 @@ def _zone_people(k, z: ProgramZone | None) -> str:
             "hospitality": "guests being served"}.get(z.role, "people using the space")
 
 
-def _time_of_day(k, sem: SemanticBrief, zone: ProgramZone | None = None) -> str:
+def _time_of_day(k, sem: SemanticBrief, zone: ProgramZone | None = None,
+                 strict: bool = False) -> str:
     keys = ([zone.activity] if zone and zone.activity else []) + [a.key for a in sem.profile.primary_activities]
     for key in keys:
         if key in k.activities and k.activities[key].time_of_day:
             return k.activities[key].time_of_day
-    return "evening"
+    return "" if strict else "evening"
 
 
 def _scale_cues(*zones) -> list[str]:

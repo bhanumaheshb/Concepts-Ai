@@ -6,6 +6,13 @@ import os
 # Tests that care about another provider construct Settings(...) directly or use
 # monkeypatch; nothing here should ever reach a real model or a local server.
 os.environ["LLM_PROVIDER"] = "mock"
+# The session archive is the user's real history. Tests archive into a throwaway
+# directory instead — set before app.api imports create the archive.
+import tempfile  # noqa: E402
+os.environ["SESSIONS_DIR"] = tempfile.mkdtemp(prefix="concepts-sessions-")
+# Design Intelligence and the Visual Director must not reach a real model from tests.
+os.environ["SEMANTIC_REASONER_ENABLED"] = "false"
+os.environ["VISUAL_REASONER_ENABLED"] = "false"
 
 import pytest  # noqa: E402
 

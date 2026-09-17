@@ -174,6 +174,7 @@ class EventType:
     invariants: tuple[Invariant, ...]
     ritual_refs: tuple[str, ...]
     traditions: dict[str, TraditionBlock] = field(default_factory=dict)
+    proper_name: bool = False        # "Sangeet" stays capitalised; "product launch" does not
 
 
 @dataclass(frozen=True)
@@ -222,6 +223,11 @@ class Knowledge:
         ev = yaml.safe_load((base / "events.yaml").read_text(encoding="utf-8"))
         ac = yaml.safe_load((base / "activities.yaml").read_text(encoding="utf-8"))
         el = yaml.safe_load((base / "elements.yaml").read_text(encoding="utf-8"))
+        sp_path = base / "spaces.yaml"
+        sp = yaml.safe_load(sp_path.read_text(encoding="utf-8")) if sp_path.exists() else {}
+        # what each space type narrows in the form: suggested families and venues
+        self.spaces: dict[str, dict] = sp.get("spaces") or {}
+        self.venues: dict[str, str] = sp.get("venues") or {}
 
         self.families: dict[str, Family] = {
             k: Family(key=k, label=v.get("label", k), domain=v.get("domain", "event"),
@@ -285,7 +291,8 @@ class Knowledge:
                 relationships=_t(v.get("relationships")),
                 operational=_t(v.get("operational")),
                 invariants=tuple(_inv(i) for i in v.get("invariants") or []),
-                ritual_refs=_t(v.get("ritual_refs")), traditions=trads)
+                ritual_refs=_t(v.get("ritual_refs")), traditions=trads,
+                proper_name=bool(v.get("proper_name", False)))
         self._validate()
 
         # indices
@@ -319,6 +326,13 @@ class Knowledge:
             for f in el.scope.families:
                 if f not in self.families:
                     problems.append(f"element {el.key}: scope names unknown family {f}")
+        for key, space in self.spaces.items():
+            for f in space.get("families") or []:
+                if f not in self.families:
+                    problems.append(f"space {key}: unknown family {f}")
+            for v in space.get("venues") or []:
+                if v not in self.venues:
+                    problems.append(f"space {key}: unknown venue {v}")
         if problems:
             raise ValueError("semantic knowledge base is inconsistent:\n  " + "\n  ".join(problems))
 

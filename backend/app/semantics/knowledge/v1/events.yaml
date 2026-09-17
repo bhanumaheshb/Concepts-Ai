@@ -76,6 +76,7 @@ event_types:
   # ── wedding celebration ──────────────────────────────────────────────────
   sangeet:
     label: Sangeet
+    proper_name: true
     family: wedding_celebration
     aliases: [sangeet, sangeeth, sangeet night, sangeeth night, sangeet ceremony, sangeeth ceremony,
               sangeet function, sangeet party]
@@ -97,6 +98,7 @@ event_types:
 
   haldi:
     label: Haldi
+    proper_name: true
     family: wedding_celebration
     aliases: [haldi, haldi ceremony, haldi function, pithi, pithi ceremony, turmeric ceremony, ubtan ceremony]
     typology: GENERIC_SPATIAL
@@ -118,6 +120,7 @@ event_types:
 
   mehendi:
     label: Mehendi
+    proper_name: true
     family: wedding_celebration
     aliases: [mehendi, mehndi, mehendi ceremony, mehndi ceremony, mehendi function, henna night, henna party]
     typology: GENERIC_SPATIAL

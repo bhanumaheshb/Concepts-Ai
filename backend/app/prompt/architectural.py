@@ -165,6 +165,7 @@ class ArchitecturalPromptCompiler:
         DNA supply the architecture. Without it the compiler falls back to the concept."""
         g = dna.genotype
         c = concept
+        self._program = program
         sections: list[PromptSection] = []
         missing: list[str] = []
 
@@ -183,7 +184,8 @@ class ArchitecturalPromptCompiler:
             return "", "none"
 
         sem = program.semantic
-        typology = (sem.profile.identity.event_type_label.lower() if sem
+        from app.domain.semantics import display_label
+        typology = (display_label(sem.profile.identity) if sem
                     else program.typology.value.replace("_", " ").lower())
         cap = constraints.capacity
         geo_refs = (g.geometry.system if isinstance(g.geometry.system, list)
@@ -426,6 +428,10 @@ class ArchitecturalPromptCompiler:
             # drop a negative that names something this concept actually uses
             if any(w in affirmed for w in t.split()):
                 continue
+            # ...or something the event itself requires
+            if any(f" {t} " in f" {p} " or f" {p} " in f" {t} "
+                   for p in getattr(self, "_affirmed_phrases", ())):
+                continue
             seen.add(t)
             ordered.append(t)
         return ordered
@@ -454,4 +460,18 @@ class ArchitecturalPromptCompiler:
         # The PALETTE section is an affirmation too: a prompt that says "warm gold"
         # and then bans "gold" is arguing with itself in the same breath.
         eat(palette)
+        # So is the programme. A stage cliche's "screen" must not ban the projection
+        # screens an astronomy night is built around, nor "bar" delete a requested bar.
+        # Matched as PHRASES, not loose words: "projection screen" protects "screen",
+        # but a photo WALL must not rescue a cliche "backdrop wall".
+        self._affirmed_phrases = set()
+        sem = getattr(getattr(self, "_program", None), "semantic", None)
+        if sem is not None:
+            from app.semantics.knowledge import load_knowledge
+            k = load_knowledge()
+            for e in sem.profile.elements:
+                if e.status.value in ("REQUIRED", "RECOMMENDED") and e.key in k.elements:
+                    self._affirmed_phrases.update(a.lower() for a in k.elements[e.key].aliases)
+            self._affirmed_phrases.update(z.label.lower() for z in sem.programme
+                                          if z.priority != "optional")
         return words

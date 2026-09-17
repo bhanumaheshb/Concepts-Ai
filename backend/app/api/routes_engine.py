@@ -166,6 +166,11 @@ def knowledge_catalogue() -> dict:
         "families": {key: f.label for key, f in k.families.items()},
         "event_types": [{"key": e.key, "label": e.label, "family": e.family,
                          "traditions": sorted(e.traditions)} for e in k.event_types.values()],
+        # "Type of space" narrows the suggestions for event and venue
+        "spaces": [{"value": key, "label": s.get("label", key),
+                    "families": list(s.get("families") or []),
+                    "venues": list(s.get("venues") or [])} for key, s in k.spaces.items()],
+        "venues": dict(k.venues),
         "activities": {key: a.label for key, a in k.activities.items()},
         "traditions": {key: t.label for key, t in k.traditions.items()},
     }
@@ -239,6 +244,9 @@ def create_exploration(req: BriefRequest, background: BackgroundTasks) -> dict:
         event_type_text=(req.event_type or "").strip() or None,
         tradition=_enum(Tradition, req.tradition, Tradition.UNSPECIFIED),
         venue_type=_enum(VenueType, req.venue_type, VenueType.UNSPECIFIED),
+        # a venue beyond the original five is kept as text rather than dropped
+        venue_text=(req.venue_type if req.venue_type and
+                    _enum(VenueType, req.venue_type, None) is None else None),
         location=req.location, dimensions_text=req.dimensions,
         budget_text=req.budget, constraints_text=req.constraints,
     )

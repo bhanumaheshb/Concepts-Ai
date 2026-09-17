@@ -193,6 +193,7 @@ class DesignIntelligence:
             identity = EventIdentity(
                 domain=et.domain, event_family=et.family or None, event_type=et.key,
                 event_type_label=tb.label if tb else et.label, tradition=g["tradition"],
+                proper_name=bool(tb) or et.proper_name,
                 culture=brief.location, known_type=True, provenance=g["event_prov"],
                 confidence=0.95 if g["event_prov"] == Provenance.USER_EXPLICIT else 0.7,
                 venue_type=_venue(brief))
@@ -568,6 +569,8 @@ def _uniq(items) -> list[str]:
 
 
 def _venue(brief: DesignBrief) -> str | None:
+    if brief.venue_text:
+        return slugify(brief.venue_text)
     v = brief.venue_type.value if brief.venue_type else "UNSPECIFIED"
     return None if v == "UNSPECIFIED" else v.lower()
 

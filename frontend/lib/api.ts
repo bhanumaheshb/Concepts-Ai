@@ -274,10 +274,19 @@ export function interpretBrief(input: {
   });
 }
 
+export type SpaceOption = {
+  value: string;
+  label: string;
+  families: string[]; // empty = every family
+  venues: string[]; // empty = every venue
+};
+
 export type KnowledgeCatalogue = {
   version: string;
   event_types: { key: string; label: string; family: string; traditions: string[] }[];
   traditions: Record<string, string>;
+  spaces: SpaceOption[];
+  venues: Record<string, string>;
 };
 
 export function getKnowledge(): Promise<KnowledgeCatalogue> {
