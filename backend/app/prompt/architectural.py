@@ -23,7 +23,8 @@ from app.ontology.graph import Ontology
 COMPILER_VERSION = "2.0.0"
 
 SECTION_ORDER = [
-    "SUBJECT", "ARCHITECTURAL CONCEPT", "SITE", "PROGRAM", "SPATIAL ORGANIZATION",
+    "SUBJECT", "IMAGE STORY", "FOCAL POINT", "HUMAN ACTIVITY", "COMPOSITION",
+    "ARCHITECTURAL CONCEPT", "SITE", "PROGRAM", "SPATIAL ORGANIZATION",
     "ARRIVAL / CIRCULATION", "FOCAL SPACE", "SEATING", "WALKWAY", "STRUCTURE",
     "GEOMETRY", "MASSING", "MATERIALS", "MATERIAL BEHAVIOUR", "LIGHTING", "PALETTE",
     "LANDSCAPE",
@@ -135,7 +136,7 @@ COLOUR_BY_MATERIAL: dict[str, str] = {
 }
 
 GLOBAL_NEGATIVES = [
-    "generic palace", "generic wedding stage", "excessive floral decoration",
+    "generic palace", "generic event stage", "excessive floral decoration",
     "fantasy architecture", "impossible floating structure", "random columns",
     "generic luxury decor", "unrelated ornament", "copied reference elements",
     "text", "watermark", "logo", "deformed geometry", "warped perspective",
@@ -157,7 +158,11 @@ class ArchitecturalPromptCompiler:
                 scene=None, reference_statements: list[str] | None = None,
                 trend_statements: list[str] | None = None,
                 extra_negatives: list[str] | None = None,
-                aspect_ratio: str = "3:2") -> ArchitecturalVisualizationPrompt:
+                aspect_ratio: str = "3:2",
+                visual=None) -> ArchitecturalVisualizationPrompt:
+        """`visual` is the Visual Director's hero intent. When present it decides the
+        subject, the story, the focus, the people and the camera; the concept and the
+        DNA supply the architecture. Without it the compiler falls back to the concept."""
         g = dna.genotype
         c = concept
         sections: list[PromptSection] = []
@@ -177,7 +182,9 @@ class ArchitecturalPromptCompiler:
                     return text, source
             return "", "none"
 
-        typology = program.typology.value.replace("_", " ").lower()
+        sem = program.semantic
+        typology = (sem.profile.identity.event_type_label.lower() if sem
+                    else program.typology.value.replace("_", " ").lower())
         cap = constraints.capacity
         geo_refs = (g.geometry.system if isinstance(g.geometry.system, list)
                     else [g.geometry.system])
@@ -187,15 +194,29 @@ class ArchitecturalPromptCompiler:
         others = [self._label(m.material) for m in g.material_palette
                   if m.material != primary.material]
 
-        # SUBJECT — always from the brief and programme, never from the model
-        subject = f"A {typology}"
-        if cap:
-            subject += f" for {cap} people"
-        if constraints.site_dimensions:
-            subject += f" on a {constraints.site_dimensions} site"
-        if brief.location:
-            subject += f", {brief.location}"
-        add("SUBJECT", subject, "brief")
+        # SUBJECT — from the semantics and the brief, never from the model
+        subject = ""
+        if visual is not None and visual.visual_subject:
+            subject = visual.visual_subject
+            if constraints.site_dimensions and "site" not in subject:
+                subject += f", on a {constraints.site_dimensions} site"
+        else:
+            subject = f"{'An' if typology[:1] in 'aeiou' else 'A'} {typology}"
+            if cap:
+                subject += f" for {cap} people"
+            if constraints.site_dimensions:
+                subject += f" on a {constraints.site_dimensions} site"
+            if brief.location:
+                subject += f", {brief.location}"
+        add("SUBJECT", subject, "semantic" if sem else "brief")
+        if visual is not None:
+            add("IMAGE STORY", visual.story_of_image, "visual")
+            add("FOCAL POINT", "; ".join(x for x in [visual.primary_focal_point]
+                                         + visual.secondary_focal_points if x), "visual")
+            add("HUMAN ACTIVITY", "; ".join(x for x in (visual.human_activity, visual.occupancy) if x),
+                "visual")
+            add("COMPOSITION", "; ".join(x for x in (visual.composition, visual.layers_phrase(),
+                                                     visual.depth) if x), "visual")
 
         add("ARCHITECTURAL CONCEPT", *pick(
             ((c.concept_thesis if c else ""), "concept"),
@@ -210,10 +231,13 @@ class ArchitecturalPromptCompiler:
         if c:
             prog_bits = [b for b in (c.program.spatial_hierarchy, c.program.sightlines,
                                      ", ".join(c.program.additional_zones)) if b]
+        zone_list = (", ".join(z.label.lower() for z in sem.programme if z.priority == "required")
+                     if sem else "")
         add("PROGRAM", *pick(
             ("; ".join(prog_bits), "concept"),
-            (f"{typology} programme for {cap or 'the stated'} people, arranged as "
-             f"{self._label(g.occupation_staging.value)}", "dna")))
+            (f"{typology} programme for {cap or 'the stated'} people"
+             + (f": {zone_list}" if zone_list else "")
+             + f", arranged as {self._label(g.occupation_staging.value)}", "dna")))
 
         add("SPATIAL ORGANIZATION", *pick(
             ((c.spatial_organization if c else ""), "concept"),
@@ -226,17 +250,22 @@ class ArchitecturalPromptCompiler:
             (arrival, "concept"),
             (" then ".join(self._label(r) for r in g.spatial_narrative), "dna")))
 
-        focal_name = (c.program.focal_space_label if c and c.program.focal_space_label
-                      else "focal space")
+        focal_name = ((sem.intent.primary_focus.lower() if sem and sem.intent.primary_focus else "")
+                      or (c.program.focal_space_label if c and c.program.focal_space_label else "")
+                      or "focal space")
+        audience = sem.profile.audience_relationship if sem else "frontal"
         add("FOCAL SPACE", *pick(
             ((c.program.focal_space if c else ""), "concept"),
-            (f"a {focal_name} at the centre of the {geo} order", "dna")))
-        add("SEATING", *pick(
-            ((c.program.seating if c else ""), "concept"),
-            (f"seating for {cap} with clear sightlines to the {focal_name}", "dna")))
+            (f"the {focal_name}, placed within the {geo} order", "dna")))
+        seats = (f"places for {cap} with clear sightlines to the {focal_name}"
+                 if audience in ("frontal", "surround", "processional", "immersive")
+                 else f"places for {cap} gathered in groups around the {focal_name}")
+        add("SEATING", *pick(((c.program.seating if c else ""), "concept"), (seats, "dna")))
+        route = ("a processional route to the" if audience == "processional"
+                 else "a route from arrival to the")
         add("WALKWAY", *pick(
             ((c.program.walkway if c else ""), "concept"),
-            (f"a processional route to the {focal_name}", "dna")))
+            (f"{route} {focal_name}", "dna")))
 
         add("STRUCTURE", *pick(
             (("; ".join(x for x in (c.structure.structural_system,
@@ -269,9 +298,12 @@ class ArchitecturalPromptCompiler:
                                       c.lighting.colour_temperature,
                                       c.lighting.height_and_distribution,
                                       c.lighting.shadow_behaviour) if x]
+        if visual is not None and visual.time_of_day:
+            light_bits.append(visual.time_of_day)
         add("LIGHTING", *pick(
             ("; ".join(light_bits), "concept"),
-            (f"{self._label(g.lighting_philosophy.value)}", "dna")))
+            ("; ".join(x for x in (self._label(g.lighting_philosophy.value),
+                                   visual.time_of_day if visual else "") if x), "dna")))
 
         add("LANDSCAPE", *pick(((c.landscape if c else ""), "concept"),
                                ("planting kept low so the plan stays readable", "dna")))
@@ -282,9 +314,11 @@ class ArchitecturalPromptCompiler:
             ((c.human_experience if c else ""), "concept"),
             (f"people at {self._label(g.scale_strategy.value)} for scale", "dna")))
 
-        camera = (c.camera_recommendation.as_phrase() if c else "")
+        # The director owns the camera: it chose the view for what the image must say.
+        camera = ((visual.camera_phrase() if visual is not None else "")
+                  or (c.camera_recommendation.as_phrase() if c else ""))
         add("CAMERA", *pick(
-            (camera, "concept"),
+            (camera, "visual" if visual is not None and visual.camera_position else "concept"),
             ("three-quarter view at 1.6 m eye height, 35 mm lens", "dna")))
 
         # PALETTE is composed, not looked up: the concept's own materials give the
@@ -317,13 +351,22 @@ class ArchitecturalPromptCompiler:
         if trend_statements:
             add("CURRENT READINGS", "; ".join(trend_statements), "trend")
 
+        # SEMANTIC INVARIANT: no section may name an element this event forbids. A
+        # model-written section that does is replaced by the DNA's own reading of it,
+        # or dropped; either way the prompt records what happened.
+        leaks_found: list[str] = []
+        if sem is not None:
+            sections, leaks_found = self._strip_leaks(sections, sem)
+
         ordered = sorted(sections,
                          key=lambda s: (SECTION_ORDER.index(s.name)
                                         if s.name in SECTION_ORDER else 99))
         positive = "\n".join(f"{s.name}: {s.text}" for s in ordered)
 
         palette_text = next((x.text for x in sections if x.name == "PALETTE"), "")
-        negatives = self._negatives(constraints, concept, extra_negatives,
+        avoid = list(visual.elements_to_avoid) if visual is not None else (
+            list(sem.intent.avoid) if sem else [])
+        negatives = self._negatives(constraints, concept, (extra_negatives or []) + avoid,
                                     self._affirmed_words(dna, concept, palette_text))
         return ArchitecturalVisualizationPrompt(
             prompt_id=deterministic_id("avp", dna.concept_id, COMPILER_VERSION),
@@ -334,7 +377,22 @@ class ArchitecturalPromptCompiler:
             inputs_hash=sha256_of({"dna": dna.concept_id,
                                    "concept": c.model_dump(mode="json") if c else None}),
             prompt_hash=sha256_of(positive + "\x00" + ", ".join(negatives)),
-            degraded=c is None, missing_sections=missing)
+            degraded=c is None, missing_sections=missing, semantic_leaks=leaks_found)
+
+    def _strip_leaks(self, sections, sem):
+        from app.semantics.knowledge import load_knowledge
+        from app.semantics.leakage import find_leaks
+        k = load_knowledge()
+        kept, found = [], []
+        for s in sections:
+            leaks = find_leaks(k, sem.profile, s.text, s.name)
+            if not leaks:
+                kept.append(s)
+                continue
+            found.append(f"{s.name}: {leaks[0].describe()} (section {'dropped' if s.source != 'dna' else 'kept, DNA-sourced'})")
+            if s.source == "dna":
+                kept.append(s)       # engine text cannot be silently rewritten; the critic owns it
+        return kept, found
 
     def _negatives(self, constraints: ConstraintEnvelope,
                    concept: StructuredArchitecturalConcept | None,

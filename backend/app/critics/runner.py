@@ -14,7 +14,7 @@ from app.creative.context import CriticContext
 from app.creative.schemas import CriticLLMOutput
 from app.critics import codes
 from app.critics.deterministic import (
-    alignment_checks, coherence_checks, cultural_checks, feasibility_checks,
+    alignment_checks, coherence_checks, cultural_checks, feasibility_checks, semantic_checks,
 )
 from app.domain.brief import DesignProgram
 from app.domain.common import CriticName, ModelTier, Severity
@@ -32,6 +32,7 @@ GATES = {
     CriticName.COHERENCE: 0.70,
     CriticName.FEASIBILITY: 0.55,
     CriticName.CULTURAL: 0.99,   # strictest: no finding at MAJOR or above
+    CriticName.SEMANTIC: 0.99,   # the concept is this event or it is not
 }
 Q_WEIGHTS = {CriticName.ALIGNMENT: 0.35, CriticName.COHERENCE: 0.35, CriticName.FEASIBILITY: 0.30}
 
@@ -46,7 +47,7 @@ def derive_score(findings: list[CriticFinding]) -> float:
 def _gate(critic: CriticName, score: float, findings: list[CriticFinding]) -> bool:
     if any(f.severity == Severity.BLOCKER for f in findings):
         return False
-    if critic == CriticName.CULTURAL:
+    if critic in (CriticName.CULTURAL, CriticName.SEMANTIC):
         return not any(f.severity in (Severity.BLOCKER, Severity.MAJOR) for f in findings)
     return score >= GATES[critic]
 
@@ -91,12 +92,16 @@ def run_critic(
         findings, ran = coherence_checks(ont, dna, program, fidelity_failures)
     elif critic == CriticName.FEASIBILITY:
         findings, ran = feasibility_checks(ont, dna, program, scene)
+    elif critic == CriticName.SEMANTIC:
+        findings, ran = semantic_checks(ont, dna, program, scene)
     else:
         findings, ran = cultural_checks(ont, dna, program)
 
     calls = 0
     blocked = any(f.severity == Severity.BLOCKER for f in findings)
-    if use_llm and not blocked:          # R-CRIT-01: skip the model when already blocked
+    # SEMANTIC is deterministic by design: leakage is decided by the scope rule, never
+    # by asking a model whether it leaked.
+    if use_llm and not blocked and critic != CriticName.SEMANTIC:          # R-CRIT-01: skip the model when already blocked
         extra, calls = _llm_findings(llm, dna, program, critic, seed)
         findings = findings + extra
 
@@ -121,11 +126,16 @@ def evaluate(
     """`only` re-runs a subset after a repair; everything else is carried forward."""
     results: dict[CriticName, CriticResult] = {}
     calls = 0
-    for critic in (CriticName.ALIGNMENT, CriticName.COHERENCE,
-                   CriticName.FEASIBILITY, CriticName.CULTURAL):
+    critics = [CriticName.ALIGNMENT, CriticName.COHERENCE,
+               CriticName.FEASIBILITY, CriticName.CULTURAL]
+    if program.semantic is not None:
+        critics.append(CriticName.SEMANTIC)
+    for critic in critics:
         if only is not None and critic not in only and previous is not None:
-            results[critic] = getattr(previous, critic.value.lower())
-            continue
+            carried = getattr(previous, critic.value.lower())
+            if carried is not None:
+                results[critic] = carried
+                continue
         res, c = run_critic(llm, ont, dna, program, critic, scene, fidelity_failures, seed, use_llm)
         results[critic] = res
         calls += c
@@ -140,7 +150,7 @@ def evaluate(
         concept_id=dna.concept_id,
         alignment=results[CriticName.ALIGNMENT], coherence=results[CriticName.COHERENCE],
         feasibility=results[CriticName.FEASIBILITY], cultural=results[CriticName.CULTURAL],
-        originality=originality,
+        originality=originality, semantic=results.get(CriticName.SEMANTIC),
         novelty=NoveltyScore(vs_platform=round(min(1.0, novelty), 4), k=5),
         gate_passed=gate, quality_q=round(min(1.0, q), 4),
     ), calls

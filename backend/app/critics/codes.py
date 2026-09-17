@@ -23,6 +23,15 @@ CULT_SACRED_MISSING = "CULT_SACRED_MISSING"
 CULT_ABSTRACTION_FLOOR = "CULT_ABSTRACTION_FLOOR"
 CULT_RESTRICTED_VALUE = "CULT_RESTRICTED_VALUE"
 
+# Semantic findings: the concept must be THIS event, and nothing from another one.
+SEM_FORBIDDEN_ELEMENT = "SEM_FORBIDDEN_ELEMENT"      # a forbidden element is named or built
+SEM_OUT_OF_SCOPE_VALUE = "SEM_OUT_OF_SCOPE_VALUE"    # a genotype value from another event
+SEM_REQUIRED_ZONE_MISSING = "SEM_REQUIRED_ZONE_MISSING"
+SEM_FOCUS_MISSING = "SEM_FOCUS_MISSING"
+
 # Cultural findings are never auto-repaired: the system must not attempt to fix a
 # ritual or appropriation error by mutation (spec R-REP-01).
-NO_AUTO_REPAIR = {CULT_SACRED_MISSING, CULT_RESTRICTED_VALUE}
+NO_AUTO_REPAIR = {CULT_SACRED_MISSING, CULT_RESTRICTED_VALUE,
+                  # Leakage is rejected, not patched: a mutation that happens to remove
+                  # the word would hide the defect rather than fix the concept.
+                  SEM_FORBIDDEN_ELEMENT, SEM_OUT_OF_SCOPE_VALUE}

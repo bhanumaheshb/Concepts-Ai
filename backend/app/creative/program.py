@@ -14,16 +14,25 @@ from app.domain.brief import (
     RequiredZone, RitualProfile, ScheduleSpec, SiteSpec, SoftIntent,
 )
 from app.domain.common import Typology, VenueType
+from app.domain.semantics import ElementStatus, Provenance, SemanticBrief
 from app.ontology.graph import Ontology
+from app.semantics.programme import capacity_for
 
+# Fallback only. The space form normally comes from Design Intelligence, which knows
+# what the event IS; these keywords name space forms, never events. "wedding" and
+# "reception" used to live here and silently turned every celebration into a mandap
+# and every wedding reception into a hotel lobby.
 TYPOLOGY_KEYWORDS: list[tuple[Typology, tuple[str, ...]]] = [
-    (Typology.WEDDING_MANDAP, ("mandap", "wedding ceremony", "shaadi", "nikah", "baraat", "wedding")),
-    (Typology.EVENT_STAGE, ("stage", "awards", "concert", "set design", "performance", "keynote")),
-    (Typology.RESTAURANT, ("restaurant", "cafe", "café", "dining", "bistro", "bar ", "covers")),
-    (Typology.EXHIBITION, ("exhibition", "booth", "gallery", "museum", "trade fair", "pavilion booth")),
+    (Typology.WEDDING_MANDAP, ("mandap",)),
+    (Typology.EVENT_STAGE, ("stage", "set design", "keynote")),
+    (Typology.RESTAURANT, ("restaurant", "cafe", "café", "bistro", "covers")),
+    (Typology.EXHIBITION, ("exhibition", "booth", "gallery", "museum", "trade fair")),
     (Typology.PAVILION, ("pavilion", "installation", "folly", "canopy structure")),
-    (Typology.INTERIOR, ("lobby", "interior", "living room", "office", "reception", "villa")),
+    (Typology.INTERIOR, ("lobby", "interior", "living room", "office", "villa")),
 ]
+# A typology that encodes an EVENT, not only a space form. Selecting it cannot
+# override what the brief itself says is happening.
+EVENT_LADEN_TYPOLOGY = {Typology.WEDDING_MANDAP: "wedding_ceremony"}
 HOT_DRY = ("jaipur", "jodhpur", "rajasthan", "dubai", "delhi", "ahmedabad", "riyadh")
 HOT_HUMID = ("mumbai", "chennai", "kochi", "goa", "kolkata", "singapore", "bangkok")
 COLD = ("london", "berlin", "oslo", "toronto", "moscow", "zurich")
@@ -110,16 +119,49 @@ def parse_month(text: str) -> int:
     return 1
 
 
-def build_program(ont: Ontology, brief: DesignBrief) -> DesignProgram:
+def estimate_capacity(brief: DesignBrief) -> int | None:
+    """The crowd the brief states, or None, before any default is applied."""
+    text = " ".join(filter(None, [brief.raw_text, brief.constraints_text]))
+    n = parse_capacity(text, 0)
+    return n or None
+
+
+def resolve_typology(brief: DesignBrief, semantic: SemanticBrief) -> Typology:
+    """Space form. The brief's explicit choice stands unless it names a DIFFERENT event
+    than the one the brief describes: a concert submitted as 'Wedding / Mandap'."""
+    semantic_typ = _typology(semantic.space_typology)
+    if brief.typology == Typology.GENERIC_SPATIAL:
+        return semantic_typ
+    implied = EVENT_LADEN_TYPOLOGY.get(brief.typology)
+    if implied and semantic.profile.identity.event_type != implied:
+        return semantic_typ
+    return brief.typology
+
+
+def _typology(value: str) -> Typology:
+    try:
+        return Typology(value)
+    except ValueError:
+        return Typology.GENERIC_SPATIAL
+
+
+def build_program(ont: Ontology, brief: DesignBrief,
+                  semantic: SemanticBrief | None = None) -> DesignProgram:
+    """Physical facts from the brief and the space form; MEANING from the semantics.
+
+    Typology supplies defaults for things a brief often omits: site size, load-in
+    time, a default crowd. It no longer supplies zones, invariants or rites. Those are
+    what the event is, and a space form cannot know that.
+    """
     text = " ".join(filter(None, [
         brief.raw_text, brief.location, brief.dimensions_text, brief.budget_text, brief.constraints_text
     ]))
-    typology = brief.typology if brief.typology != Typology.GENERIC_SPATIAL else classify_typology(text)
+    if semantic is None:
+        # deterministic reading: every caller gets semantics, with or without a model
+        from app.semantics.intelligence import DesignIntelligence
+        semantic = DesignIntelligence().understand(brief, capacity=estimate_capacity(brief))
+    typology = resolve_typology(brief, semantic)
     defaults = ont.typology_defaults.get(typology.value, ont.typology_defaults["GENERIC_SPATIAL"])
-    # A typology may carry a per-tradition ceremony. Selecting one REPLACES the
-    # neutral ritual profile and ADDS that rite's invariants; selecting none leaves
-    # the typology tradition-neutral rather than defaulting to any one rite.
-    tradition_block = (defaults.get("traditions") or {}).get(brief.tradition.value)
 
     d_cap = defaults.get("capacity", {})
     guests = parse_capacity(text, int(d_cap.get("guests", 100)))
@@ -149,11 +191,18 @@ def build_program(ont: Ontology, brief: DesignBrief) -> DesignProgram:
     )
 
     invariants: list[Constraint] = []
-    for c in (list(defaults.get("invariants", []))
-              + list((tradition_block or {}).get("invariants", []))):
+    for inv in semantic.invariants:
         invariants.append(Constraint(
-            constraint_id=c["id"], kind="HARD", category=c["category"], statement=c["statement"],
-            source="TYPOLOGY", sacred=bool(c.get("sacred", False)),
+            constraint_id=inv.id, kind="HARD",
+            category=inv.category if inv.category in _CATEGORIES else "PROGRAM",
+            statement=inv.statement, source="SEMANTIC", sacred=inv.sacred,
+            confidence=inv.confidence,
+        ))
+    exclusion = _exclusion_statement(semantic)
+    if exclusion:
+        invariants.append(Constraint(
+            constraint_id="c_semantic_exclusions", kind="HARD", category="PROGRAM",
+            statement=exclusion, source="SEMANTIC",
         ))
     invariants.append(Constraint(
         constraint_id="c_capacity", kind="HARD", category="CAPACITY",
@@ -189,20 +238,18 @@ def build_program(ont: Ontology, brief: DesignBrief) -> DesignProgram:
         ))
 
     ritual = None
-    r = (tradition_block or {}).get("ritual") or defaults.get("ritual")
-    if r:
-        ritual = RitualProfile(tradition=r.get("tradition"), region=brief.location,
-                               required_elements=list(r.get("required_elements", [])))
+    if semantic.ritual_refs:
+        ritual = RitualProfile(tradition=semantic.profile.identity.tradition,
+                               region=brief.location,
+                               required_elements=list(semantic.ritual_refs))
 
-    zones = [RequiredZone(zone=z["zone"], min_area_m2=float(z.get("min_area_m2", 0)),
-                          capacity=int(z.get("capacity", 0)))
-             for z in defaults.get("required_zones", [])]
-    if zones and capacity.guests:
-        scale = max(1.0, capacity.guests / max(1, int(d_cap.get("guests", 100))))
-        zones = [z.model_copy(update={
-            "min_area_m2": round(z.min_area_m2 * (scale if z.capacity else 1.0), 1),
-            "capacity": int(z.capacity * scale) if z.capacity else 0}) for z in zones]
+    # zones: the semantic programme, sized to this site and this crowd
+    usable = width * depth
+    zones = [RequiredZone(zone=z.key, min_area_m2=round(z.area_share * usable, 1),
+                          capacity=capacity_for(z, capacity.guests))
+             for z in semantic.programme if z.priority in ("required", "recommended")]
 
+    label = semantic.profile.identity.event_type_label
     return DesignProgram(
         program_id=deterministic_id("pg", brief.brief_id, typology.value),
         brief_id=brief.brief_id, typology=typology,
@@ -211,11 +258,28 @@ def build_program(ont: Ontology, brief: DesignBrief) -> DesignProgram:
                     else VenueType.CONVENTION_SPACE),
         invariants=invariants, soft_intents=[], open_variables=[],
         site=site, budget=BudgetBand(band=band), schedule=schedule, capacity=capacity,
-        ritual=ritual, required_zones=zones,
-        summary=f"{typology.value.replace('_', ' ').title()} for {capacity.guests} "
+        ritual=ritual, required_zones=zones, semantic=semantic,
+        summary=f"{label} for {capacity.guests} "
                 f"on a {width}x{depth} m {site.kind.lower()} site, budget band {band}/5, "
                 f"{site.climate.label.replace('_', ' ')} climate.",
     )
+
+
+_CATEGORIES = {"RITUAL", "SAFETY", "CAPACITY", "BUDGET", "SITE", "SCHEDULE", "CLIMATE",
+               "ACCESS", "PROGRAM"}
+
+
+def _exclusion_statement(semantic: SemanticBrief) -> str:
+    """What the concept is NOT, stated once: only what a designer could plausibly
+    confuse it with, or what the user excluded by name. A restaurant brief is not
+    told it contains no mandap; that would only put the word in front of a model."""
+    items = [e.label for e in semantic.profile.elements
+             if e.status == ElementStatus.FORBIDDEN
+             and (e.provenance == Provenance.USER_EXPLICIT or "neighbouring" in e.rationale)]
+    if not items:
+        return ""
+    label = semantic.profile.identity.event_type_label
+    return f"This is a {label}. It must not contain: " + ", ".join(items[:16]) + "."
 
 
 def attach_soft_intents(program: DesignProgram, proposal_intents: list[str]) -> DesignProgram:

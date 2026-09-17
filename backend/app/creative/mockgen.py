@@ -241,12 +241,13 @@ def make_scene_generator(ont: Ontology):
             for z in p.required_zones
         ] or [SceneZoneProposal(zone="main", role="main",
                                 area_m2=p.site.usable_area_m2 * 0.4, capacity=p.capacity.guests)]
+        focus = (p.semantic.intent.primary_zone_key if p.semantic else "") or "main"
         if g.site_relationship.value.endswith("embedded") or g.thesis_archetype.value.endswith("excavation"):
-            zones = [z.model_copy(update={"level_m": -2.1}) if z.zone in ("ceremony", "main", "stage")
+            zones = [z.model_copy(update={"level_m": -2.1}) if z.zone == focus
                      else z for z in zones]
         span = next((pp.value for pp in g.geometry.params if pp.name == "span_m"), None)
         return SceneGraphProposal(
-            zones=zones, focal_role="focal",
+            zones=zones, focal_role=focus,
             focal_clearance_radial_m=1.5, focal_clearance_overhead_m=4.0,
             element_height_m=round(2.6 + rng.random() * 3.5, 2),
             element_span_m=round(span or (5.0 + rng.random() * 6.0), 2),

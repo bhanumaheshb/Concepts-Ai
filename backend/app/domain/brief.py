@@ -4,6 +4,7 @@ from typing import Literal
 
 from pydantic import Field
 
+from app.domain.semantics import SemanticBrief
 from app.domain.common import (
     ConstraintId, EventType, FacetId, Frozen, OntologyRef, Score, Tradition, Typology,
     VenueType,
@@ -26,7 +27,7 @@ class Constraint(Frozen):
     ]
     statement: str
     measurable: Measurable | None = None
-    source: Literal["BRIEF", "INFERRED", "DEFAULT", "TYPOLOGY"] = "BRIEF"
+    source: Literal["BRIEF", "INFERRED", "DEFAULT", "TYPOLOGY", "SEMANTIC"] = "BRIEF"
     confidence: Score = 1.0
     sacred: bool = False  # true => unreachable by every mutation operator, forever
 
@@ -140,6 +141,9 @@ class DesignProgram(Frozen):
     capacity: CapacitySpec = CapacitySpec()
     ritual: RitualProfile | None = None
     required_zones: list[RequiredZone] = []
+    # What the brief means: identity, activities, elements, programme, provenance.
+    # The zones and semantic invariants above are derived from it.
+    semantic: SemanticBrief | None = None
     summary: str = ""
 
     def constraint_ids(self) -> set[str]:

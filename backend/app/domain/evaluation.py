@@ -44,13 +44,15 @@ class EvaluationResult(Frozen):
     feasibility: CriticResult
     cultural: CriticResult
     originality: CriticResult | None = None      # present only in reference mode
+    semantic: CriticResult | None = None         # present whenever semantics are known
     novelty: NoveltyScore = NoveltyScore()
     gate_passed: bool
     quality_q: Score
 
     def results(self) -> list[CriticResult]:
         base = [self.alignment, self.coherence, self.feasibility, self.cultural]
-        return base + ([self.originality] if self.originality else [])
+        return (base + ([self.originality] if self.originality else [])
+                + ([self.semantic] if self.semantic else []))
 
     def blockers(self) -> list[CriticFinding]:
         return [f for r in self.results() for f in r.findings if f.severity == Severity.BLOCKER]

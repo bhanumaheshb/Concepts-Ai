@@ -19,7 +19,7 @@ from app.creative.context import BriefContext
 from app.creative.mockgen import make_program_generator  # noqa: F401  (registered in composition)
 from app.creative.phenotype import synthesise_phenotype
 from app.creative.portfolio import select_portfolio
-from app.creative.program import attach_soft_intents, build_program
+from app.creative.program import attach_soft_intents, build_program, estimate_capacity
 from app.creative.schemas import ProgramProposal
 from app.critics.runner import evaluate
 from app.diversity.matrix import build_matrix, is_duplicate
@@ -44,10 +44,13 @@ from app.ontology.graph import Ontology
 from app.prompt.compiler import compile_prompt
 from app.repair.engine import repair_concept
 from app.scene.build import build_scene_graph
+from app.semantics.intelligence import DesignIntelligence, log_reading
+from app.semantics.priors import semantic_priors
+from app.visual.director import VisualDirector, log_intent
 from app.space.instantiate import instantiate_with_relaxation
 
 STAGES = [
-    ("01", "Brief parsing"), ("02", "Design programme"), ("03", "Anti-brief"),
+    ("01", "Design intelligence"), ("02", "Design programme"), ("03", "Anti-brief"),
     ("04", "Search space"), ("05", "Niche allocation"), ("06", "Genotype solve"),
     ("07", "Principle injection"), ("08", "Phenotype synthesis"), ("09", "Critics"),
     ("10", "Repair"), ("11", "Diversity evaluation"), ("12", "Portfolio selection"),
@@ -64,6 +67,9 @@ class ExplorationRecord:
     brief: DesignBrief
     versions: VersionStamp
     program: DesignProgram | None = None
+    semantic: object | None = None           # SemanticBrief: what the brief means
+    llm_trace: list = field(default_factory=list)   # LLMCallRecord per reasoning call
+    visual_intents: dict = field(default_factory=dict)   # cid -> list[VisualIntent]
     antibrief: AntiBrief | None = None
     space: CreativeSearchSpace | None = None
     niches: list[Niche] = field(default_factory=list)
@@ -114,10 +120,18 @@ class ExplorationRecord:
         return out
 
 
+def _archive_key(program: DesignProgram) -> str:
+    """Novelty is measured against past concepts for the same EVENT. A Sangeet is not
+    made "novel" by differing from last week's mandaps."""
+    sem = program.semantic
+    return f"event:{sem.profile.identity.event_type}" if sem else program.typology.value
+
+
 class Pipeline:
     def __init__(self, ont: Ontology, llm: LLMProvider, store, use_llm_critics: bool = True,
                  synthesizer=None, arch_compiler=None, view_compiler=None,
-                 embeddings=None, cognition=None) -> None:
+                 embeddings=None, cognition=None, intelligence=None,
+                 visual_director=None) -> None:
         self.ont = ont
         self.llm = llm
         self.store = store
@@ -133,6 +147,12 @@ class Pipeline:
         # Creative Cognition. None => no conceptual expansion, no extra candidates,
         # no extra provider calls, no extra randomness drawn.
         self.cognition = cognition
+        # Design Intelligence always runs. Without a reasoning model it is the
+        # deterministic reading, and the trace says so.
+        self.intelligence = intelligence or DesignIntelligence()
+        # Visual Director. Always present: deterministic direction from the semantics,
+        # the concept and the scene; a reasoning model may refine the hero view.
+        self.visual_director = visual_director or VisualDirector(ont)
 
     def _drop_duplicates(self, ont: Ontology, pool: list[ConceptDNA]):
         """Two concepts that are the same idea in different words are one concept.
@@ -243,8 +263,9 @@ class Pipeline:
         elog.note(f"RUN {rec.exploration_id}  k={k} seed={seed} "
                   f"ontology={ont.version}")
         elog.note(f"     brief: {brief.raw_text[:70]!r}")
-        elog.note(f"     event={brief.event_type.value} tradition={brief.tradition.value} "
-                  f"venue={brief.venue_type.value}")
+        elog.note(f"     form: event={brief.event_type_text or brief.event_type.value} "
+                  f"tradition={brief.tradition.value} venue={brief.venue_type.value} "
+                  f"typology={brief.typology.value}")
         # State the optional layers UP FRONT, present or absent. Reading "why did
         # nothing happen" out of an absence is the slowest kind of debugging.
         elog.note(f"     layers: reference={'on' if injection else 'off'} "
@@ -259,11 +280,29 @@ class Pipeline:
         self.store.put(rec)
         rng = SeededRandom(seed, "pipeline", rec.exploration_id)
         try:
-            # 01 brief parsing + 02 programme
-            with self._stage(rec, "01", "Brief parsing") as st:
-                st.detail = f"typology inference from {len(brief.raw_text)} chars"
+            # 01 design intelligence — understand the brief BEFORE any creative search.
+            # Everything downstream reads the programme it produces; nothing downstream
+            # re-reads the brief prose to decide what the event is.
+            with self._stage(rec, "01", "Design intelligence") as st:
+                calls_before = len(self.intelligence.calls)
+                semantic = self.intelligence.understand(
+                    brief, capacity=estimate_capacity(brief))
+                new_calls = self.intelligence.calls[calls_before:]
+                rec.llm_trace += list(new_calls)
+                rec.llm_calls += len(new_calls)
+                rec.semantic = semantic
+                ident = semantic.profile.identity
+                if semantic.reasoner.error:
+                    rec.degraded.append(f"01: reasoning model failed ({semantic.reasoner.error[:80]}); "
+                                        "deterministic reading used")
+                st.detail = (f"{ident.event_type_label} [{ident.event_type}"
+                             f"{'' if ident.known_type else ', inferred'}] via "
+                             f"{semantic.reasoner.source.lower()}: {len(semantic.programme)} zones, "
+                             f"{len(semantic.profile.forbidden_keys())} forbidden, "
+                             f"{len(semantic.invariants)} invariants")
+            log_reading(semantic)
             with self._stage(rec, "02", "Design programme") as st:
-                program = build_program(ont, brief)
+                program = build_program(ont, brief, semantic)
                 proposal = self._program_proposal(program, brief)
                 rec.llm_calls += 1
                 program = attach_soft_intents(program, proposal.soft_intents)
@@ -272,11 +311,15 @@ class Pipeline:
 
             # 04 search space (before anti-brief: the canonical seed must be legal)
             with self._stage(rec, "04", "Search space") as st:
+                priors = semantic_priors(semantic)
                 space = instantiate_with_relaxation(
-                    ont, program, injection.prior_bias if injection else None)
+                    ont, program, (list(injection.prior_bias) if injection else []) + priors)
                 rec.space = space
+                scoped = sum(1 for d in space.domains for e in d.excluded
+                             if e.rule_id == "semantic_scope")
                 st.detail = (f"dim={space.effective_dimensionality:.1f}, "
-                             f"{sum(len(d.excluded) for d in space.domains)} values pruned")
+                             f"{sum(len(d.excluded) for d in space.domains)} values pruned "
+                             f"({scoped} out of semantic scope), {len(priors)} semantic priors")
 
             # 03 anti-brief
             with self._stage(rec, "03", "Anti-brief") as st:
@@ -291,7 +334,7 @@ class Pipeline:
             # 05 + 06 + 07 allocation (solves candidate genotypes, picks the spread)
             with self._stage(rec, "05", "Niche allocation") as st:
                 archive = self.store.archive_genotypes(
-                    program.typology.value, exclude_exploration_id=rec.exploration_id)
+                    _archive_key(program), exclude_exploration_id=rec.exploration_id)
                 alloc = allocate(ont, space, antibrief, rec.exploration_id, k, seed, archive,
                                  injection=injection)
                 rec.niches = alloc.niches
@@ -533,13 +576,15 @@ class Pipeline:
             # 14b LLM creative synthesis + architectural prompt compilation.
             # Runs AFTER portfolio selection so exactly k concepts are synthesised:
             # one bounded call each, never a call for a concept that was rejected.
+            constraints_by_concept = {}
+            forbidden = []
             if self.synthesizer is None:
                 elog.skip("14b", "Creative synthesis",
                           "no writer configured (LLM_PROVIDER=mock) — the 21-section "
                           "prompts are still complete, marked degraded")
             else:
+                forbidden = sorted(antibrief.surface_tokens_excluding(set()))
                 with self._stage(rec, "14b", "Creative synthesis") as st:
-                    forbidden = sorted(antibrief.surface_tokens_excluding(set()))
                     for dna in rec.concepts:
                         refs = self._reference_statements(rec, dna)
                         result = self.synthesizer.synthesize(
@@ -550,26 +595,56 @@ class Pipeline:
                         rec.synthesis_repairs += 1 if result.trace.repaired else 0
                         rec.synthesis_traces[dna.concept_id] = result.trace
                         rec.validations[dna.concept_id] = result.validation
+                        constraints_by_concept[dna.concept_id] = result.constraints
                         if result.concept is not None:
                             rec.structured[dna.concept_id] = result.concept
-                        if self.arch_compiler is not None:
-                            hero = self.arch_compiler.compile(
-                                dna=dna, concept=result.concept, brief=brief,
-                                program=program, constraints=result.constraints,
-                                scene=rec.scenes.get(dna.concept_id),
-                                reference_statements=refs,
-                                extra_negatives=forbidden)
-                            rec.arch_prompts[dna.concept_id] = hero
-                            if self.view_compiler is not None:
-                                rec.view_prompts[dna.concept_id] = (
-                                    self.view_compiler.compile_views(
-                                        hero=hero, dna=dna, concept=result.concept,
-                                        program=program, brief_text=brief.raw_text,
-                                        scene=rec.scenes.get(dna.concept_id)))
                     ok = sum(1 for v in rec.validations.values() if v.passed)
                     st.detail = (f"{len(rec.structured)}/{len(rec.concepts)} synthesised, "
                                  f"{ok} valid, {rec.synthesis_repairs} repaired, "
                                  f"{rec.synthesis_calls} model calls")
+
+            # 14c visual direction, THEN prompt compilation. The director decides what
+            # each image must communicate; the compilers only put that into words.
+            with self._stage(rec, "14c", "Visual direction") as st:
+                calls_before = len(self.visual_director.calls)
+                views_total = 0
+                for dna in rec.concepts:
+                    concept = rec.structured.get(dna.concept_id)
+                    scene = rec.scenes.get(dna.concept_id)
+                    intents = self.visual_director.direct(
+                        dna=dna, program=program, concept=concept, scene=scene)
+                    rec.visual_intents[dna.concept_id] = intents
+                    views_total += len(intents)
+                    if self.synthesizer is None or self.arch_compiler is None:
+                        continue
+                    hero_intent = next((i for i in intents if i.view_key == "hero"), None)
+                    hero = self.arch_compiler.compile(
+                        dna=dna, concept=concept, brief=brief, program=program,
+                        constraints=constraints_by_concept.get(dna.concept_id),
+                        scene=scene, reference_statements=self._reference_statements(rec, dna),
+                        extra_negatives=forbidden, visual=hero_intent)
+                    rec.arch_prompts[dna.concept_id] = hero
+                    if self.view_compiler is not None:
+                        rec.view_prompts[dna.concept_id] = self.view_compiler.compile_views(
+                            hero=hero, dna=dna, concept=concept, program=program,
+                            brief_text=brief.raw_text, scene=scene, visual_intents=intents)
+                new_calls = self.visual_director.calls[calls_before:]
+                rec.llm_trace += list(new_calls)
+                rec.llm_calls += len(new_calls)
+                leaks = sum(len(p.semantic_leaks) for p in rec.arch_prompts.values())
+                st.detail = (f"{views_total} visual intents for {len(rec.concepts)} concepts"
+                             + (f", {len(new_calls)} model refinements" if new_calls else "")
+                             + (f", {leaks} leaked sections removed" if leaks else ""))
+            try:
+                elog.note("")
+                elog.note("VISUAL INTENT (hero)")
+                for dna in rec.concepts:
+                    hero_i = next((i for i in rec.visual_intents.get(dna.concept_id, [])
+                                   if i.view_key == "hero"), None)
+                    if hero_i is not None:
+                        log_intent(hero_i, dna.phenotype.title)
+            except Exception:                              # pragma: no cover
+                pass
 
             # 15 archive
             # The prompt IS the product, so print it. Logged here rather than at
@@ -578,7 +653,7 @@ class Pipeline:
 
             with self._stage(rec, "15", "Trace & archive") as st:
                 self.store.add_to_archive(
-                    program.typology.value, rec.exploration_id,
+                    _archive_key(program), rec.exploration_id,
                     [c.genotype for c in rec.concepts + rec.rejected])
                 st.detail = f"{len(rec.concepts)} accepted + {len(rec.rejected)} rejected archived"
 

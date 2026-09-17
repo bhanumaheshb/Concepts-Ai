@@ -1,0 +1,95 @@
+version: v1
+# How a visualisation director frames a space — keyed by what the space is FOR, not
+# by what the event is called. The hero view follows where attention goes; a zone
+# view follows what that zone does. A new event type needs no entry here.
+
+hero_by_audience:
+  frontal:
+    position: "from the rear third of the audience, on the central axis, looking toward the focus"
+    height_m: 1.7
+    lens_mm: 24
+    fov: "wide, the full width of the focus and the backs of the audience in frame"
+    direction: "toward the focus"
+    composition: "one-point perspective, the focus centred, the crowd leading the eye in"
+  surround:
+    position: "elevated at a corner, looking across the focus to the audience on the far side"
+    height_m: 4.0
+    lens_mm: 24
+    fov: "wide enough to show the audience on at least two sides of the focus"
+    direction: "diagonally across the focus"
+    composition: "diagonal composition, the focus in the middle third, audience wrapping it"
+  immersive:
+    position: "inside the audience, low, looking up and around"
+    height_m: 1.2
+    lens_mm: 16
+    fov: "ultra-wide, surrounding surfaces filling the edges of the frame"
+    direction: "up and outward"
+    composition: "the audience in silhouette at the bottom edge, the medium filling the rest"
+  distributed:
+    position: "elevated oblique view over several zones at once"
+    height_m: 6.0
+    lens_mm: 28
+    fov: "wide, at least three destinations legible"
+    direction: "across the plan"
+    composition: "layered depth, destinations stepping back from foreground to background"
+  participatory:
+    position: "at the edge of the main activity, among the participants"
+    height_m: 1.5
+    lens_mm: 24
+    fov: "wide, participants close in the foreground"
+    direction: "into the activity"
+    composition: "people in motion framing the space, the focus beyond them"
+  processional:
+    position: "low on the route axis, looking along it"
+    height_m: 1.4
+    lens_mm: 35
+    fov: "the full length of the route to its destination"
+    direction: "along the route"
+    composition: "strong one-point perspective down the route"
+  convivial:
+    position: "at seated eye height between groups"
+    height_m: 1.2
+    lens_mm: 35
+    fov: "medium, two or three groups and the room behind them"
+    direction: "across the room"
+    composition: "occupied tables or lounges in the foreground, the space opening behind"
+  none:
+    position: "three-quarter view at standing eye height"
+    height_m: 1.6
+    lens_mm: 35
+    fov: "medium-wide"
+    direction: "into the space"
+    composition: "balanced three-quarter composition"
+
+zone_by_role:
+  arrival:       {position: "at the threshold, looking in", height_m: 1.6, lens_mm: 28, direction: "inward", composition: "the entry frame in the foreground, the space revealed beyond"}
+  focal:         {position: "frontal, centred on the focus", height_m: 1.6, lens_mm: 35, direction: "toward the focus", composition: "the focus complete in frame"}
+  performance:   {position: "frontal, from the audience", height_m: 1.7, lens_mm: 35, direction: "toward the stage", composition: "the full performance area in frame with performers"}
+  ceremony:      {position: "frontal, from the guests", height_m: 1.6, lens_mm: 35, direction: "toward the ceremony focus", composition: "the ceremony focus centred and complete"}
+  audience:      {position: "raised three-quarter over the audience", height_m: 3.0, lens_mm: 24, direction: "across the audience toward the focus", composition: "rows or clusters of people leading to the focus"}
+  participation: {position: "within the activity", height_m: 1.5, lens_mm: 24, direction: "across the activity", composition: "people mid-action in the foreground"}
+  social:        {position: "seated eye height inside the lounge", height_m: 1.2, lens_mm: 35, direction: "across the groups", composition: "people in conversation, furniture legible"}
+  hospitality:   {position: "three-quarter view of the counter", height_m: 1.5, lens_mm: 50, direction: "along the counter", composition: "the counter in sharp focus, guests at it"}
+  dining:        {position: "seated eye height among tables", height_m: 1.2, lens_mm: 35, direction: "across the dining room", composition: "occupied tables in the foreground"}
+  display:       {position: "visitor eye level beside a display", height_m: 1.6, lens_mm: 35, direction: "along the visitor route", composition: "an object in the foreground, visitors and further displays beyond"}
+  circulation:   {position: "low on the route axis", height_m: 1.4, lens_mm: 35, direction: "along the route", composition: "one-point perspective along the route"}
+  media:         {position: "behind the media position, over the cameras", height_m: 2.2, lens_mm: 50, direction: "toward the subject", composition: "camera lenses in the foreground, the subject beyond"}
+  retail:        {position: "shopper eye level in an aisle", height_m: 1.6, lens_mm: 28, direction: "along the displays", composition: "products in the foreground, the store opening beyond"}
+  work:          {position: "standing eye height at the edge of the work area", height_m: 1.6, lens_mm: 28, direction: "across the work settings", composition: "people at work in varied settings"}
+  support:       {position: "three-quarter view", height_m: 1.6, lens_mm: 35, direction: "into the zone", composition: "the zone in use"}
+  outdoor:       {position: "distant three-quarter view", height_m: 1.8, lens_mm: 35, direction: "toward the structure", composition: "the structure in its landscape"}
+
+# Zones worth their own image. Service, technical and backstage are real programme
+# but rarely the story; they are drawn in plan, not rendered.
+rendered_roles: [arrival, focal, performance, ceremony, audience, participation, social,
+                 hospitality, dining, display, circulation, retail, work, outdoor]
+
+scale_cues_by_role:
+  audience: [rows or clusters of seated people]
+  participation: [people mid-movement]
+  dining: [set tables and chairs]
+  hospitality: [bar stools and a counter at 1.1 m]
+  display: [plinths at hip height, visitors beside them]
+  performance: [performers and instruments on the stage]
+  social: [sofas and low tables]
+  work: [desks and task chairs]

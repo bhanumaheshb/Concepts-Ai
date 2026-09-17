@@ -166,6 +166,76 @@ def feasibility_checks(
     return findings, ran
 
 
+def semantic_checks(
+    ont: Ontology, dna: ConceptDNA, program: DesignProgram, scene: SceneGraph | None
+) -> tuple[list[CriticFinding], list[str]]:
+    """Does this concept solve the event that was asked for, and only that event?
+
+    Entirely deterministic. The same scope rule and the same leak detector used by
+    Design Intelligence decide it, so the critic cannot disagree with the reading.
+    """
+    from app.semantics.knowledge import load_knowledge
+    from app.semantics.leakage import find_leaks_in
+    from app.semantics.priors import value_out_of_scope
+
+    ran = [codes.SEM_OUT_OF_SCOPE_VALUE, codes.SEM_FORBIDDEN_ELEMENT,
+           codes.SEM_REQUIRED_ZONE_MISSING, codes.SEM_FOCUS_MISSING]
+    sem = program.semantic
+    findings: list[CriticFinding] = []
+    if sem is None:
+        return findings, []
+    k = load_knowledge()
+    label = sem.profile.identity.event_type_label
+
+    for ref in dna.genotype.all_refs():
+        node = ont.nodes.get(ref)
+        why = value_out_of_scope(node, sem) if node else None
+        if why:
+            findings.append(CriticFinding(
+                code=codes.SEM_OUT_OF_SCOPE_VALUE, severity=Severity.BLOCKER,
+                statement=f"{node.label} does not belong to a {label}: {why}.",
+                evidence=[_span("GENOTYPE", ref.split(":")[0], ref)],
+                facet_ref=ref.split(":")[0]))
+
+    ph = dna.phenotype
+    fields = {
+        "phenotype.title": ph.title, "phenotype.one_line": ph.one_line,
+        "phenotype.design_thesis": ph.design_thesis,
+        "phenotype.spatial_explanation": ph.spatial_explanation,
+        "phenotype.material_explanation": ph.material_explanation,
+        "phenotype.experience_narrative": ph.experience_narrative,
+        "phenotype.atmosphere": ph.visual_direction.atmosphere,
+    }
+    if scene is not None:
+        for n in scene.nodes:
+            if n.type in ("zone", "focal") and n.role:
+                fields[f"scene.{n.id}"] = n.role.replace("_", " ")
+    for leak in find_leaks_in(k, sem.profile, fields):
+        findings.append(CriticFinding(
+            code=codes.SEM_FORBIDDEN_ELEMENT, severity=Severity.BLOCKER,
+            statement=f"A {leak.label.lower()} appears in a {label}: {leak.rule}.",
+            evidence=[_span("SCENE_GRAPH" if leak.where.startswith("scene") else "PHENOTYPE",
+                            leak.where, leak.phrase)]))
+
+    if scene is not None and scene.status != "FAILED":
+        present = {n.role for n in scene.by_type("zone")}
+        for z in sem.programme:
+            if z.priority == "required" and z.key not in present:
+                findings.append(CriticFinding(
+                    code=codes.SEM_REQUIRED_ZONE_MISSING, severity=Severity.MAJOR,
+                    statement=f"The {label} needs a {z.label.lower()} ({z.rationale}); "
+                              f"the scene has none.",
+                    evidence=[_span("PROGRAM", "semantic.programme", z.key)]))
+        focus = sem.intent.primary_zone_key
+        if focus and focus not in present:
+            findings.append(CriticFinding(
+                code=codes.SEM_FOCUS_MISSING, severity=Severity.MAJOR,
+                statement=f"The concept has no {sem.intent.primary_focus.lower()}, "
+                          f"which is what a {label} is organised around.",
+                evidence=[_span("PROGRAM", "semantic.intent.primary_zone_key", focus)]))
+    return findings, ran
+
+
 def cultural_checks(
     ont: Ontology, dna: ConceptDNA, program: DesignProgram
 ) -> tuple[list[CriticFinding], list[str]]:

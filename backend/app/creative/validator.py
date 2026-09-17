@@ -65,6 +65,7 @@ class ConceptLLMValidator:
         f += self._hard_constraints(concept, constraints, blob)
         f += self._dna_consistency(concept, constraints, blob)
         f += self._forbidden(concept, constraints, blob)
+        f += self._semantic_leakage(concept, program)
         f += self._structure_realism(concept, constraints)
         f += self._spatial_logic(concept)
         f += self._materials_and_light(concept)
@@ -101,15 +102,20 @@ class ConceptLLMValidator:
         """Only the programme the brief actually requires (§6)."""
         out = []
         needed = ["arrival", "circulation", "seating"]
-        if program.typology in GATHERING_TYPOLOGIES:
+        sem = program.semantic
+        focused = (sem.profile.audience_relationship in ("frontal", "surround", "processional",
+                                                         "immersive", "participatory")
+                   if sem else program.typology in GATHERING_TYPOLOGIES)
+        if focused:
             needed += ["focal_space", "walkway"]
+        kind = (sem.profile.identity.event_type_label.lower() if sem
+                else program.typology.value.replace('_', ' ').lower())
         for slot in needed:
             value = (getattr(c.program, slot, "") or "").strip()
             if len(value) < MIN_FIELD:
                 out.append(ValidationFinding(
                     code="PROGRAM_INCOMPLETE", field=f"program.{slot}",
-                    message=f"program.{slot} is required for a "
-                            f"{program.typology.value.replace('_', ' ').lower()} and "
+                    message=f"program.{slot} is required for a {kind} and "
                             f"must describe it spatially, not name it.",
                     evidence=value[:80]))
             elif _echoes_name(slot, value):
@@ -118,13 +124,32 @@ class ConceptLLMValidator:
                     message=f"program.{slot} returns the label instead of resolving "
                             f"the space.", evidence=value[:80]))
         for zone in program.required_zones:
-            name = getattr(zone, "name", str(zone))
+            name = zone.zone.replace("_", " ")
             if name and name.lower() not in " ".join(
                     v for v in c.program.model_dump().values() if isinstance(v, str)
             ).lower() + " ".join(c.program.additional_zones).lower():
                 out.append(ValidationFinding(
                     code="REQUIRED_ZONE_MISSING", severity=WARNING,
                     field="program", message=f"required zone '{name}' is not resolved."))
+        return out
+
+    def _semantic_leakage(self, c: StructuredArchitecturalConcept, program: DesignProgram):
+        """An element that belongs to another event is an ERROR, which sends the concept
+        back for one repair with the finding stated. Deterministic: the model is never
+        asked whether it leaked."""
+        sem = program.semantic
+        if sem is None:
+            return []
+        from app.semantics.knowledge import load_knowledge
+        from app.semantics.leakage import find_leaks
+        out = []
+        for leak in find_leaks(load_knowledge(), sem.profile, self._blob(c), "concept"):
+            out.append(ValidationFinding(
+                code="SEMANTIC_LEAK", field="concept",
+                message=(f"The concept mentions '{leak.phrase}' ({leak.label}), which does not "
+                         f"belong to a {sem.profile.identity.event_type_label}: {leak.rule}. "
+                         f"Remove it and resolve the {sem.intent.primary_focus.lower() or 'focus'} instead."),
+                evidence=leak.phrase))
         return out
 
     def _hard_constraints(self, c: StructuredArchitecturalConcept,
@@ -177,9 +202,17 @@ class ConceptLLMValidator:
 
     def _forbidden(self, c: StructuredArchitecturalConcept,
                    cons: ConstraintEnvelope, blob: str):
+        """A forbidden token counts only where the concept AFFIRMS it. Its own
+        anti-cliche list and any negated mention ("no symmetrical backdrop wall") are
+        the concept rejecting the cliche, which is exactly what was asked for."""
+        from app.semantics.knowledge import _is_negated, normalise
+        affirmed = normalise(" ".join(
+            v for k, v in ((k, self._field_text(c, k)) for k in type(c).model_fields
+                           if k != "anti_cliches") if v))
         out = []
         for token in cons.forbidden_tokens:
-            if re.search(rf"\b{re.escape(token.lower())}\b", blob):
+            hits = [m.start() for m in re.finditer(rf"\b{re.escape(normalise(token))}\b", affirmed)]
+            if any(not _is_negated(affirmed, s) for s in hits):
                 out.append(ValidationFinding(
                     code="FORBIDDEN_TOKEN", field="concept",
                     message=f"'{token}' is a forbidden surface token and must not "
@@ -260,6 +293,17 @@ class ConceptLLMValidator:
                 field="lighting.colour_temperature",
                 message="state a colour temperature."))
         return out
+
+    @staticmethod
+    def _field_text(c: StructuredArchitecturalConcept, name: str) -> str:
+        value = getattr(c, name, None)
+        if isinstance(value, str):
+            return value
+        if isinstance(value, list):
+            return " ".join(str(v.model_dump() if hasattr(v, "model_dump") else v) for v in value)
+        if hasattr(value, "model_dump"):
+            return " ".join(str(v) for v in value.model_dump().values())
+        return ""
 
     @staticmethod
     def _blob(c: StructuredArchitecturalConcept) -> str:

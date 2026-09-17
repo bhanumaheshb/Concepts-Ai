@@ -108,10 +108,14 @@ def build_scene_graph(
             unresolved=unresolved or ["no zone could be placed"],
         ), calls
 
-    # the signature element belongs at the programme's PRIMARY zone, not merely the
-    # largest one — otherwise the prompt describes the seating rather than the ceremony
-    PRIMARY_ROLES = ("ceremony", "stage", "main", "gallery", "shelter", "dining")
-    main = next((n for r in PRIMARY_ROLES for n in nodes if n.role == r),
+    # The signature element belongs at the programme's PRIMARY zone, not merely the
+    # largest one, or the prompt describes the seating instead of what the event is
+    # about. Design Intelligence names that zone; the role list is only the fallback
+    # for a programme built without semantics.
+    focus_key = program.semantic.intent.primary_zone_key if program.semantic else ""
+    FALLBACK_ROLES = ("stage", "main", "gallery", "shelter", "dining", "ceremony")
+    main = (next((n for n in nodes if n.role == focus_key), None) if focus_key else None) \
+        or next((n for r in FALLBACK_ROLES for n in nodes if n.role == r),
                 max(nodes, key=lambda n: n.area_m2 or 0.0))
 
     # ---- the signature element, dimensioned from the genotype's geometry ----
@@ -177,7 +181,12 @@ def build_scene_graph(
         lens_mm=35.0, eye_height_m=1.6, look_at=focal.id,
     )
     nodes.append(cam)
-    edges.append(SceneEdge(type="sightline", src="occupancy_guests", dst=focal.id))
+    # A sightline to one focus is a property of frontal, surround and immersive events.
+    # A restaurant, an exhibition or a festival has attention spread across the space,
+    # and asserting a single sightline there would be a ceremony's assumption.
+    audience = program.semantic.profile.audience_relationship if program.semantic else "frontal"
+    if audience in ("frontal", "surround", "immersive", "processional", "participatory"):
+        edges.append(SceneEdge(type="sightline", src="occupancy_guests", dst=focal.id))
 
     # ---- derived quantities ----
     cost_band = max(ont.node(r).cost for r in g.all_refs() if r in ont.nodes)

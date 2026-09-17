@@ -106,7 +106,8 @@ class RepairOutcome:
 def critics_to_rerun(failed: CriticName, touched: list[str]) -> set[CriticName]:
     """COHERENCE is always included: any genotype edit can break an excludes or
     requires relation."""
-    out = {failed, CriticName.COHERENCE}
+    # SEMANTIC too: an edited value can come from another event's vocabulary
+    out = {failed, CriticName.COHERENCE, CriticName.SEMANTIC}
     for f in touched:
         out |= FACET_CRITICS.get(f, set())
     return out
@@ -129,6 +130,8 @@ def _critic_of(code: str) -> CriticName:
         return CriticName.COHERENCE
     if code.startswith("FEAS"):
         return CriticName.FEASIBILITY
+    if code.startswith("SEM_"):
+        return CriticName.SEMANTIC
     return CriticName.CULTURAL
 
 

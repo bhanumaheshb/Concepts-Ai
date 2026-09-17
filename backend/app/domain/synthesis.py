@@ -231,6 +231,8 @@ class ArchitecturalVisualizationPrompt(Frozen):
     view_key: str = "hero"
     view_label: str = "Overall"
     shared_signature: str = ""
+    # Sections a forbidden element was removed from, and why. Empty on a clean prompt.
+    semantic_leaks: list[str] = []
 
     def section(self, name: str) -> str:
         for s in self.sections:

@@ -24,7 +24,7 @@ _REINTERPRETATIONS = (
      "arrival is a sequence with a held low point before the volume opens"),
     ("circulation as a corridor", "circulation as the primary social space",
      "movement and gathering share one volume instead of being separated"),
-    ("the ceremonial focus as an object", "the focus as a condition of light and clearance",
+    ("the {focus} as an object", "the {focus} as a condition of light and clearance",
      "the centre is defined by what surrounds it rather than by what stands there"),
     ("the boundary as a wall", "the boundary as a gradient of privacy",
      "enclosure is graded in depth rather than drawn as a line"),
@@ -38,7 +38,7 @@ _DISTORTIONS = (
     ("repetition", "a single bay is repeated far past structural necessity",
      "the field of supports becomes the space rather than defining it"),
     ("density of occupation", "the gathering is packed into a third of the area",
-     "the remaining space reads as deliberate void and carries the ceremony"),
+     "the remaining space reads as deliberate void and carries the {event}"),
 )
 
 _SCALES = (
@@ -51,7 +51,7 @@ _SCALES = (
 
 _REMOVALS = (
     ("the central focal object", "the clearance and the light that fell on it now define the centre",
-     "the ceremony is held by absence, and the surrounding geometry does the work"),
+     "the {event} is held by absence, and the surrounding geometry does the work"),
     ("the fixed seating hierarchy", "level changes replace assigned rank",
      "standing position is negotiated by the ground rather than allocated"),
     ("the visible structure", "the structure is buried in the ground plane and the perimeter",
@@ -75,8 +75,19 @@ _ASSOCIATIONS = (
 )
 
 
-def _pick(rng, table):
-    return table[rng.randint(0, len(table) - 1)]
+def _pick(rng, table, ctx=None):
+    row = table[rng.randint(0, len(table) - 1)]
+    if ctx is None:
+        return row
+    focus = ctx.focus_label() if hasattr(ctx, "focus_label") else "focal space"
+    event = ctx.event_label() if hasattr(ctx, "event_label") else "event"
+    return tuple(s.replace("{focus}", focus).replace("{event}", event) for s in row)
+
+
+def _primitive(rng, ctx):
+    """One of the event's own relationships, or None when the event has none."""
+    prims = ctx.primitives() if hasattr(ctx, "primitives") else []
+    return prims[rng.randint(0, len(prims) - 1)] if prims else None
 
 
 class MockCognitionProvider:
@@ -111,18 +122,25 @@ class MockCognitionProvider:
                 a, f"the opposite of: {a.rstrip('.').lower()}",
                 "the plan reorganises around the reversed condition")
         elif op is Op.REINTERPRET:
-            was, becomes, consequence = _pick(rng, _REINTERPRETATIONS)
+            prim = _primitive(rng, ctx)
+            if prim is not None and rng.random() < 0.5:
+                a, b = prim
+                was = f"the {a} and the {b} as separate zones with a line between them"
+                becomes = f"the {a} and the {b} sharing one continuous space"
+                consequence = f"the boundary between {a} and {b} becomes the architecture"
+            else:
+                was, becomes, consequence = _pick(rng, _REINTERPRETATIONS, ctx)
         elif op is Op.DISTORT:
-            param, becomes, consequence = _pick(rng, _DISTORTIONS)
+            param, becomes, consequence = _pick(rng, _DISTORTIONS, ctx)
             was = f"{param} held at a conventional value"
         elif op is Op.REMOVE:
-            was, becomes, consequence = _pick(rng, _REMOVALS)
+            was, becomes, consequence = _pick(rng, _REMOVALS, ctx)
             was = f"{was} is treated as essential"
         elif op is Op.SCALE:
-            frm, to, consequence = _pick(rng, _SCALES)
+            frm, to, consequence = _pick(rng, _SCALES, ctx)
             was, becomes = f"the design is read as {frm}", f"it is read as {to}"
         elif op is Op.SEQUENCE:
-            was, becomes, consequence = _pick(rng, _SEQUENCES)
+            was, becomes, consequence = _pick(rng, _SEQUENCES, ctx)
             was = f"the journey assumes {was}"
         elif op is Op.ASSOCIATE:
             src = ctx.principle_statements[0] if ctx.principle_statements else _pick(rng, _ASSOCIATIONS)[0]

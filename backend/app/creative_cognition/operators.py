@@ -67,12 +67,41 @@ class CognitionContext:
         """Hard invariants. Stated so the provider knows what it may not touch —
         never so it can claim to have satisfied them."""
         p = self.program
-        out = [f"typology: {p.typology.value}",
-               f"capacity: {p.capacity.guests} guests",
-               f"site: {p.site.width_m:.0f} x {p.site.depth_m:.0f} m, {p.site.kind.lower()}",
-               f"climate: {p.site.climate.label.replace('_', ' ')}"]
+        sem = p.semantic
+        out = ([f"event: {sem.profile.identity.event_type_label} "
+                f"({sem.profile.identity.event_family or 'no family'})",
+                f"primary focus: {sem.intent.primary_focus}",
+                f"audience relationship: {sem.profile.audience_relationship}"]
+               if sem else [f"typology: {p.typology.value}"])
+        out += [f"capacity: {p.capacity.guests} guests",
+                f"site: {p.site.width_m:.0f} x {p.site.depth_m:.0f} m, {p.site.kind.lower()}",
+                f"climate: {p.site.climate.label.replace('_', ' ')}"]
         out += [f"invariant: {c.statement}" for c in p.invariants if c.kind == "HARD"][:6]
         return out
+
+    def primitives(self) -> list[tuple[str, str]]:
+        """The conceptual pairs this event is organised by: performer/audience for a
+        concert, kitchen/dining for a restaurant, object/circulation for an exhibition.
+        These are what an operation transforms, so INVERT on a concert inverts the
+        stage/audience hierarchy rather than a ceremony it never had."""
+        sem = self.program.semantic
+        if sem is None:
+            return []
+        out = []
+        for pair in sem.profile.relationships:
+            a, _, b = pair.partition("|")
+            if a and b:
+                out.append((a.replace("_", " "), b.replace("_", " ")))
+        return out
+
+    def focus_label(self) -> str:
+        sem = self.program.semantic
+        return (sem.intent.primary_focus.lower() if sem and sem.intent.primary_focus
+                else "focal space")
+
+    def event_label(self) -> str:
+        sem = self.program.semantic
+        return sem.profile.identity.event_type_label.lower() if sem else "event"
 
     def assumptions(self) -> list[str]:
         """Only assumptions that are NOT blocked by a sacred constraint.
@@ -100,6 +129,10 @@ class CognitionContext:
             f"  staging: {g.occupation_staging.value.split(':')[-1]}",
             f"  sequence: {' -> '.join(s.split(':')[-1] for s in g.spatial_narrative)}",
         ]
+        prims = self.primitives()
+        if prims:
+            blocks += ["", "DESIGN PRIMITIVES (the relationships this event is organised by):",
+                       *(f"  - {a} / {b}" for a, b in prims)]
         if operation is Op.INVERT:
             a = self.assumptions()
             blocks += ["", "ASSUMPTIONS (conventions you MAY reverse):",

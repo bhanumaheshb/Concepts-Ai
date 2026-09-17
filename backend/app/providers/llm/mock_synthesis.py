@@ -94,7 +94,9 @@ class MockCreativeProvider:
                     description="the route continues along the principal axis"))
 
         cap = constraints.capacity or 100
-        focal_label = FOCAL_BY_TYPOLOGY.get(constraints.typology, "focal platform")
+        sem = program.semantic
+        focal_label = ((sem.intent.primary_focus.lower() if sem and sem.intent.primary_focus else "")
+                       or FOCAL_BY_TYPOLOGY.get(constraints.typology, "focal platform"))
         dims = constraints.site_dimensions or "the given site"
 
         return StructuredArchitecturalConcept(
@@ -126,11 +128,11 @@ class MockCreativeProvider:
                 focal_space_label=focal_label,
                 seating=(f"Seating for {cap} is arranged so every position holds an "
                          f"unobstructed sightline to the {focal_label}."),
-                walkway=(f"A single processional walkway runs from the arrival edge to "
+                walkway=(f"A single clear route runs from the arrival edge to "
                          f"the {focal_label}, wide enough for two abreast."),
                 arrival=(f"Arrival is {site_rel}, compressing before the room opens."),
                 circulation=(f"Perimeter circulation runs behind the seating so guests "
-                             f"move without crossing the ceremonial route."),
+                             f"move without crossing the principal route."),
                 service_access=("A discreet service route reaches the rear of the "
                                 "focal space out of guest sightlines."),
                 sightlines=(f"All {cap} sightlines converge on the {focal_label}."),

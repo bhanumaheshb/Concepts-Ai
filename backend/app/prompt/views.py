@@ -42,7 +42,8 @@ IDENTITY_SECTIONS = (
 
 # Order within a single view prompt.
 VIEW_SECTION_ORDER = (
-    "SUBJECT", "AREA", "DIMENSIONS", "ARCHITECTURAL CONCEPT", "SITE", "SPATIAL ORGANIZATION",
+    "SUBJECT", "AREA", "DIMENSIONS", "HUMAN ACTIVITY", "COMPOSITION",
+    "ARCHITECTURAL CONCEPT", "SITE", "SPATIAL ORGANIZATION",
     "STRUCTURE", "GEOMETRY", "MASSING", "MATERIALS", "MATERIAL BEHAVIOUR",
     "LIGHTING", "LANDSCAPE", "ATMOSPHERE", "HUMAN SCALE", "CAMERA",
     "ARCHITECTURAL VISUALIZATION STYLE", "CONSTRUCTION REALISM",
@@ -279,8 +280,15 @@ class ViewPromptCompiler:
     def compile_views(
         self, *, hero: ArchitecturalVisualizationPrompt, dna: ConceptDNA,
         concept: StructuredArchitecturalConcept | None, program: DesignProgram,
-        brief_text: str = "", scene=None,
+        brief_text: str = "", scene=None, visual_intents=None,
     ) -> list[ArchitecturalVisualizationPrompt]:
+        # With the Visual Director's intents, the shot list IS the programme: one view
+        # per zone worth rendering, framed for what that zone does. No event catalogue
+        # is consulted, so an event nobody catalogued still gets a complete set.
+        if visual_intents:
+            return self._compile_from_intents(hero=hero, dna=dna, concept=concept,
+                                              program=program, scene=scene,
+                                              intents=visual_intents)
         # The event and its tradition decide the shot list when they are known; a
         # brief that names neither falls back to the typology catalogue unchanged.
         specs = event_views(
@@ -319,6 +327,63 @@ class ViewPromptCompiler:
         for spec in DRAWING_VIEWS:
             out.append(self._one(spec, hero, dna, concept, identity, signature,
                                  subject_base, _dimension_text(spec.axis, scene, program)))
+        return out
+
+    # ---- the director's shot list ---------------------------------------------
+    def _compile_from_intents(self, *, hero, dna, concept, program, scene, intents):
+        identity = [s for s in hero.sections if s.name in IDENTITY_SECTIONS]
+        signature = sha256_of("|".join(f"{s.name}:{s.text}" for s in identity))
+        out: list[ArchitecturalVisualizationPrompt] = []
+        drawings = {"drawing_plan": DRAWING_VIEWS[0], "drawing_front": DRAWING_VIEWS[1],
+                    "drawing_side": DRAWING_VIEWS[2]}
+        for intent in intents:
+            if intent.view_key == "hero":
+                continue
+            ortho = intent.render_intent == "orthographic_drawing"
+            spec = drawings.get(intent.view_key) if ortho else None
+            sections = [PromptSection(name="SUBJECT", text=intent.visual_subject, source="semantic")]
+            if ortho and spec is not None:
+                dims = _dimension_text(spec.axis, scene, program)
+                if intent.visible_program_zones:
+                    dims += " Zones labelled: " + ", ".join(intent.visible_program_zones) + "."
+                sections.append(PromptSection(name="DIMENSIONS", text=dims, source="compiler"))
+            else:
+                if intent.story_of_image:
+                    sections.append(PromptSection(name="AREA", text=intent.story_of_image,
+                                                  source=intent.provenance.get("story_of_image", "visual")))
+                people = "; ".join(x for x in (intent.human_activity, intent.occupancy) if x)
+                if people:
+                    sections.append(PromptSection(name="HUMAN ACTIVITY", text=people, source="visual"))
+                comp = "; ".join(x for x in (intent.composition, intent.layers_phrase()) if x)
+                if comp:
+                    sections.append(PromptSection(name="COMPOSITION", text=comp, source="visual"))
+            sections += list(identity)
+            for extra in (("SPATIAL ORGANIZATION",) if ortho else ("SPATIAL ORGANIZATION", "HUMAN SCALE")):
+                text = hero.section(extra)
+                if text:
+                    sections.append(PromptSection(name=extra, text=text, source="concept"))
+            camera = spec.camera if (ortho and spec is not None) else (intent.camera_phrase() or hero.section("CAMERA"))
+            sections.append(PromptSection(name="CAMERA", text=camera, source="visual"))
+            ordered = sorted(sections, key=lambda s: (
+                VIEW_SECTION_ORDER.index(s.name) if s.name in VIEW_SECTION_ORDER else 99))
+            positive = "\n".join(f"{s.name}: {s.text}" for s in ordered)
+            negative = hero.negative_prompt
+            if ortho:
+                negative = ", ".join([negative, *ORTHO_NEGATIVES])
+            out.append(ArchitecturalVisualizationPrompt(
+                prompt_id=deterministic_id("view", dna.concept_id, intent.view_key, VIEWS_VERSION),
+                concept_id=dna.concept_id, sections=ordered, positive_prompt=positive,
+                negative_prompt=negative, camera=camera, aspect_ratio=hero.aspect_ratio,
+                compiler_version=VIEWS_VERSION, prompt_hash=sha256_of(positive),
+                inputs_hash=hero.inputs_hash, degraded=hero.degraded,
+                view_key=intent.view_key, view_label=intent.view_label,
+                shared_signature=signature, semantic_leaks=list(hero.semantic_leaks)))
+
+        states = list(getattr(concept, "stage_states", None) or [])
+        focus = program.semantic.intent.primary_zone_key if program.semantic else ""
+        if len(states) > 1 and out:
+            base = next((p for p in out if p.view_key == focus), out[0])
+            out += [self._state_view(base, dna, st, signature) for st in states]
         return out
 
     # ---- one state of an existing view ---------------------------------------

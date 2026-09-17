@@ -1,0 +1,33 @@
+version: v1
+# SEMANTIC PRIORS — how the understood brief leans the creative search.
+#
+# These only RAISE weights, after pruning, exactly like a reference's prior bias. They
+# make the canonical answer to a runway show a runway-shaped staging without making
+# any other staging illegal: the radical and wildcard niches still reach past them.
+multiplier: 1.6
+
+# where attention goes -> the staging patterns that organise it
+audience_staging:
+  frontal:       [occupation_staging:frontal_stage, occupation_staging:layered_terraces, occupation_staging:asymmetric_focus]
+  surround:      [occupation_staging:in_the_round, occupation_staging:thrust_runway, occupation_staging:perimeter_ring]
+  immersive:     [occupation_staging:in_the_round, occupation_staging:concealed_reveal, occupation_staging:dispersed_clusters]
+  distributed:   [occupation_staging:dispersed_clusters, occupation_staging:perimeter_ring, occupation_staging:concealed_reveal]
+  participatory: [occupation_staging:thrust_runway, occupation_staging:in_the_round, occupation_staging:mehfil_intimate]
+  processional:  [occupation_staging:processional_axis, occupation_staging:thrust_runway]
+  convivial:     [occupation_staging:dispersed_clusters, occupation_staging:mehfil_intimate, occupation_staging:perimeter_ring]
+
+# what happens -> the experiential sequence it suggests
+activity_values:
+  performance:  [spatial_narrative:performance]
+  dance:        [spatial_narrative:release, spatial_narrative:performance]
+  reveal:       [spatial_narrative:revelation, occupation_staging:concealed_reveal]
+  projection:   [spatial_narrative:immersion]
+  narration:    [spatial_narrative:immersion, spatial_narrative:discovery]
+  display:      [spatial_narrative:discovery]
+  product_display: [spatial_narrative:discovery]
+  runway:       [occupation_staging:thrust_runway, spatial_narrative:procession]
+  ceremony:     [spatial_narrative:arrival, spatial_narrative:procession]
+  dining:       [spatial_narrative:enclosure]
+  shelter:      [spatial_narrative:release]
+  turmeric_application: [spatial_narrative:welcome, occupation_staging:mehfil_intimate]
+  henna_application:    [occupation_staging:mehfil_intimate]

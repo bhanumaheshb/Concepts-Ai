@@ -78,9 +78,11 @@ def compile_prompt(
         return PH(ref)
 
     # 1 SUBJECT
-    subject = (f"Architectural visualisation of a "
-               f"{program.typology.value.replace('_', ' ').lower()} — \"{p.title}\".")
-    add("SUBJECT", subject, ["program.typology", "phenotype.title"])
+    kind = (program.semantic.profile.identity.event_type_label.lower() if program.semantic
+            else program.typology.value.replace('_', ' ').lower())
+    subject = f"Architectural visualisation of a {kind} — \"{p.title}\"."
+    add("SUBJECT", subject, ["program.semantic" if program.semantic else "program.typology",
+                             "phenotype.title"])
     # 2 LANGUAGE
     add("LANGUAGE", phrase(g.architectural_language.value, "arch").capitalize() + ".",
         ["genotype.architectural_language"])

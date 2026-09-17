@@ -65,11 +65,48 @@ def map_to_ontology(ont: Ontology, text: str) -> str | None:
     return best if best_score >= MATCH_THRESHOLD else None
 
 
+def _cliche_key(ont: Ontology, program: DesignProgram) -> str:
+    """Most specific first: the event's own cliches, then its family's, then the space
+    form's. A Sangeet pushes against what wedding celebrations repeat, not against
+    what stages in general repeat."""
+    sem = program.semantic
+    if sem is not None:
+        ident = sem.profile.identity
+        for key in (f"event:{ident.event_type}", f"family:{ident.event_family}"):
+            if key in ont.cliches:
+                return key
+    return program.typology.value if program.typology.value in ont.cliches else "GENERIC_SPATIAL"
+
+
+def _relationship_assumptions(program: DesignProgram) -> list[QuestionedAssumption]:
+    """The conventions of THIS event, stated so a creative operator can question them.
+
+    Taken from the event's relationships ("performer|audience", "kitchen|dining"), so
+    INVERT acts on the stage/audience hierarchy of a concert and on the kitchen/dining
+    visibility of a restaurant, rather than on a ceremony every brief used to inherit.
+    """
+    sem = program.semantic
+    if sem is None:
+        return []
+    out: list[QuestionedAssumption] = []
+    facets = ("occupation_staging", "spatial_narrative", "thesis_archetype")
+    for i, pair in enumerate(sem.profile.relationships[:3]):
+        a, _, b = pair.partition("|")
+        if not b:
+            continue
+        a, b = a.replace("_", " "), b.replace("_", " ")
+        out.append(QuestionedAssumption(
+            assumption_id=f"qa_rel_{i}", inverts_facet=facets[i % len(facets)],
+            statement=f"The {a} leads and the {b} faces it, each in its own separate zone."))
+    return out
+
+
 def _curated(ont: Ontology, program: DesignProgram) -> list[ClicheCluster]:
-    seeds = ont.cliches.get(program.typology.value) or ont.cliches.get("GENERIC_SPATIAL", [])
+    key = _cliche_key(ont, program)
+    seeds = ont.cliches.get(key, [])
     return [
         ClicheCluster(
-            cluster_id=deterministic_id("cl", program.typology.value, s.label),
+            cluster_id=deterministic_id("cl", key, s.label),
             label=s.label, facet_values=list(s.facet_values), prevalence=s.prevalence,
             evidence="CURATED", surface_tokens=list(s.surface_tokens),
         )
@@ -178,9 +215,10 @@ def build_antibrief(
             QuestionedAssumption(assumption_id="qa_2", inverts_facet="thesis_archetype",
                                  statement="The design must be an object rather than a void."),
         ]
+    assumptions += _relationship_assumptions(program)
     if sacred:
         assumptions.append(QuestionedAssumption(
-            assumption_id="qa_sacred", statement="The ritual elements could be omitted.",
+            assumption_id="qa_sacred", statement="The rite's required elements could be omitted.",
             inverts_facet=None,
             blocked_by=next((c.constraint_id for c in program.invariants if c.sacred), "c_ritual"),
         ))

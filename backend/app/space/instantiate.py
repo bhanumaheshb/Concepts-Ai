@@ -16,6 +16,7 @@ from app.domain.space import (
     CreativeSearchSpace, Exclusion, FacetDomain, TensionPair, ValuePrior,
 )
 from app.ontology.graph import Ontology
+from app.semantics.priors import value_out_of_scope
 
 # facet id used inside the genotype -> ontology facet id
 FACET_ONTOLOGY = {
@@ -83,6 +84,12 @@ def instantiate_space(
         excluded: list[Exclusion] = []
         for ref in ont.values(of):
             node = ont.node(ref)
+            # semantic scope first: a value that belongs to a different event is not a
+            # budget or climate question, it is simply not part of this brief
+            out_of_scope = value_out_of_scope(node, program.semantic)
+            if out_of_scope:
+                excluded.append(Exclusion(value=ref, rule_id="semantic_scope", reason=out_of_scope))
+                continue
             killer = next(
                 (r for r in rules if _rule_applies(r, program) and _prunes(r, node, program)), None
             )

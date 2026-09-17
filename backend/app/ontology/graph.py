@@ -43,6 +43,10 @@ class Node:
     sensitivity: str = "none"
     min_abstraction: float = 0.0
     primitive: str | None = None
+    # semantic scope — empty means the value belongs to every brief
+    scope_event_types: tuple[str, ...] = ()
+    scope_families: tuple[str, ...] = ()
+    scope_traditions: tuple[str, ...] = ()
 
     @property
     def value(self) -> str:
@@ -130,6 +134,9 @@ class Ontology:
                 sensitivity=n.get("sensitivity", "none"),
                 min_abstraction=float(n.get("min_abstraction", 0.0)),
                 primitive=n.get("primitive"),
+                scope_event_types=tuple((n.get("scope") or {}).get("event_types", [])),
+                scope_families=tuple((n.get("scope") or {}).get("families", [])),
+                scope_traditions=tuple((n.get("scope") or {}).get("traditions", [])),
             )
 
         self.edges: list[Edge] = [
@@ -162,6 +169,15 @@ class Ontology:
             ]
             for typ, seeds in raw_cliches["typologies"].items()
         }
+        # Cliches can also belong to an event family or an event type. The anti-brief
+        # looks them up most-specific first: event, then family, then space typology.
+        for section, prefix in (("families", "family:"), ("events", "event:")):
+            for key, seeds in (raw_cliches.get(section) or {}).items():
+                self.cliches[prefix + key] = [
+                    ClicheSeed(c["label"], float(c["prevalence"]), list(c["facet_values"]),
+                               list(c.get("surface_tokens", [])))
+                    for c in seeds
+                ]
 
         self._depth_cache: dict[str, int] = {}
         self._validate()

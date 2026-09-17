@@ -88,6 +88,7 @@ class CriticName(StrEnum):
     FEASIBILITY = "FEASIBILITY"
     CULTURAL = "CULTURAL"
     ORIGINALITY = "ORIGINALITY"      # runs only when a reference is present
+    SEMANTIC = "SEMANTIC"            # runs whenever the programme carries semantics
 
 
 class Severity(StrEnum):

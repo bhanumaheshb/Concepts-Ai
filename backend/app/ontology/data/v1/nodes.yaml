@@ -267,12 +267,14 @@ nodes:
 - {id: spatial_narrative:circumambulation, label: Circumambulation, phrase: "a circling route around the centre"}
 # The beats an Indian wedding is actually sequenced by. spatial_narrative is an
 # ORDERED_SEQ facet, so the order these appear in is itself a design decision the
+# `scope` confines a value to the events it belongs to: outside that scope it is pruned
+# from the search space with a recorded exclusion, exactly like a budget or climate rule.
 # distance metric can measure — welcome→varmala→pheras reads differently from
 # welcome→pheras→varmala, and now the engine can tell.
 - {id: spatial_narrative:welcome, phrase: "a held welcome before the space opens", label: Welcome}
-- {id: spatial_narrative:varmala, phrase: "the exchange staged as the room's first peak", label: Varmala}
-- {id: spatial_narrative:pheras, phrase: "the binding circuit at the ceremonial centre", label: Pheras}
-- {id: spatial_narrative:vidaai, phrase: "a departure the whole room turns to watch", label: Vidaai}
+- {id: spatial_narrative:varmala, scope: {event_types: [wedding_ceremony], traditions: [hindu]}, phrase: "the exchange staged as the room's first peak", label: Varmala}
+- {id: spatial_narrative:pheras, scope: {event_types: [wedding_ceremony], traditions: [hindu]}, phrase: "the binding circuit at the ceremonial centre", label: Pheras}
+- {id: spatial_narrative:vidaai, scope: {event_types: [wedding_ceremony], traditions: [hindu]}, phrase: "a departure the whole room turns to watch", label: Vidaai}
 - {id: spatial_narrative:performance, phrase: "a performance the room reconfigures around", label: Performance}
 
 # ──────────────────────── occupation_staging ────────────────────────
@@ -303,16 +305,16 @@ nodes:
 # How an Indian wedding actually occupies a room. These are staging patterns, not
 # decoration: each puts the guests, the couple and the families in a different
 # relationship, which is what makes two concepts genuinely different events.
-- {id: occupation_staging:baraat_arrival, label: Baraat arrival, parent: occupation_staging:directional, cost: 3,
+- {id: occupation_staging:baraat_arrival, label: Baraat arrival, scope: {event_types: [wedding_ceremony], traditions: [hindu, sikh]}, parent: occupation_staging:directional, cost: 3,
    phrase: "a moving arrival procession that becomes the first performance"}
-- {id: occupation_staging:varmala_platform, label: Varmala platform, parent: occupation_staging:centred, cost: 3,
+- {id: occupation_staging:varmala_platform, label: Varmala platform, scope: {event_types: [wedding_ceremony], traditions: [hindu]}, parent: occupation_staging:centred, cost: 3,
    phrase: "a raised exchange platform the whole room can see into"}
-- {id: occupation_staging:family_flanking, label: Family flanking, parent: occupation_staging:directional, cost: 2,
+- {id: occupation_staging:family_flanking, label: Family flanking, scope: {families: [wedding_celebration]}, parent: occupation_staging:directional, cost: 2,
    phrase: "two families seated facing one another across the ceremonial centre"}
 - {id: occupation_staging:thrust_runway, label: Thrust runway, parent: occupation_staging:directional, cost: 3,
    phrase: "a stage thrust into the guests, performers surrounded on three sides"}
 - {id: occupation_staging:floor_seated, label: Floor seated, parent: occupation_staging:centred, cost: 2,
-   phrase: "guests seated at floor level around a low ceremonial centre"}
+   phrase: "guests seated at floor level around a low centre"}
 - {id: occupation_staging:mehfil_intimate, label: Mehfil intimate, parent: occupation_staging:distributed, cost: 2,
    phrase: "low cushioned clusters gathered close around performers"}
 

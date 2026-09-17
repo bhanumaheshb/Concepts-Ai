@@ -2,7 +2,7 @@ version: v1
 # Curated mode seeds per typology. This is the anti-brief's production fallback,
 # not a test fixture — it is why stage 03 cannot fail (spec R-ANTI-01).
 typologies:
-  WEDDING_MANDAP:
+  WEDDING_MANDAP: &wedding_celebration_cliches
     # Drawn from the actual market, not from imagination. Six unrelated real mandaps
     # differ in surface — gold vs white, roses vs marigolds, Dravidian vs Mughal — and
     # are nonetheless ONE ROOM. What repeats is the CONFIGURATION, so that is what is
@@ -109,3 +109,61 @@ typologies:
       facet_values: [architectural_language:miesian_minimal, geometry_system:orthogonal_grid,
                      material:lime_plaster]
       surface_tokens: [minimal, neutral palette, clean lines]
+
+# The configurations above are what the WEDDING CELEBRATION market repeats — at a
+# Sangeet, a Haldi and a reception as much as at a ceremony. They are the family's
+# cliches, so every event in the family pushes against them, not only the mandap.
+families:
+  wedding_celebration: *wedding_celebration_cliches
+
+  # Live entertainment repeats the rental catalogue: black truss, LED wall, haze.
+  live_entertainment:
+    - label: "black truss rig and LED wall"
+      prevalence: 0.85
+      facet_values: [structural_logic:space_frame, lighting_philosophy:projected_light,
+                     occupation_staging:frontal_stage, material:anodised_aluminium,
+                     tectonic_logic:truss_dressed, emotional_register:euphoric]
+      surface_tokens: [led wall, black truss, moving heads, haze, co2 jets, confetti cannon]
+    - label: "festival field of pop-up tents"
+      prevalence: 0.70
+      facet_values: [architectural_language:tensile_membrane, material:canvas_membrane,
+                     occupation_staging:dispersed_clusters, tectonic_logic:tensioned]
+      surface_tokens: [gazebo tents, bunting, festoon lights, hay bales]
+  corporate:
+    - label: "black box, stage and screen"
+      prevalence: 0.84
+      facet_values: [occupation_staging:frontal_stage, lighting_philosophy:projected_light,
+                     geometry_system:orthogonal_grid, architectural_language:miesian_minimal,
+                     tectonic_logic:assembled_modular, emotional_register:austere]
+      surface_tokens: [black box, lectern, branded backdrop, step-and-repeat, led screen]
+  fashion:
+    - label: "white runway between straight rows"
+      prevalence: 0.86
+      facet_values: [occupation_staging:thrust_runway, geometry_system:orthogonal_grid,
+                     architectural_language:miesian_minimal, lighting_philosophy:grazing_wash,
+                     emotional_register:austere, tectonic_logic:assembled_modular]
+      surface_tokens: [white runway, straight front row, photographers' riser, backdrop logo]
+  exhibition:
+    - label: "shell-scheme booths on an aisle grid"
+      prevalence: 0.82
+      facet_values: [geometry_system:modular_bay, occupation_staging:dispersed_clusters,
+                     tectonic_logic:assembled_modular, structural_logic:modular_frame,
+                     lighting_philosophy:grazing_wash]
+      surface_tokens: [shell scheme, booth fascia, carpet tiles, aisle grid, pop-up banner]
+
+# The convention of a specific event, where it differs from its family's.
+events:
+  product_launch:
+    - label: "curtain drop on a turntable under a screen"
+      prevalence: 0.84
+      facet_values: [occupation_staging:concealed_reveal, occupation_staging:frontal_stage,
+                     lighting_philosophy:projected_light, material:polished_steel,
+                     emotional_register:theatrical, tectonic_logic:assembled_modular]
+      surface_tokens: [kabuki drop, turntable, countdown screen, dry ice reveal, brand logo wall]
+  conference:
+    - label: "theatre rows facing a lectern and three screens"
+      prevalence: 0.86
+      facet_values: [occupation_staging:frontal_stage, occupation_staging:layered_terraces,
+                     lighting_philosophy:projected_light, geometry_system:orthogonal_grid,
+                     emotional_register:austere]
+      surface_tokens: [theatre rows, lectern, triple screen, lanyard, pipe and drape]

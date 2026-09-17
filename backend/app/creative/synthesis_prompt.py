@@ -38,8 +38,9 @@ Absolute rules:
    a shopping list.
 6. Lighting is described as source, colour temperature, height, distribution and shadow
    behaviour — never as "beautiful warm lighting".
-7. Resolve only the programme the brief requires. Do not invent a backstage for a \
-restaurant or a mandap for a retail interior.
+7. Resolve only the programme the brief requires, for the event it actually is. Never \
+add an element listed under MUST NOT CONTAIN, and never borrow the focus, rituals or \
+furniture of a different event, even one from the same family.
 8. Write for a client presentation: specific, confident, architectural. No marketing \
 adjectives, no hedging, no alternatives.
 
@@ -110,8 +111,12 @@ def build_constraints(ont: Ontology, program: DesignProgram, brief: DesignBrief,
     for m in genotype.material_palette:
         add(f"material:{m.role.value.lower()}", m.material)
 
+    sem = program.semantic
     hard: list[str] = [
-        f"The concept is a {program.typology.value.replace('_', ' ').lower()}.",
+        (f"The concept is a {sem.profile.identity.event_type_label} "
+         f"({sem.profile.identity.event_family.replace('_', ' ') if sem.profile.identity.event_family else 'no family'}), "
+         f"organised around the {sem.intent.primary_focus.lower() or 'focus'}.")
+        if sem else f"The concept is a {program.typology.value.replace('_', ' ').lower()}.",
     ]
     if program.capacity and program.capacity.guests:
         hard.append(f"Capacity is exactly {program.capacity.guests} people — "
@@ -205,14 +210,43 @@ def build_user_prompt(brief: DesignBrief, program: DesignProgram,
             a(f"- {s}")
         a("")
 
+    sem = program.semantic
+    if sem is not None:
+        p = sem.profile
+        a("## WHAT THIS EVENT IS — understood before the concept was chosen")
+        a(f"- Event: {p.identity.event_type_label}"
+          + (f", in the {p.identity.event_family.replace('_', ' ')} family" if p.identity.event_family else ""))
+        if p.primary_activities:
+            a("- What happens: " + ", ".join(i.label.lower() for i in p.primary_activities)
+              + (" (also " + ", ".join(i.label.lower() for i in p.secondary_activities) + ")"
+                 if p.secondary_activities else ""))
+        a(f"- Where attention goes: {p.audience_relationship}"
+          + (f" — {p.focal_relationship}" if p.focal_relationship else ""))
+        if sem.intent.must_communicate:
+            a("- It must read as this event: " + "; ".join(sem.intent.must_communicate[:3]))
+        a("")
+
     a("## PROGRAMME TO RESOLVE")
-    zones = [z.name if hasattr(z, "name") else str(z) for z in program.required_zones]
-    if zones:
-        for z in zones:
-            a(f"- {z}")
+    if sem is not None and sem.programme:
+        for z in sem.programme:
+            if z.priority == "optional":
+                continue
+            a(f"- {z.label} [{z.role}, {z.priority}] — {z.rationale}")
+    elif program.required_zones:
+        for z in program.required_zones:
+            a(f"- {z.zone.replace('_', ' ')}")
     else:
         a("- derive the programme from the brief; do not invent zones it does not need")
     a("")
+
+    if sem is not None:
+        must_not = [e.label for e in sem.profile.elements
+                    if e.status.value == "FORBIDDEN"
+                    and ("neighbouring" in e.rationale or e.provenance.value == "USER_EXPLICIT")]
+        if must_not:
+            a("## MUST NOT CONTAIN — these belong to other events")
+            a(", ".join(must_not))
+            a("")
 
     if constraints.forbidden_tokens:
         a("## FORBIDDEN WORDS — must not appear anywhere in your output")
