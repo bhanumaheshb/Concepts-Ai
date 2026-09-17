@@ -8,10 +8,11 @@ from __future__ import annotations
 
 from typing import Any, Protocol, Sequence, TypeVar, runtime_checkable
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.domain.common import Frozen, ModelTier
 from app.domain.images import ImageCapabilities, ImageGenerationRequest, ImageGenerationResult
+from app.domain.semantics import LLMCallRecord
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -213,3 +214,32 @@ class SearchError(RuntimeError):
     must be able to tell an outage from an empty result set without importing a
     concrete backend. (tests/test_architecture.py enforces that it cannot.)
     """
+
+
+class StructuredResult(Frozen):
+    """A validated structured answer, or None — with the call record either way.
+
+    `value` is typed loosely because each call names its own schema; the generator
+    guarantees that a non-None value has passed that schema's validation.
+    """
+    model_config = ConfigDict(extra="forbid", frozen=True, arbitrary_types_allowed=True)
+    value: Any = None
+    record: LLMCallRecord
+
+
+@runtime_checkable
+class StructuredGenerator(Protocol):
+    """A reasoning model that answers in a schema.
+
+    The Design Intelligence and Visual Director stages depend on this and nothing
+    else, so any capable model — a local one, a hosted one — can serve them. The
+    adapter owns transport, schema enforcement, validation, retries on malformed
+    output, timeouts and the call record. Failure is returned, never raised, and
+    never hidden: the record says what went wrong.
+    """
+    name: str
+
+    def is_configured(self) -> bool: ...
+
+    def generate(self, *, stage: str, purpose: str, system: str, user: str,
+                 schema: type[BaseModel], max_output_tokens: int = 2048) -> StructuredResult: ...

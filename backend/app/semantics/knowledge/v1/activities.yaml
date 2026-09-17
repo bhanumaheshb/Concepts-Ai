@@ -1,0 +1,359 @@
+version: v1
+# ACTIVITIES are the unit of programme inference.
+#
+# An event type the knowledge base has never seen is still programmable, because
+# what HAPPENS in it can be recognised: "projection surfaces, live narration and
+# informal seating" implies a projection field, a narrator's position and a
+# lounging audience without anyone having written an entry for that event.
+#
+#   cues            phrases that indicate the activity in a brief (word-bounded)
+#   zones           spaces the activity needs; area/capacity shares are of the site / crowd
+#   audience        how attention is organised when this activity leads
+#   relationships   conceptual pairs a creative operator may act on ("a|b")
+#   human_activity  what people are visibly doing — used by the Visual Director
+#   time_of_day     the default light this activity is experienced in
+#   invariants      hard requirements this activity imposes, whatever the event
+#   operational     back-of-house needs
+activities:
+
+  performance:
+    label: Live performance
+    cues: [perform, performs, performance, performances, performer, performers, live band,
+           band, concert, recital, gig, live music, orchestra, singer, singers, musicians]
+    audience: frontal
+    zones:
+      - {key: performance_stage, label: Performance stage, role: performance, priority: required, area_share: 0.10}
+      - {key: backstage, label: Backstage and green room, role: backstage, priority: recommended, area_share: 0.04}
+      - {key: technical_control, label: Sound and lighting control, role: technical, priority: recommended, area_share: 0.02}
+    relationships: ["performer|audience", "stage|house"]
+    human_activity: "performers mid-performance, the audience turned toward the stage"
+    time_of_day: evening
+    invariants:
+      - {id: c_sightline_performance, statement: "Every audience position must have an unobstructed sightline to the performance stage."}
+    operational: [performer changing and holding, stage power and rigging, sound and lighting control position]
+
+  dance:
+    label: Dancing
+    cues: [dance, dancing, dance floor, choreography, choreographed, garba, dandiya, bhangra]
+    audience: participatory
+    zones:
+      - {key: dance_floor, label: Dance floor, role: participation, priority: required, area_share: 0.14, capacity_share: 0.35}
+    relationships: ["dance_floor|spectators", "dancers|performers"]
+    human_activity: "guests dancing, bodies in motion, others gathered at the edge of the floor"
+    time_of_day: night
+
+  music:
+    label: Recorded or DJ music
+    cues: [dj, disc jockey, dj booth, playlist, sound system]
+    audience: participatory
+    zones:
+      - {key: dj_booth, label: DJ booth, role: technical, priority: optional, area_share: 0.01}
+    relationships: ["dj|dance_floor"]
+    human_activity: "a DJ at the booth with the crowd responding"
+    time_of_day: night
+
+  celebration:
+    label: Social celebration
+    cues: [celebration, celebrate, celebrating, party, festivities, festive]
+    audience: convivial
+    zones:
+      - {key: guest_gathering, label: Guest gathering, role: social, priority: required, area_share: 0.18, capacity_share: 0.45}
+    relationships: ["hosts|guests", "gathering|focus"]
+    human_activity: "guests gathered in animated groups, talking and laughing"
+    time_of_day: evening
+
+  socialising:
+    label: Socialising
+    cues: [mingle, mingling, socialise, socialize, social, lounge, lounges, lounging, conversation]
+    audience: convivial
+    zones:
+      - {key: lounge, label: Lounge, role: social, priority: recommended, area_share: 0.08, capacity_share: 0.15}
+    relationships: ["lounge|focus", "intimate|collective"]
+    human_activity: "small groups seated and standing in conversation"
+    time_of_day: evening
+
+  networking:
+    label: Networking
+    cues: [networking, network, business contacts, meet and greet]
+    audience: convivial
+    zones:
+      - {key: networking_lounge, label: Networking lounge, role: social, priority: required, area_share: 0.12, capacity_share: 0.25}
+    relationships: ["networking|presentation"]
+    human_activity: "attendees standing in loose clusters, exchanging conversation"
+    time_of_day: day
+
+  drinks:
+    label: Drinks service
+    cues: [bar, bars, bar counter, cocktail, cocktails, drinks, beverage, beverages, mixology, wine]
+    audience: convivial
+    zones:
+      - {key: bar, label: Bar counter, role: hospitality, priority: required, area_share: 0.04, capacity_share: 0.05}
+    relationships: ["bar|gathering"]
+    human_activity: "bartenders serving guests leaning at the counter"
+    time_of_day: evening
+    operational: [bar back storage, ice and glass wash]
+
+  dining:
+    label: Dining
+    cues: [dinner, dining, diner, diners, banquet, meal, meals, lunch, brunch, breakfast, buffet,
+           covers, restaurant, food, feast, supper, tasting menu]
+    audience: convivial
+    zones:
+      - {key: dining, label: Dining, role: dining, priority: required, area_share: 0.30, capacity_share: 0.60}
+      - {key: service_kitchen, label: Kitchen and service, role: service, priority: recommended, area_share: 0.08}
+    relationships: ["kitchen|dining", "host|table"]
+    human_activity: "guests seated at tables mid-meal, servers moving between them"
+    time_of_day: evening
+    invariants:
+      - {id: c_covers, statement: "The dining zone must seat the stated number of guests."}
+    operational: [kitchen or service pass, clearing route separate from guests]
+
+  presentation:
+    label: Presentation
+    cues: [keynote, keynotes, presentation, presentations, talk, talks, speech, speeches, panel,
+           panels, lecture, conference, summit, seminar, address, briefing]
+    audience: frontal
+    zones:
+      - {key: presentation_stage, label: Presentation stage, role: performance, priority: required, area_share: 0.08}
+      - {key: audience_seating, label: Audience seating, role: audience, priority: required, area_share: 0.30, capacity_share: 0.70}
+      - {key: technical_control, label: AV control, role: technical, priority: recommended, area_share: 0.02}
+    relationships: ["speaker|audience", "screen|stage"]
+    human_activity: "a speaker on stage addressing a seated, attentive audience"
+    time_of_day: day
+    invariants:
+      - {id: c_sightline_presentation, statement: "Every seat must see both the speaker and the principal screen."}
+
+  reveal:
+    label: Reveal
+    cues: [launch, launches, launching, reveal, reveals, unveil, unveiling, unveiled, premiere, debut]
+    audience: frontal
+    zones:
+      - {key: reveal_zone, label: Reveal zone, role: focal, priority: required, area_share: 0.08}
+    relationships: ["concealed|revealed", "object|audience"]
+    human_activity: "an audience watching the moment of reveal, the object caught in light"
+    time_of_day: evening
+
+  product_display:
+    label: Product demonstration
+    cues: [demo, demos, demonstration, hands-on, hands on, test drive, try-out, product experience,
+           experience zone, product showcase]
+    audience: distributed
+    zones:
+      - {key: demo_zone, label: Demonstration zone, role: display, priority: required, area_share: 0.12, capacity_share: 0.15}
+    relationships: ["product|visitor", "display|interaction"]
+    human_activity: "visitors handling products while staff demonstrate"
+    time_of_day: day
+
+  display:
+    label: Display and exhibition
+    cues: [exhibit, exhibits, exhibition, exhibitions, display, displays, showcase, gallery,
+           booth, booths, stall, stalls, artworks, artefacts, artifacts, installation pieces, expo]
+    audience: distributed
+    zones:
+      - {key: display_zones, label: Display zones, role: display, priority: required, area_share: 0.35, capacity_share: 0.55}
+      - {key: orientation, label: Orientation, role: arrival, priority: recommended, area_share: 0.04}
+      - {key: storage, label: Storage and service, role: service, priority: recommended, area_share: 0.04}
+    relationships: ["object|visitor_circulation", "display|pause"]
+    human_activity: "visitors moving between displays, pausing to look closely"
+    time_of_day: day
+
+  runway:
+    label: Runway show
+    cues: [runway, catwalk, fashion show, fashion week, model walk, collection show]
+    audience: surround
+    zones:
+      - {key: runway, label: Runway, role: performance, priority: required, area_share: 0.08}
+      - {key: runway_seating, label: Front-row and tiered seating, role: audience, priority: required, area_share: 0.25, capacity_share: 0.75}
+      - {key: backstage, label: Backstage, role: backstage, priority: required, area_share: 0.08}
+      - {key: press_pit, label: Press and photographers' pit, role: media, priority: recommended, area_share: 0.03}
+      - {key: technical_control, label: Show control, role: technical, priority: recommended, area_share: 0.02}
+    relationships: ["model|audience", "backstage|runway", "runway|press_pit"]
+    human_activity: "a model mid-stride on the runway, rows of guests and photographers watching"
+    time_of_day: evening
+    invariants:
+      - {id: c_runway_sightline, statement: "The full runway length must be visible from every seat and from the press pit at its end."}
+    operational: [model changing and queueing, separate model route from backstage to runway]
+
+  media:
+    label: Media coverage
+    cues: [press, media, photographers, broadcast, broadcasting, livestream, live stream, camera crew, influencers]
+    audience: frontal
+    zones:
+      - {key: media_riser, label: Media riser, role: media, priority: recommended, area_share: 0.03}
+    relationships: ["event|camera"]
+    human_activity: "photographers on the riser, cameras raised"
+    time_of_day: evening
+
+  photography:
+    label: Photography
+    cues: [photo, photos, photography, photographer, photo booth, photo op, photo opportunity,
+           selfie, selfie point, instagrammable]
+    audience: participatory
+    zones:
+      - {key: photo_zone, label: Photo zone, role: support, priority: optional, area_share: 0.03}
+    relationships: ["subject|backdrop"]
+    human_activity: "guests posing while others photograph them"
+    time_of_day: day
+
+  registration:
+    label: Registration
+    cues: [registration, register, check-in, check in, badge, badges, accreditation]
+    audience: none
+    zones:
+      - {key: registration, label: Registration, role: arrival, priority: required, area_share: 0.03}
+    relationships: ["queue|welcome"]
+    human_activity: "attendees collecting badges at a registration counter"
+    time_of_day: day
+
+  projection:
+    label: Projection
+    cues: [projection, projections, projected, projection mapping, projection surface,
+           projection surfaces, projector, projectors, immersive visuals, dome screen, full-dome,
+           video mapping]
+    audience: immersive
+    zones:
+      - {key: projection_field, label: Projection surfaces, role: focal, priority: required, area_share: 0.10}
+      - {key: projection_control, label: Projection control, role: technical, priority: recommended, area_share: 0.02}
+    relationships: ["projected_image|audience", "surface|darkness"]
+    human_activity: "an audience lit by projected imagery, faces turned up and around"
+    time_of_day: night
+    invariants:
+      - {id: c_projection_throw, statement: "Projection surfaces must have clear throw paths free of structure and people, and the space must be darkenable."}
+    operational: [projector positions with clear throw, blackout of ambient light]
+
+  narration:
+    label: Narration and storytelling
+    cues: [narration, narrated, narrator, narrators, storytelling, storyteller, storytellers,
+           spoken word, recitation, poetry reading]
+    audience: frontal
+    zones:
+      - {key: narrator_position, label: Narrator's position, role: performance, priority: required, area_share: 0.03}
+    relationships: ["narrator|listeners", "voice|image"]
+    human_activity: "a narrator speaking while listeners follow, still and attentive"
+    time_of_day: night
+
+  informal_seating:
+    label: Informal seating
+    cues: [informal seating, beanbags, bean bags, floor cushions, cushions, loungers, lounge seating,
+           casual seating, picnic, reclining, lie back, lying down, mattresses, rugs]
+    audience: convivial
+    zones:
+      - {key: informal_seating, label: Informal seating field, role: audience, priority: required, area_share: 0.30, capacity_share: 0.80}
+    relationships: ["reclining|upright", "individual|collective"]
+    human_activity: "people sitting and reclining on cushions in loose, relaxed groups"
+    time_of_day: night
+
+  formal_seating:
+    label: Seated audience
+    cues: [theatre seating, tiered seating, auditorium, spectators, grandstand]
+    audience: frontal
+    zones:
+      - {key: guest_seating, label: Guest seating, role: audience, priority: required, area_share: 0.28, capacity_share: 0.70}
+    relationships: ["seat|focus"]
+    human_activity: "a seated audience facing the focus"
+    time_of_day: evening
+
+  ceremony:
+    label: Ceremony
+    cues: [ceremony, ceremonies, vows, solemnisation, solemnization, wedding ceremony]
+    audience: frontal
+    zones:
+      - {key: ceremony_focus, label: Ceremony focus, role: ceremony, priority: required, area_share: 0.08}
+      - {key: guest_seating, label: Guest seating, role: audience, priority: required, area_share: 0.30, capacity_share: 0.80}
+    relationships: ["ceremony|witnesses", "officiant|couple"]
+    human_activity: "guests seated and watching the ceremony at its focus"
+    time_of_day: evening
+    invariants:
+      - {id: c_sightline_all, statement: "Every seated guest must have an unobstructed sightline to the ceremony focus."}
+
+  turmeric_application:
+    label: Turmeric application
+    cues: [haldi, turmeric, turmeric paste, pithi, ubtan]
+    audience: participatory
+    zones:
+      - {key: haldi_seat, label: Couple's low seat, role: participation, priority: required, area_share: 0.04}
+      - {key: family_circle, label: Family gathering circle, role: participation, priority: required, area_share: 0.20, capacity_share: 0.55}
+      - {key: wash_station, label: Wash station, role: service, priority: required, area_share: 0.02}
+    relationships: ["couple|family", "messy|protected"]
+    human_activity: "family members taking turns to apply turmeric paste to the seated couple, laughing"
+    time_of_day: morning
+    invariants:
+      - {id: c_washable, statement: "Floors and seating within reach of the turmeric application must be washable or protected."}
+    operational: [water and towels, protected or washable floor]
+
+  henna_application:
+    label: Henna application
+    cues: [mehendi, mehndi, henna, henna artists]
+    audience: convivial
+    zones:
+      - {key: henna_stations, label: Henna application stations, role: participation, priority: required, area_share: 0.12, capacity_share: 0.20}
+      - {key: family_lounge, label: Family lounge, role: social, priority: required, area_share: 0.18, capacity_share: 0.50}
+    relationships: ["artist|guest", "waiting|drying"]
+    human_activity: "guests seated with artists applying henna, others lounging and singing"
+    time_of_day: afternoon
+
+  retail:
+    label: Retail
+    cues: [shop, shops, store, stores, retail, boutique, merchandise, sales floor, flagship store]
+    audience: distributed
+    zones:
+      - {key: sales_floor, label: Sales floor, role: retail, priority: required, area_share: 0.45, capacity_share: 0.80}
+      - {key: fitting_or_trial, label: Trial area, role: support, priority: recommended, area_share: 0.06}
+      - {key: cash_wrap, label: Cash wrap, role: service, priority: required, area_share: 0.04}
+      - {key: stockroom, label: Stockroom, role: service, priority: recommended, area_share: 0.08}
+    relationships: ["product|shopper", "window|interior"]
+    human_activity: "shoppers browsing and handling products"
+    time_of_day: day
+
+  work:
+    label: Work
+    cues: [office, offices, workspace, workplace, coworking, co-working, desks, workstations, studio office]
+    audience: distributed
+    zones:
+      - {key: workstations, label: Workstations, role: work, priority: required, area_share: 0.40, capacity_share: 0.70}
+      - {key: meeting_rooms, label: Meeting rooms, role: work, priority: required, area_share: 0.12, capacity_share: 0.20}
+      - {key: breakout, label: Breakout, role: social, priority: recommended, area_share: 0.08, capacity_share: 0.10}
+    relationships: ["focus|collaboration", "private|open"]
+    human_activity: "people working at desks and meeting in small groups"
+    time_of_day: day
+
+  shelter:
+    label: Shelter and rest
+    cues: [shelter, shade, shaded, pavilion, canopy structure, folly, rest, resting]
+    audience: convivial
+    zones:
+      - {key: shelter, label: Sheltered gathering, role: social, priority: required, area_share: 0.35, capacity_share: 0.80}
+    relationships: ["inside|outside", "shade|sun"]
+    human_activity: "people resting in shade, some passing through"
+    time_of_day: day
+
+  waiting:
+    label: Arrival and waiting
+    cues: [lobby, foyer, reception desk, waiting area, concierge, check-in lounge]
+    audience: convivial
+    zones:
+      - {key: lobby, label: Lobby, role: arrival, priority: required, area_share: 0.35, capacity_share: 0.60}
+      - {key: reception_desk, label: Reception desk, role: service, priority: required, area_share: 0.04}
+    relationships: ["arrival|pause", "public|private"]
+    human_activity: "guests arriving, waiting and being welcomed"
+    time_of_day: day
+
+  food_stalls:
+    label: Food stalls
+    cues: [food stalls, food court, food trucks, street food, live counters, chaat counter]
+    audience: distributed
+    zones:
+      - {key: food_stalls, label: Food stalls, role: hospitality, priority: required, area_share: 0.12, capacity_share: 0.20}
+    relationships: ["stall|queue"]
+    human_activity: "guests queuing and eating at food stalls"
+    time_of_day: evening
+
+  play:
+    label: Play and games
+    cues: [games, gaming, play area, kids zone, children, carnival games, interactive games]
+    audience: participatory
+    zones:
+      - {key: play_zone, label: Play zone, role: participation, priority: required, area_share: 0.10, capacity_share: 0.15}
+    relationships: ["player|spectator"]
+    human_activity: "people playing while friends watch and cheer"
+    time_of_day: day

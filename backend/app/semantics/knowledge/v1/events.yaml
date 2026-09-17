@@ -1,0 +1,630 @@
+version: v1
+# FAMILIES give context. EVENT TYPES decide the design.
+#
+# event_family and event_type are never interchangeable: a Sangeet and a Haldi are
+# both in the wedding_celebration family and have almost nothing in common as
+# programmes. The family contributes cultural context and hospitality expectations;
+# it never contributes a zone or an element.
+#
+# An event type here is DOMAIN KNOWLEDGE, not a requirement for support. A brief
+# naming an event absent from this file is resolved from its activities instead.
+#
+# event type fields
+#   aliases              phrases that name the event (word-bounded, longest wins)
+#   typology             the legacy space-form prior used by ontology affinities
+#   activities           primary / secondary — expand to zones via activities.yaml
+#   suppress_activities  cues that, inside this event, do not mean what they usually mean
+#                        ("a Haldi ceremony" has no ceremony focus)
+#   elements             required / recommended / optional element keys (elements.yaml)
+#   invariants           hard requirements of this event type
+#   traditions           per-tradition additions, selected only when a tradition is known
+
+families:
+  wedding_celebration:
+    label: Wedding celebration
+    domain: event
+    cultural_context: ["one of several events in a multi-day family celebration",
+                       "hosted by families for extended family and friends"]
+    participants: [hosts, the couple, families, guests]
+  live_entertainment:
+    label: Live entertainment
+    domain: event
+    participants: [performers, audience, crew]
+  corporate:
+    label: Corporate event
+    domain: event
+    participants: [hosts, attendees, presenters, press]
+  exhibition:
+    label: Exhibition
+    domain: event
+    participants: [visitors, exhibitors, staff]
+  fashion:
+    label: Fashion event
+    domain: event
+    participants: [models, designers, audience, press, crew]
+  social_celebration:
+    label: Social celebration
+    domain: event
+    participants: [hosts, guests]
+  hospitality:
+    label: Hospitality
+    domain: interior
+    participants: [guests, staff]
+  retail:
+    label: Retail
+    domain: interior
+    participants: [shoppers, staff]
+  workplace:
+    label: Workplace
+    domain: interior
+    participants: [staff, visitors]
+  architecture:
+    label: Architecture
+    domain: architecture
+    participants: [visitors, occupants]
+  installation:
+    label: Installation
+    domain: installation
+    participants: [visitors]
+  cultural_programme:
+    label: Cultural programme
+    domain: event
+    participants: [audience, performers, hosts]
+
+event_types:
+
+  # ── wedding celebration ──────────────────────────────────────────────────
+  sangeet:
+    label: Sangeet
+    family: wedding_celebration
+    aliases: [sangeet, sangeeth, sangeet night, sangeeth night, sangeet ceremony, sangeeth ceremony,
+              sangeet function, sangeet party]
+    typology: EVENT_STAGE
+    activities:
+      primary: [performance, dance, celebration]
+      secondary: [socialising]
+    suppress_activities: [ceremony]
+    audience: participatory
+    focal: "family performances staged toward a dance floor the guests then take over"
+    atmosphere: [energetic, celebratory, musical, festive]
+    elements:
+      required: [performance_stage, dance_floor]
+      recommended: [stage_lighting, sound_system, guest_lounge]
+      optional: [bar, dj_booth, live_band, photo_zone]
+    visual_priorities: [energy, performance visibility, lighting, movement, people]
+    must_communicate: ["performers on a lit stage", "guests dancing", "families gathered around the performance"]
+    relationships: ["performance|dance_floor", "family_performers|guests"]
+
+  haldi:
+    label: Haldi
+    family: wedding_celebration
+    aliases: [haldi, haldi ceremony, haldi function, pithi, pithi ceremony, turmeric ceremony, ubtan ceremony]
+    typology: GENERIC_SPATIAL
+    activities:
+      primary: [turmeric_application, celebration]
+      secondary: [photography]
+    suppress_activities: [ceremony]
+    audience: participatory
+    focal: "the couple seated low while family members take turns applying turmeric paste"
+    atmosphere: [joyful, informal, bright, intimate, daylit]
+    elements:
+      required: [haldi_seat, wash_station]
+      recommended: [washable_surfaces, family_seating, photo_zone]
+      optional: [food_counter, music_corner]
+    visual_priorities: [daylight, turmeric-yellow tones, intimacy, family interaction, candid photography]
+    must_communicate: ["family members applying turmeric paste to the seated couple", "yellow as the dominant colour", "open daylight"]
+    relationships: ["couple|family", "messy|protected"]
+    operational: [water and towels close to the seat, protected floor]
+
+  mehendi:
+    label: Mehendi
+    family: wedding_celebration
+    aliases: [mehendi, mehndi, mehendi ceremony, mehndi ceremony, mehendi function, henna night, henna party]
+    typology: GENERIC_SPATIAL
+    activities:
+      primary: [henna_application, celebration]
+      secondary: [socialising, music]
+    suppress_activities: [ceremony]
+    audience: convivial
+    focal: "guests seated with henna artists while the family lounges, sings and talks"
+    atmosphere: [relaxed, colourful, intimate, musical]
+    elements:
+      required: [henna_stations, family_seating]
+      recommended: [guest_lounge, photo_zone]
+      optional: [food_counter, music_corner]
+    visual_priorities: [intimacy, colour, hands and detail, lounging groups]
+    must_communicate: ["henna artists at work on guests' hands", "low relaxed seating", "an afternoon gathering"]
+    relationships: ["artist|guest", "waiting|drying"]
+
+  wedding_reception:
+    label: Wedding reception
+    family: wedding_celebration
+    aliases: [wedding reception, reception party, reception dinner, marriage reception, post-wedding reception]
+    typology: EVENT_STAGE
+    activities:
+      primary: [celebration, dining]
+      secondary: [socialising, photography]
+    suppress_activities: [ceremony]
+    audience: convivial
+    focal: "the couple received on a stage while guests dine and queue to greet them"
+    atmosphere: [elegant, celebratory, warm]
+    elements:
+      required: [couple_stage, dining_tables]
+      recommended: [guest_lounge, photo_zone, stage_lighting]
+      optional: [bar, dance_floor]
+    visual_priorities: [the couple's stage, dining guests, warmth, hospitality]
+    must_communicate: ["guests queuing to greet the couple on stage", "dining in progress"]
+    relationships: ["couple_stage|guests", "greeting_queue|dining"]
+
+  engagement:
+    label: Engagement
+    family: wedding_celebration
+    aliases: [engagement, engagement ceremony, engagement party, ring ceremony, roka, sagai, misri]
+    typology: EVENT_STAGE
+    activities:
+      primary: [celebration]
+      secondary: [dining, socialising, photography]
+    suppress_activities: [ceremony]
+    audience: frontal
+    focal: "the ring exchange on a low stage the families gather around"
+    atmosphere: [intimate, celebratory, elegant]
+    elements:
+      required: [ring_exchange_stage]
+      recommended: [family_seating, photo_zone]
+      optional: [bar, dance_floor, dining_tables]
+    visual_priorities: [the exchange moment, families, intimacy]
+    must_communicate: ["the couple exchanging rings", "families gathered close"]
+    relationships: ["couple|families"]
+
+  cocktail_night:
+    label: Cocktail night
+    family: wedding_celebration
+    aliases: [cocktail night, cocktail party, cocktail evening, cocktails night]
+    typology: EVENT_STAGE
+    activities:
+      primary: [drinks, socialising]
+      secondary: [music, dance]
+    audience: convivial
+    focal: "a bar and lounge landscape with a music focus for later in the night"
+    atmosphere: [glamorous, social, nocturnal]
+    elements:
+      required: [bar, guest_lounge]
+      recommended: [dj_booth, dance_floor]
+      optional: [photo_zone]
+    visual_priorities: [bar glow, lounge groups, night lighting]
+    must_communicate: ["guests with drinks in lounge clusters", "a glowing bar"]
+    relationships: ["bar|lounge", "lounge|dance_floor"]
+
+  wedding_ceremony:
+    label: Wedding ceremony
+    family: wedding_celebration
+    aliases: [wedding ceremony, marriage ceremony, wedding mandap, mandap, mandapam, vivah, pheras,
+              nikah, nikah ceremony, anand karaj, church wedding, wedding vows]
+    # Words that name the FAMILY rather than an event in it. They resolve to this type only
+    # when nothing more specific matched — "a Sangeet for my sister's wedding" is a Sangeet.
+    family_aliases: [wedding, weddings, shaadi, marriage, wedding celebration]
+    typology: WEDDING_MANDAP
+    activities:
+      primary: [ceremony]
+      secondary: [celebration]
+    audience: frontal
+    focal: "the ceremony focus every guest can see"
+    atmosphere: [ceremonial, significant, joyful]
+    elements:
+      required: [ceremony_focus, guest_seating]
+      recommended: [processional_route]
+      optional: [bar, guest_lounge]
+    visual_priorities: [the ceremony focus, witnesses, significance]
+    must_communicate: ["the ceremony focus", "guests witnessing"]
+    relationships: ["ceremony|witnesses", "arrival|ceremony"]
+    ritual_refs: [ritual:seating_sightline]
+    traditions:
+      hindu:
+        label: Hindu wedding
+        focal: "the mandap sheltering the sacred fire, open to the sky"
+        elements:
+          required: [mandap, ritual_fire]
+          recommended: [varmala_platform, pheras_circuit, priest_platform]
+        ritual_refs: [ritual:agni_kund, ritual:seating_sightline]
+        must_communicate: ["the mandap with the ritual fire at its centre"]
+        invariants:
+          - {id: c_ritual_agni, sacred: true, category: RITUAL,
+             statement: "A fire vessel must be present at the ceremonial centre, open to the sky, with 1.5 m radial and 4 m overhead clearance."}
+          - {id: c_ritual_canopy, category: RITUAL,
+             statement: "The ceremonial centre is marked by a distinct canopy or covering condition. Four posts are the common resolution, not the only one."}
+      muslim:
+        label: Nikah
+        focal: "the nikah stage where the couple and the officiant are seated"
+        elements:
+          required: [nikah_stage]
+          recommended: [screened_approach]
+        ritual_refs: [ritual:seating_sightline]
+        must_communicate: ["the seated nikah platform", "a controlled, screened approach"]
+        invariants:
+          - {id: c_ritual_nikah_seating, sacred: true, category: RITUAL,
+             statement: "The couple and the officiant are seated at the ceremonial centre; no fire element is present."}
+          - {id: c_ritual_nikah_approach, category: RITUAL,
+             statement: "The ceremonial platform has a controlled approach and a defined degree of screening from the general seating."}
+      christian:
+        label: Christian wedding
+        focal: "the altar terminating a single processional aisle"
+        elements:
+          required: [altar, church_aisle]
+          recommended: [priest_platform]
+        ritual_refs: [ritual:seating_sightline]
+        must_communicate: ["the aisle leading to the altar"]
+        invariants:
+          - {id: c_ritual_altar, sacred: true, category: RITUAL,
+             statement: "The ceremony terminates on an altar or equivalent standing focus; no fire element is present."}
+          - {id: c_ritual_aisle, category: RITUAL,
+             statement: "A single processional axis runs from the entrance to the altar, wide enough to walk two abreast."}
+      sikh:
+        label: Anand Karaj
+        focal: "the Palki Sahib on its raised canopied dais"
+        elements:
+          required: [palki_sahib]
+          recommended: [floor_seating]
+        ritual_refs: [ritual:seating_sightline]
+        must_communicate: ["the canopied dais", "guests seated on the floor facing it"]
+        invariants:
+          - {id: c_ritual_palki, sacred: true, category: RITUAL,
+             statement: "The Guru Granth Sahib rests on a raised, canopied dais; nothing is placed above it and no fire element is present."}
+          - {id: c_ritual_floor_seating, category: RITUAL,
+             statement: "Guests are seated at floor level facing the dais, with a clear circumambulation route around it."}
+      secular:
+        label: Secular wedding
+        focal: "one unambiguous ceremony focus"
+        elements:
+          required: [ceremony_focus]
+        ritual_refs: [ritual:seating_sightline]
+        invariants:
+          - {id: c_ritual_focus, category: RITUAL,
+             statement: "The ceremony has one unambiguous spatial focus that every guest can see."}
+
+  # ── live entertainment ───────────────────────────────────────────────────
+  music_concert:
+    label: Music concert
+    family: live_entertainment
+    aliases: [concert, concerts, music concert, live concert, gig, music festival stage, live music night]
+    typology: EVENT_STAGE
+    activities:
+      primary: [performance]
+      secondary: [drinks, media]
+    audience: frontal
+    focal: "a performance stage facing a standing audience field"
+    atmosphere: [loud, collective, charged, nocturnal]
+    elements:
+      required: [performance_stage, audience_field, sound_system, stage_lighting]
+      recommended: [front_of_house_mix, crowd_barrier, backstage]
+      optional: [bar, led_wall]
+    zones:
+      - {key: audience_field, label: Standing audience field, role: audience, priority: required, area_share: 0.40, capacity_share: 0.90}
+      - {key: front_of_house, label: Front-of-house mix position, role: technical, priority: required, area_share: 0.02}
+      - {key: security_egress, label: Security and egress routes, role: circulation, priority: required, area_share: 0.06}
+    visual_priorities: [stage lighting, crowd scale, energy, sightlines]
+    must_communicate: ["a lit stage with performers", "a dense crowd facing it", "beams of stage light"]
+    relationships: ["stage|crowd", "front_of_house|stage"]
+    operational: [load-in dock, crowd management, emergency egress]
+
+  festival:
+    label: Festival
+    family: live_entertainment
+    aliases: [festival, music festival, arts festival, food festival, cultural festival, fest]
+    typology: GENERIC_SPATIAL
+    activities:
+      primary: [performance, celebration]
+      secondary: [food_stalls, drinks, play]
+    audience: distributed
+    focal: "several stages and attractions distributed across a site"
+    atmosphere: [expansive, festive, communal]
+    elements:
+      required: [performance_stage, food_stalls]
+      recommended: [wayfinding, rest_areas]
+      optional: [bar, play_zone]
+    visual_priorities: [site scale, multiple attractions, crowds moving]
+    must_communicate: ["a site with several attractions at once", "crowds moving between them"]
+    relationships: ["stage|stalls", "destination|wandering"]
+
+  award_ceremony:
+    label: Awards ceremony
+    family: corporate
+    aliases: [awards ceremony, award ceremony, awards night, awards gala, award show, awards show]
+    typology: EVENT_STAGE
+    activities:
+      primary: [presentation, dining]
+      secondary: [media, socialising]
+    suppress_activities: [ceremony]
+    audience: frontal
+    focal: "an awards stage seen from dining tables"
+    atmosphere: [glamorous, formal, anticipatory]
+    elements:
+      required: [presentation_stage, dining_tables, led_wall]
+      recommended: [media_riser, red_carpet_arrival]
+      optional: [bar]
+    visual_priorities: [the stage moment, table audience, glamour]
+    must_communicate: ["a winner on stage", "tables of guests applauding"]
+    relationships: ["stage|tables", "winner|audience"]
+
+  # ── corporate ───────────────────────────────────────────────────────────
+  product_launch:
+    label: Product launch
+    family: corporate
+    aliases: [product launch, product launches, launch event, launch party, product reveal, product unveiling, car launch]
+    typology: EVENT_STAGE
+    activities:
+      primary: [reveal, presentation]
+      secondary: [product_display, networking, media, registration]
+    audience: frontal
+    focal: "the product revealed on a presentation stage, then experienced up close"
+    atmosphere: [anticipatory, precise, contemporary]
+    elements:
+      required: [reveal_platform, presentation_stage, registration_desk]
+      recommended: [demo_stations, media_riser, networking_lounge]
+      optional: [bar, led_wall]
+    visual_priorities: [the product, the moment of reveal, precision, brand clarity]
+    must_communicate: ["the product as the hero object", "an audience at the moment of reveal"]
+    relationships: ["product|audience", "reveal|demo", "concealed|revealed"]
+
+  conference:
+    label: Conference
+    family: corporate
+    aliases: [conference, conferences, summit, convention, symposium, seminar, forum, tech conference]
+    typology: EVENT_STAGE
+    activities:
+      primary: [presentation]
+      secondary: [networking, registration, dining]
+    audience: frontal
+    focal: "a plenary stage and screens facing a seated audience"
+    atmosphere: [focused, professional, clear]
+    elements:
+      required: [presentation_stage, audience_seating, registration_desk]
+      recommended: [breakout_rooms, networking_lounge, led_wall]
+      optional: [exhibitor_booths]
+    zones:
+      - {key: breakout_rooms, label: Breakout rooms, role: work, priority: recommended, area_share: 0.10, capacity_share: 0.10}
+    visual_priorities: [speaker and screen, attentive audience, clarity]
+    must_communicate: ["a speaker addressing a seated audience", "a large screen"]
+    relationships: ["plenary|breakout", "speaker|audience"]
+
+  gala_dinner:
+    label: Gala dinner
+    family: corporate
+    aliases: [gala dinner, gala, black tie dinner, charity gala, fundraising dinner]
+    typology: EVENT_STAGE
+    activities:
+      primary: [dining]
+      secondary: [presentation, drinks, socialising]
+    audience: convivial
+    focal: "long or round tables with a short programme on a stage"
+    atmosphere: [formal, elegant, warm]
+    elements:
+      required: [dining_tables]
+      recommended: [presentation_stage, bar]
+      optional: [dance_floor]
+    visual_priorities: [table settings, warm light, occupied tables]
+    must_communicate: ["guests dining at dressed tables"]
+    relationships: ["tables|stage"]
+
+  # ── fashion ─────────────────────────────────────────────────────────────
+  fashion_show:
+    label: Fashion show
+    family: fashion
+    aliases: [fashion show, fashion shows, runway show, catwalk show, fashion week show, couture show, trunk show]
+    typology: EVENT_STAGE
+    activities:
+      primary: [runway]
+      secondary: [media, socialising]
+    audience: surround
+    focal: "a runway lined with front-row seating and terminating at the press pit"
+    atmosphere: [sharp, theatrical, controlled]
+    elements:
+      required: [runway, backstage, press_pit]
+      recommended: [front_row_seating, show_lighting]
+      optional: [bar, photo_zone]
+    visual_priorities: [the model in motion, the runway's length, the front row, press flashes]
+    must_communicate: ["a model walking the runway", "rows of seated guests on either side", "photographers at the end"]
+    relationships: ["model|audience", "backstage|runway", "runway|press_pit"]
+
+  # ── exhibition ──────────────────────────────────────────────────────────
+  exhibition:
+    label: Exhibition
+    family: exhibition
+    aliases: [exhibition, exhibitions, art exhibition, gallery show, museum exhibition, expo, trade show, trade fair]
+    typology: EXHIBITION
+    activities:
+      primary: [display]
+      secondary: [registration]
+    audience: distributed
+    focal: "objects in sequence along a visitor route"
+    atmosphere: [contemplative, curious, clear]
+    elements:
+      required: [display_plinths, visitor_route]
+      recommended: [orientation_panel, rest_areas]
+      optional: [demo_stations, cafe]
+    visual_priorities: [objects, visitor movement, legibility of the route]
+    must_communicate: ["visitors looking closely at displayed objects", "a legible route"]
+    relationships: ["object|visitor_circulation", "display|pause"]
+
+  automobile_exhibition:
+    label: Automobile exhibition
+    family: exhibition
+    aliases: [auto expo, automobile exhibition, car exhibition, motor show, auto show, car show]
+    typology: EXHIBITION
+    activities:
+      primary: [display, product_display]
+      secondary: [reveal, media, registration]
+    audience: distributed
+    focal: "vehicles on turntables and plinths visitors can walk around and sit in"
+    atmosphere: [precise, dynamic, polished]
+    elements:
+      required: [vehicle_plinths, visitor_route]
+      recommended: [turntables, demo_stations, media_riser]
+      optional: [reveal_platform, cafe]
+    visual_priorities: [the vehicles, reflections, visitors walking around them]
+    must_communicate: ["cars displayed on plinths", "visitors circling them"]
+    relationships: ["vehicle|visitor", "plinth|circulation"]
+
+  # ── social ──────────────────────────────────────────────────────────────
+  birthday_party:
+    label: Birthday party
+    family: social_celebration
+    aliases: [birthday, birthday party, birthday celebration, milestone birthday, anniversary party]
+    typology: GENERIC_SPATIAL
+    activities:
+      primary: [celebration]
+      secondary: [dining, drinks, music, dance]
+    audience: convivial
+    focal: "a gathering around a cake moment and a place to dance"
+    atmosphere: [joyful, personal, warm]
+    elements:
+      required: [guest_lounge]
+      recommended: [dance_floor, bar, cake_table]
+      optional: [photo_zone, dj_booth]
+    visual_priorities: [people celebrating, warmth, personality]
+    must_communicate: ["friends gathered and celebrating"]
+    relationships: ["host|guests"]
+
+  # ── interiors and architecture ──────────────────────────────────────────
+  restaurant:
+    label: Restaurant
+    family: hospitality
+    domain: interior
+    aliases: [restaurant, restaurants, bistro, brasserie, eatery, dining room, cafe, café, fine dining]
+    typology: RESTAURANT
+    activities:
+      primary: [dining]
+      secondary: [drinks]
+    audience: convivial
+    focal: "tables arranged around a visible kitchen or bar"
+    atmosphere: [convivial, warm, appetising]
+    elements:
+      required: [dining_tables, kitchen, entry]
+      recommended: [bar]
+      optional: [open_kitchen, private_dining]
+    zones:
+      - {key: entry, label: Entry, role: arrival, priority: required, area_share: 0.04}
+    visual_priorities: [occupied tables, material warmth, the kitchen or bar as a focus]
+    must_communicate: ["diners at tables", "food and service in progress"]
+    relationships: ["kitchen|dining", "bar|tables", "window|interior"]
+
+  bar_lounge:
+    label: Bar and lounge
+    family: hospitality
+    domain: interior
+    aliases: [lounge bar, cocktail bar, speakeasy, wine bar, rooftop bar, bar interior, pub]
+    typology: RESTAURANT
+    activities:
+      primary: [drinks, socialising]
+    audience: convivial
+    focal: "a bar counter anchoring lounge seating"
+    atmosphere: [intimate, nocturnal, social]
+    elements:
+      required: [bar, guest_lounge]
+      optional: [dj_booth]
+    visual_priorities: [the bar as a glowing object, low light, groups]
+    must_communicate: ["a lit bar counter", "guests at low tables"]
+    relationships: ["bar|lounge"]
+
+  hotel_lobby:
+    label: Hotel lobby
+    family: hospitality
+    domain: interior
+    aliases: [hotel lobby, lobby, hotel reception, foyer, arrival hall]
+    typology: INTERIOR
+    activities:
+      primary: [waiting]
+      secondary: [socialising, drinks]
+    audience: convivial
+    focal: "a welcome desk and a lounge landscape under a generous volume"
+    atmosphere: [welcoming, calm, generous]
+    elements:
+      required: [reception_desk, guest_lounge]
+      optional: [bar]
+    visual_priorities: [the volume, arrival, calm]
+    must_communicate: ["guests arriving and being welcomed", "a generous lounge"]
+    relationships: ["arrival|pause", "desk|lounge"]
+
+  retail_store:
+    label: Retail store
+    family: retail
+    domain: interior
+    aliases: [retail store, store, shop, boutique, flagship, flagship store, showroom, concept store]
+    typology: INTERIOR
+    activities:
+      primary: [retail]
+    audience: distributed
+    focal: "products displayed along a route that turns browsing into discovery"
+    atmosphere: [curated, inviting, clear]
+    elements:
+      required: [product_displays, cash_wrap]
+      recommended: [fitting_rooms]
+    visual_priorities: [products, shoppers, material quality]
+    must_communicate: ["shoppers among displayed products"]
+    relationships: ["product|shopper", "window|interior"]
+
+  office:
+    label: Office
+    family: workplace
+    domain: interior
+    aliases: [office, office interior, workplace, headquarters, coworking space, co-working space]
+    typology: INTERIOR
+    activities:
+      primary: [work]
+      secondary: [socialising]
+    audience: distributed
+    focal: "work settings arranged around a shared social heart"
+    atmosphere: [focused, calm, collaborative]
+    elements:
+      required: [workstations, meeting_rooms]
+      recommended: [breakout]
+    visual_priorities: [people working, daylight, varied settings]
+    must_communicate: ["people at work in varied settings"]
+    relationships: ["focus|collaboration", "private|open"]
+
+  pavilion:
+    label: Pavilion
+    family: architecture
+    domain: architecture
+    aliases: [pavilion, pavilions, folly, garden pavilion, exhibition pavilion, temporary pavilion]
+    typology: PAVILION
+    activities:
+      primary: [shelter]
+      secondary: [display]
+    audience: distributed
+    focal: "a sheltering structure people move through and gather under"
+    atmosphere: [open, light, contemplative]
+    elements:
+      required: [shelter_structure]
+      recommended: [approach]
+    zones:
+      - {key: approach, label: Approach, role: arrival, priority: required, area_share: 0.10}
+    visual_priorities: [the structure against its landscape, people for scale, light]
+    must_communicate: ["the pavilion in its setting", "people under and around it"]
+    relationships: ["inside|outside", "structure|landscape"]
+
+  art_installation:
+    label: Art installation
+    family: installation
+    domain: installation
+    aliases: [art installation, installation, immersive installation, light installation, sculpture installation]
+    typology: PAVILION
+    activities:
+      primary: [display]
+    audience: immersive
+    focal: "a work visitors enter and are changed by"
+    atmosphere: [immersive, surprising, contemplative]
+    elements:
+      required: [installation_work]
+      recommended: [visitor_route]
+    visual_priorities: [the work, visitors inside it, scale]
+    must_communicate: ["visitors inside the work"]
+    relationships: ["work|visitor", "inside|outside"]
+
+# Tradition is stated or selected, never guessed. "Indian" is a culture, not a rite:
+# an Indian wedding may be Hindu, Muslim, Christian, Sikh or none of these.
+traditions:
+  hindu:     {label: Hindu,     cues: [hindu, vedic]}
+  muslim:    {label: Muslim,    cues: [muslim, islamic, nikah]}
+  christian: {label: Christian, cues: [christian, catholic, church wedding, protestant]}
+  sikh:      {label: Sikh,      cues: [sikh, anand karaj, gurdwara]}
+  secular:   {label: Secular,   cues: [secular, civil ceremony, humanist, non-religious]}

@@ -1,0 +1,371 @@
+version: v1
+# ELEMENTS — the things a concept can contain, and where each one belongs.
+#
+#   aliases   phrases that name the element in a brief or in generated text
+#   zone      the programme zone the element materialises as, when required/recommended.
+#             A zone key shared with an activity zone MERGES with it; `label` then names
+#             it more specifically ("ceremony_focus" becomes "Mandap").
+#   scope     where the element natively belongs. OMITTED = neutral, usable anywhere.
+#               event_types  the element belongs only to these event types
+#               families     ...or only to events in these families
+#               traditions   ...and, when present, only to these traditions
+#   physical  false for words that name a context rather than a thing ("wedding", "bride")
+#
+# NEGATIVE SEMANTICS ARE DERIVED, NOT LISTED. A scoped element is FORBIDDEN for every
+# brief outside its scope, unless the user explicitly asks for it. Nobody writes
+# "a concert must not contain a mandap"; it follows from where a mandap belongs.
+# Adding a new ritual element to this file protects every existing event type from it.
+elements:
+
+  # ── ritual and ceremonial — scoped ─────────────────────────────────────
+  mandap:
+    label: Mandap
+    aliases: [mandap, mandaps, mandapam, mantapa, wedding mandap, mandap canopy]
+    zone: {key: ceremony_focus, label: Mandap, role: ceremony, area_share: 0.08}
+    scope: {event_types: [wedding_ceremony], traditions: [hindu]}
+  ritual_fire:
+    label: Ritual fire
+    aliases: [ritual fire, sacred fire, agni, agni kund, havan, havan kund, hawan, homa, homa kund,
+              hom kund, yagna kund, yajna kund, fire altar, sacred flame, holy fire]
+    scope: {event_types: [wedding_ceremony], traditions: [hindu]}
+  varmala_platform:
+    label: Varmala platform
+    aliases: [varmala, var mala, jaimala, jai mala, varmala platform, varmala stage, garland exchange]
+    zone: {key: varmala_platform, label: Varmala platform, role: focal, area_share: 0.04}
+    scope: {event_types: [wedding_ceremony], traditions: [hindu]}
+  pheras_circuit:
+    label: Pheras circuit
+    aliases: [pheras, phere, saat phere, seven pheras, saptapadi, seven steps around the fire]
+    scope: {event_types: [wedding_ceremony], traditions: [hindu]}
+  vidaai:
+    label: Vidaai
+    aliases: [vidaai, vidai, bidaai, bidai]
+    scope: {event_types: [wedding_ceremony], traditions: [hindu]}
+  baraat:
+    label: Baraat procession
+    aliases: [baraat, barat, groom's procession, grooms procession, ghodi]
+    scope: {event_types: [wedding_ceremony], traditions: [hindu, sikh]}
+  priest_platform:
+    label: Priest platform
+    aliases: [priest, priests, pandit, pandit ji, panditji, purohit, priest platform, priest's seat]
+    scope: {event_types: [wedding_ceremony]}
+  nikah_stage:
+    label: Nikah stage
+    aliases: [nikah, nikah stage, nikah platform, qazi, qazi sahab, maulvi, nikahnama]
+    zone: {key: ceremony_focus, label: Nikah stage, role: ceremony, area_share: 0.08}
+    scope: {event_types: [wedding_ceremony], traditions: [muslim]}
+  screened_approach:
+    label: Screened approach
+    aliases: [screened approach, purdah screen]
+    scope: {event_types: [wedding_ceremony], traditions: [muslim]}
+  altar:
+    label: Altar
+    aliases: [altar, altars, chancel, altar table]
+    zone: {key: ceremony_focus, label: Altar, role: ceremony, area_share: 0.06}
+    scope: {event_types: [wedding_ceremony], traditions: [christian]}
+  church_aisle:
+    label: Church aisle
+    aliases: [church aisle, bridal aisle, wedding aisle, nave, pews, pew]
+    zone: {key: processional_route, label: Aisle, role: circulation, area_share: 0.05}
+    scope: {event_types: [wedding_ceremony], traditions: [christian]}
+  palki_sahib:
+    label: Palki Sahib
+    aliases: [palki sahib, palki, guru granth sahib, granth sahib]
+    zone: {key: ceremony_focus, label: Palki Sahib, role: ceremony, area_share: 0.08}
+    scope: {event_types: [wedding_ceremony], traditions: [sikh]}
+  ceremony_focus:
+    label: Ceremony focus
+    aliases: [ceremony focus, ceremonial focus, ceremonial centre, ceremonial center, ceremony stage,
+              ceremonial platform]
+    zone: {key: ceremony_focus, label: Ceremony focus, role: ceremony, area_share: 0.08}
+    scope: {event_types: [wedding_ceremony]}
+  haldi_seat:
+    label: Haldi seat
+    aliases: [haldi seat, haldi chowki, turmeric paste, turmeric application, applying turmeric]
+    zone: {key: haldi_seat, label: Couple's low seat, role: participation, area_share: 0.04}
+    scope: {event_types: [haldi]}
+  henna_stations:
+    label: Henna stations
+    aliases: [henna artists, henna artist, mehendi artists, mehndi artists, henna station, henna stations,
+              mehendi station, mehndi station]
+    zone: {key: henna_stations, label: Henna application stations, role: participation, area_share: 0.12, capacity_share: 0.20}
+    scope: {event_types: [mehendi]}
+  couple_stage:
+    label: Couple's stage
+    aliases: [couple's stage, couple stage, couples stage, bride and groom stage, reception stage]
+    zone: {key: couple_stage, label: Couple's stage, role: focal, area_share: 0.06}
+    scope: {families: [wedding_celebration]}
+  ring_exchange_stage:
+    label: Ring exchange stage
+    aliases: [ring exchange, ring ceremony stage, ring exchange stage]
+    zone: {key: ring_exchange_stage, label: Ring exchange stage, role: focal, area_share: 0.05}
+    scope: {families: [wedding_celebration]}
+  bride_and_groom:
+    label: Bride and groom
+    physical: false      # a reference to the context, never something to build
+    aliases: [bride, brides, groom, grooms, bridegroom, bridal, newlyweds, bride and groom, bride-to-be,
+              groom-to-be]
+    scope: {families: [wedding_celebration]}
+  wedding_reference:
+    label: Wedding
+    physical: false      # a reference to the context, never something to build
+    aliases: [wedding, weddings, marriage, matrimonial, shaadi, nuptial, nuptials]
+    scope: {families: [wedding_celebration]}
+
+  # ── performance and entertainment — neutral ─────────────────────────────
+  performance_stage:
+    label: Performance stage
+    aliases: [stage, stages, performance stage, main stage, bandstand, concert stage, live stage]
+    zone: {key: performance_stage, label: Performance stage, role: performance, area_share: 0.10}
+  dance_floor:
+    label: Dance floor
+    aliases: [dance floor, dancefloor, dance area]
+    zone: {key: dance_floor, label: Dance floor, role: participation, area_share: 0.14, capacity_share: 0.35}
+  live_band:
+    label: Live band
+    aliases: [live band, band, orchestra, musicians]
+  dj_booth:
+    label: DJ booth
+    aliases: [dj booth, dj console, dj]
+    zone: {key: dj_booth, label: DJ booth, role: technical, area_share: 0.01}
+  sound_system:
+    label: Sound system
+    aliases: [sound system, speakers, line array, pa system]
+  stage_lighting:
+    label: Stage lighting
+    aliases: [stage lighting, stage lights, lighting rig, moving heads, follow spot]
+  show_lighting:
+    label: Show lighting
+    aliases: [show lighting, runway lighting]
+  led_wall:
+    label: LED wall
+    aliases: [led wall, led screen, led backdrop, video wall]
+  audience_field:
+    label: Audience field
+    aliases: [audience field, standing crowd, mosh pit, general admission]
+    zone: {key: audience_field, label: Standing audience field, role: audience, area_share: 0.40, capacity_share: 0.90}
+  front_of_house_mix:
+    label: Front-of-house mix position
+    aliases: [front of house, foh, mixing desk, sound desk]
+    zone: {key: front_of_house, label: Front-of-house mix position, role: technical, area_share: 0.02}
+  crowd_barrier:
+    label: Crowd barrier
+    aliases: [crowd barrier, barricade, pit barrier]
+  backstage:
+    label: Backstage
+    aliases: [backstage, green room, greenroom, back of house]
+    zone: {key: backstage, label: Backstage, role: backstage, area_share: 0.04}
+  runway:
+    label: Runway
+    aliases: [runway, catwalk, ramp walk]
+    zone: {key: runway, label: Runway, role: performance, area_share: 0.08}
+  press_pit:
+    label: Press pit
+    aliases: [press pit, photographers' pit, photo pit, press riser]
+    zone: {key: press_pit, label: Press and photographers' pit, role: media, area_share: 0.03}
+  front_row_seating:
+    label: Front-row seating
+    aliases: [front row, front-row, tiered runway seating]
+    zone: {key: runway_seating, label: Front-row and tiered seating, role: audience, area_share: 0.25, capacity_share: 0.75}
+  media_riser:
+    label: Media riser
+    aliases: [media riser, camera riser, broadcast position]
+    zone: {key: media_riser, label: Media riser, role: media, area_share: 0.03}
+  red_carpet_arrival:
+    label: Red-carpet arrival
+    aliases: [red carpet, red-carpet]
+    zone: {key: arrival, label: Red-carpet arrival, role: arrival, area_share: 0.05}
+
+  # ── hospitality ─────────────────────────────────────────────────────────
+  bar:
+    label: Bar
+    aliases: [bar, bars, bar counter, cocktail bar, open bar]
+    zone: {key: bar, label: Bar counter, role: hospitality, area_share: 0.04, capacity_share: 0.05}
+  guest_lounge:
+    label: Lounge
+    aliases: [lounge, lounges, lounge seating, vip lounge, guest lounge]
+    zone: {key: lounge, label: Lounge, role: social, area_share: 0.08, capacity_share: 0.15}
+  dining_tables:
+    label: Dining tables
+    aliases: [dining tables, banquet tables, round tables, long tables, dinner tables]
+    zone: {key: dining, label: Dining, role: dining, area_share: 0.30, capacity_share: 0.60}
+  food_counter:
+    label: Food counter
+    aliases: [food counter, live counter, buffet counter, snack counter]
+    zone: {key: food_counter, label: Food counter, role: hospitality, area_share: 0.04}
+  food_stalls:
+    label: Food stalls
+    aliases: [food stalls, food stall, food trucks, food court]
+    zone: {key: food_stalls, label: Food stalls, role: hospitality, area_share: 0.12, capacity_share: 0.20}
+  cafe:
+    label: Cafe
+    aliases: [cafe, café, coffee bar]
+    zone: {key: cafe, label: Cafe, role: hospitality, area_share: 0.06, capacity_share: 0.10}
+  kitchen:
+    label: Kitchen
+    aliases: [kitchen, kitchens, back kitchen]
+    zone: {key: service_kitchen, label: Kitchen and service, role: service, area_share: 0.08}
+  open_kitchen:
+    label: Open kitchen
+    aliases: [open kitchen, chef's counter, chefs counter, kitchen pass]
+    zone: {key: service_kitchen, label: Open kitchen, role: service, area_share: 0.08}
+  private_dining:
+    label: Private dining
+    aliases: [private dining, private dining room, chef's table]
+    zone: {key: private_dining, label: Private dining, role: dining, area_share: 0.06, capacity_share: 0.10}
+  cake_table:
+    label: Cake table
+    aliases: [cake table, cake cutting, cake]
+  entry:
+    label: Entry
+    aliases: [entry, entrance, entrance gate, main entrance]
+    zone: {key: entry, label: Entry, role: arrival, area_share: 0.04}
+  reception_desk:
+    label: Reception desk
+    aliases: [reception desk, front desk, concierge desk, check-in desk]
+    zone: {key: reception_desk, label: Reception desk, role: service, area_share: 0.04}
+
+  # ── gathering and seating ───────────────────────────────────────────────
+  guest_seating:
+    label: Guest seating
+    aliases: [guest seating, chairs, seating rows, seated guests]
+    zone: {key: guest_seating, label: Guest seating, role: audience, area_share: 0.30, capacity_share: 0.80}
+  floor_seating:
+    label: Floor seating
+    aliases: [floor seating, seated on the floor, baithak, gaddi seating]
+    zone: {key: guest_seating, label: Floor seating, role: audience, area_share: 0.30, capacity_share: 0.80}
+  family_seating:
+    label: Family seating
+    aliases: [family seating, seating for family, elders' seating]
+    zone: {key: family_seating, label: Family seating, role: audience, area_share: 0.20, capacity_share: 0.50}
+  audience_seating:
+    label: Audience seating
+    aliases: [audience seating, theatre seating, auditorium seating, tiered seating]
+    zone: {key: audience_seating, label: Audience seating, role: audience, area_share: 0.30, capacity_share: 0.70}
+  processional_route:
+    label: Processional route
+    aliases: [processional route, processional axis, procession route, processional path]
+    zone: {key: processional_route, label: Processional route, role: circulation, area_share: 0.05}
+  rest_areas:
+    label: Rest areas
+    aliases: [rest areas, rest area, seating nooks, benches]
+    zone: {key: rest_areas, label: Rest areas, role: social, area_share: 0.05, capacity_share: 0.05}
+  music_corner:
+    label: Music corner
+    aliases: [music corner, dholki corner, singing corner]
+    zone: {key: music_corner, label: Music corner, role: social, area_share: 0.04}
+
+  # ── presentation, corporate ─────────────────────────────────────────────
+  presentation_stage:
+    label: Presentation stage
+    aliases: [presentation stage, keynote stage, plenary stage, podium, lectern]
+    zone: {key: presentation_stage, label: Presentation stage, role: performance, area_share: 0.08}
+  reveal_platform:
+    label: Reveal platform
+    aliases: [reveal platform, reveal stage, turntable reveal, unveiling platform]
+    zone: {key: reveal_zone, label: Reveal zone, role: focal, area_share: 0.08}
+  registration_desk:
+    label: Registration desk
+    aliases: [registration desk, registration counter, check-in counter, badge collection]
+    zone: {key: registration, label: Registration, role: arrival, area_share: 0.03}
+  demo_stations:
+    label: Demonstration stations
+    aliases: [demo stations, demo station, demo zone, experience stations, hands-on stations]
+    zone: {key: demo_zone, label: Demonstration zone, role: display, area_share: 0.12, capacity_share: 0.15}
+  networking_lounge:
+    label: Networking lounge
+    aliases: [networking lounge, networking area, networking zone]
+    zone: {key: networking_lounge, label: Networking lounge, role: social, area_share: 0.12, capacity_share: 0.25}
+  breakout_rooms:
+    label: Breakout rooms
+    aliases: [breakout rooms, breakout room, breakout sessions]
+    zone: {key: breakout_rooms, label: Breakout rooms, role: work, area_share: 0.10, capacity_share: 0.10}
+  exhibitor_booths:
+    label: Exhibitor booths
+    aliases: [exhibitor booths, exhibitor stands, sponsor booths]
+    zone: {key: display_zones, label: Exhibitor booths, role: display, area_share: 0.20, capacity_share: 0.20}
+
+  # ── display ─────────────────────────────────────────────────────────────
+  display_plinths:
+    label: Display plinths
+    aliases: [plinths, plinth, vitrines, vitrine, display cases, display plinths]
+    zone: {key: display_zones, label: Display zones, role: display, area_share: 0.35, capacity_share: 0.55}
+  vehicle_plinths:
+    label: Vehicle plinths
+    aliases: [vehicle plinths, car plinths, car displays, vehicle displays]
+    zone: {key: display_zones, label: Vehicle plinths, role: display, area_share: 0.40, capacity_share: 0.55}
+  turntables:
+    label: Turntables
+    aliases: [turntable, turntables, rotating platform]
+  visitor_route:
+    label: Visitor route
+    aliases: [visitor route, visitor path, exhibition route, gallery route]
+    zone: {key: visitor_route, label: Visitor route, role: circulation, area_share: 0.08}
+  orientation_panel:
+    label: Orientation
+    aliases: [orientation, orientation wall, introduction panel]
+    zone: {key: orientation, label: Orientation, role: arrival, area_share: 0.04}
+  wayfinding:
+    label: Wayfinding
+    aliases: [wayfinding, signage, directional signs]
+  installation_work:
+    label: The installation
+    aliases: [the installation, installation work]
+    zone: {key: installation_work, label: The installation, role: focal, area_share: 0.30, capacity_share: 0.60}
+  play_zone:
+    label: Play zone
+    aliases: [play zone, play area, kids zone, games area]
+    zone: {key: play_zone, label: Play zone, role: participation, area_share: 0.10, capacity_share: 0.15}
+  photo_zone:
+    label: Photo zone
+    aliases: [photo zone, photo booth, photo wall, selfie point, photo op]
+    zone: {key: photo_zone, label: Photo zone, role: support, area_share: 0.03}
+  wash_station:
+    label: Wash station
+    aliases: [wash station, wash area, washing station, hand wash, rinse station]
+    zone: {key: wash_station, label: Wash station, role: service, area_share: 0.02}
+  washable_surfaces:
+    label: Washable surfaces
+    aliases: [washable surfaces, washable floor, protected floor, wipe-clean]
+
+  # ── retail, work, architecture ──────────────────────────────────────────
+  product_displays:
+    label: Product displays
+    aliases: [product displays, merchandise displays, shelving, display tables]
+    zone: {key: sales_floor, label: Sales floor, role: retail, area_share: 0.45, capacity_share: 0.80}
+  cash_wrap:
+    label: Cash wrap
+    aliases: [cash wrap, checkout counter, billing counter]
+    zone: {key: cash_wrap, label: Cash wrap, role: service, area_share: 0.04}
+  fitting_rooms:
+    label: Fitting rooms
+    aliases: [fitting rooms, fitting room, trial rooms, changing rooms]
+    zone: {key: fitting_or_trial, label: Trial area, role: support, area_share: 0.06}
+  workstations:
+    label: Workstations
+    aliases: [workstations, desks, hot desks]
+    zone: {key: workstations, label: Workstations, role: work, area_share: 0.40, capacity_share: 0.70}
+  meeting_rooms:
+    label: Meeting rooms
+    aliases: [meeting rooms, meeting room, conference room, boardroom]
+    zone: {key: meeting_rooms, label: Meeting rooms, role: work, area_share: 0.12, capacity_share: 0.20}
+  breakout:
+    label: Breakout
+    aliases: [breakout, breakout space, pantry]
+    zone: {key: breakout, label: Breakout, role: social, area_share: 0.08, capacity_share: 0.10}
+  shelter_structure:
+    label: Sheltering structure
+    aliases: [roof structure, sheltering structure, shade structure]
+    zone: {key: shelter, label: Sheltered gathering, role: social, area_share: 0.35, capacity_share: 0.80}
+  approach:
+    label: Approach
+    aliases: [approach path, approach route]
+    zone: {key: approach, label: Approach, role: arrival, area_share: 0.10}
+  projection_surface:
+    label: Projection surfaces
+    aliases: [projection surface, projection surfaces, projection screen, projection dome, projection walls]
+    zone: {key: projection_field, label: Projection surfaces, role: focal, area_share: 0.10}
+  narrator_position:
+    label: Narrator's position
+    aliases: [narrator's position, narrator position, storyteller's seat]
+    zone: {key: narrator_position, label: Narrator's position, role: performance, area_share: 0.03}

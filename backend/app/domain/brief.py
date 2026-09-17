@@ -107,6 +107,9 @@ class DesignBrief(Frozen):
     # WHAT / FOR WHOM / WHERE. All default to UNSPECIFIED so an existing brief that
     # names none of them behaves exactly as it did before this field existed.
     event_type: EventType = EventType.GENERIC_EVENT
+    # The event as the user named it, when the legacy enum cannot hold it. Identity is
+    # resolved from this by Design Intelligence; the enum above is only a hint.
+    event_type_text: str | None = None
     tradition: Tradition = Tradition.UNSPECIFIED
     venue_type: VenueType = VenueType.UNSPECIFIED
     location: str | None = None
