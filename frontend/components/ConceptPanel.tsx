@@ -20,16 +20,22 @@ export function ConceptPanel({
   const [error, setError] = useState("");
   const [showConcept, setShowConcept] = useState(false);
 
+  // Both tabs exist for every concept; open on the one the run was started for.
+  const open = (d: ConceptDetail) => {
+    setData(d);
+    setShowConcept(d.output_mode !== "SET_3D");
+  };
+
   useEffect(() => {
     let alive = true;
     // Try the live store first — it has the freshest record. Fall back to the
     // session archive, which is the only source once the backend has restarted.
     getConcept(conceptId)
-      .then((d) => alive && setData(d))
+      .then((d) => alive && open(d))
       .catch(() =>
         sessionId
           ? getSessionConcept(sessionId, conceptId)
-              .then((d) => alive && setData(d))
+              .then((d) => alive && open(d))
               .catch((e) => alive && setError(String(e.message || e)))
           : undefined
       );

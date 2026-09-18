@@ -3,7 +3,8 @@ import pytest
 from app.api.serializers import concept_detail
 from app.creative.synthesis import CreativeSynthesizer
 from app.domain.brief import DesignBrief
-from app.prompt.set_design import compile_set_design, _physical
+from app.prompt.design_lock import physical
+from app.prompt.set_design import compile_set_design
 from app.providers.llm.mock_synthesis import MockCreativeProvider
 
 
@@ -59,12 +60,15 @@ def test_serialized_mode_and_normal_mode(handoff):
     detail = concept_detail(ont, rec, dna)
     assert detail['output_mode'] == 'SET_3D'
     assert detail['set_design']['status'] == 'prompt_ready'
+    # a CONCEPT run gets the same handoff: both tabs are views of one design
     rec.brief = rec.brief.model_copy(update={'output_mode': 'CONCEPT'})
-    assert concept_detail(ont, rec, dna)['set_design'] is None
+    normal = concept_detail(ont, rec, dna)
+    assert normal['output_mode'] == 'CONCEPT'
+    assert normal['set_design']['shared_signature'] == detail['set_design']['shared_signature']
 
 
 def test_narrative_does_not_reintroduce_people():
-    assert _physical('Guests gather near the columns. Carved panels carry grazing light.') == 'Carved panels carry grazing light.'
+    assert physical('Guests gather near the columns. Carved panels carry grazing light.') == 'Carved panels carry grazing light'
 
 
 def test_every_key_is_unique(handoff):

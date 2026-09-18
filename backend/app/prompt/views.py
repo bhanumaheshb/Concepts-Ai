@@ -22,6 +22,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from app.core.hashing import sha256_of
+from app.prompt.design_lock import signature_of
 from app.core.ids import deterministic_id
 from app.domain.brief import DesignProgram
 from app.domain.concept import ConceptDNA
@@ -29,23 +30,27 @@ from app.domain.synthesis import (
     ArchitecturalVisualizationPrompt, PromptSection, StructuredArchitecturalConcept,
 )
 
-VIEWS_VERSION = "1.0.0"
+VIEWS_VERSION = "2.0.0"
 
 # Sections that make two images look like the same place. Copied verbatim into every
 # view; never regenerated per view, because regenerating is how a set drifts apart.
 IDENTITY_SECTIONS = (
     "ARCHITECTURAL CONCEPT", "SITE", "STRUCTURE", "GEOMETRY", "MASSING",
-    "MATERIALS", "MATERIAL BEHAVIOUR", "LIGHTING", "LANDSCAPE", "ATMOSPHERE",
-    "ARCHITECTURAL VISUALIZATION STYLE", "CONSTRUCTION REALISM",
+    "MATERIALS", "MATERIAL BEHAVIOUR", "PALETTE", "LIGHTING", "TIME OF DAY", "LANDSCAPE",
+    "ATMOSPHERE", "ARCHITECTURAL VISUALIZATION STYLE", "CONSTRUCTION REALISM",
     "TRANSFERRED PRINCIPLES", "CURRENT READINGS",
 )
+
+# A measured drawing shares the building, not the photograph: the camera, light and
+# mood sections would turn an elevation back into a render.
+PHOTO_ONLY = frozenset({"ARCHITECTURAL VISUALIZATION STYLE", "TIME OF DAY", "ATMOSPHERE"})
 
 # Order within a single view prompt.
 VIEW_SECTION_ORDER = (
     "SUBJECT", "AREA", "DIMENSIONS", "HUMAN ACTIVITY", "COMPOSITION",
     "ARCHITECTURAL CONCEPT", "SITE", "SPATIAL ORGANIZATION",
     "STRUCTURE", "GEOMETRY", "MASSING", "MATERIALS", "MATERIAL BEHAVIOUR",
-    "LIGHTING", "LANDSCAPE", "ATMOSPHERE", "HUMAN SCALE", "CAMERA",
+    "PALETTE", "LIGHTING", "TIME OF DAY", "LANDSCAPE", "ATMOSPHERE", "HUMAN SCALE", "CAMERA",
     "ARCHITECTURAL VISUALIZATION STYLE", "CONSTRUCTION REALISM",
     "TRANSFERRED PRINCIPLES", "CURRENT READINGS",
 )
@@ -302,7 +307,9 @@ class ViewPromptCompiler:
         ) or VIEW_CATALOGUE.get(program.typology.value, _GENERIC)
 
         identity = [s for s in hero.sections if s.name in IDENTITY_SECTIONS]
-        signature = sha256_of("|".join(f"{s.name}:{s.text}" for s in identity))
+        # The design lock's signature, so a view here and a 3D handoff view of the
+        # same concept carry the same one exactly when they describe the same building.
+        signature = signature_of((s.name, s.text) for s in hero.sections)
         named = _named_zones(concept, program)
         subject_base = hero.section("SUBJECT")
         asked = (brief_text or "").lower()
@@ -337,7 +344,9 @@ class ViewPromptCompiler:
     # ---- the director's shot list ---------------------------------------------
     def _compile_from_intents(self, *, hero, dna, concept, program, scene, intents):
         identity = [s for s in hero.sections if s.name in IDENTITY_SECTIONS]
-        signature = sha256_of("|".join(f"{s.name}:{s.text}" for s in identity))
+        # The design lock's signature, so a view here and a 3D handoff view of the
+        # same concept carry the same one exactly when they describe the same building.
+        signature = signature_of((s.name, s.text) for s in hero.sections)
         out: list[ArchitecturalVisualizationPrompt] = []
         drawings = {"drawing_plan": DRAWING_VIEWS[0], "drawing_front": DRAWING_VIEWS[1],
                     "drawing_side": DRAWING_VIEWS[2]}
@@ -362,7 +371,7 @@ class ViewPromptCompiler:
                 comp = "; ".join(x for x in (intent.composition, intent.layers_phrase()) if x)
                 if comp:
                     sections.append(PromptSection(name="COMPOSITION", text=comp, source="visual"))
-            sections += list(identity)
+            sections += [x for x in identity if not (ortho and x.name in PHOTO_ONLY)]
             for extra in (("SPATIAL ORGANIZATION",) if ortho else ("SPATIAL ORGANIZATION", "HUMAN SCALE")):
                 text = hero.section(extra)
                 if text:
@@ -434,7 +443,7 @@ class ViewPromptCompiler:
                 # from the solved scene rather than from the model.
                 name="DIMENSIONS" if spec.orthographic else "AREA",
                 text=area, source="compiler" if spec.orthographic else "concept"))
-        sections += list(identity)
+        sections += [x for x in identity if not (spec.orthographic and x.name in PHOTO_ONLY)]
         # HUMAN SCALE puts figures in the frame, which is wrong in a measured drawing.
         extras = ("SPATIAL ORGANIZATION",) if spec.orthographic \
             else ("SPATIAL ORGANIZATION", "HUMAN SCALE")

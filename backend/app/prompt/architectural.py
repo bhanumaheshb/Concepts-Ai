@@ -19,14 +19,15 @@ from app.domain.synthesis import (
     StructuredArchitecturalConcept,
 )
 from app.ontology.graph import Ontology
+from app.prompt.design_lock import build_design_lock
 
-COMPILER_VERSION = "2.0.0"
+COMPILER_VERSION = "3.0.0"
 
 SECTION_ORDER = [
     "SUBJECT", "IMAGE STORY", "FOCAL POINT", "HUMAN ACTIVITY", "COMPOSITION",
     "ARCHITECTURAL CONCEPT", "SITE", "PROGRAM", "SPATIAL ORGANIZATION",
     "ARRIVAL / CIRCULATION", "FOCAL SPACE", "SEATING", "WALKWAY", "STRUCTURE",
-    "GEOMETRY", "MASSING", "MATERIALS", "MATERIAL BEHAVIOUR", "LIGHTING", "PALETTE",
+    "GEOMETRY", "MASSING", "MATERIALS", "MATERIAL BEHAVIOUR", "PALETTE", "LIGHTING", "TIME OF DAY",
     "LANDSCAPE",
     "ATMOSPHERE", "HUMAN SCALE", "CAMERA", "ARCHITECTURAL VISUALIZATION STYLE",
     "CONSTRUCTION REALISM",
@@ -36,37 +37,46 @@ SECTION_ORDER = [
 # the director is complete without them.
 VISUAL_SECTIONS = frozenset({"IMAGE STORY", "FOCAL POINT", "HUMAN ACTIVITY", "COMPOSITION"})
 
-STYLE = ("architectural visualisation, physically based rendering, accurate daylight "
-         "and artificial light balance, correct perspective, believable construction "
-         "detail, no illustration styling")
+# Realism is a camera, a lens and the evidence of construction, not a mood. The old
+# per-register styles ("dramatic", "saturated", "crowd mid-celebration") were read by
+# image models as licence for the generated look: glowing gold, perfect symmetry,
+# lamps by the hundred. The concept's register now only sets the light's temperament.
+PHOTO_REALISM = ("unretouched photograph of a real, physically built event set: full-frame camera, "
+                 "24 mm tilt-shift lens with verticals corrected, f/8, ISO 400, natural exposure, "
+                 "true-to-life colour, soft highlight roll-off, no post-processing glow")
+BUILT_TRUTH = ("construction truth visible: panel joints and seams, fabric creases and hems, "
+               "cable runs taped along floor edges, slight scuffs and dust underfoot, real finish "
+               "thicknesses, uneven flame heights, props varied in size rather than cloned")
 
-# A single fixed style string made every concept render in one photographic idiom,
-# so ten genuinely different buildings came back as ten variations of the same
-# civic stone hall. The register follows the concept's OWN emotional_register and
-# lighting_philosophy — a scenographic concept and a vernacular one should not be
-# photographed the same way.
-STYLE_BY_REGISTER: dict[str, str] = {
-    # keys are the ontology's own emotional_register labels — all twelve, so no
-    # concept silently falls back to the neutral architectural idiom
-    "euphoric":      "celebratory event photography, saturated colour, crowd mid-celebration",
-    "playful":       "lively event photography, colour-rich, movement visible in the frame",
-    "ceremonial":    "formal ceremonial photography, composed symmetry, deep saturated colour",
-    "theatrical":    "stage photography, dramatic directional light, strong colour contrast",
-    "reverent":      "quiet ceremonial photography, warm restrained colour, still figures",
-    "tender":        "soft intimate photography, gentle warm light, close human scale",
-    "intimate":      "close intimate photography, shallow depth, warm low-level light",
-    "contemplative": "calm architectural photography, soft even light, restrained palette",
-    "sublime":       "wide dramatic photography, vast scale, atmospheric depth",
-    "melancholic":   "muted photography, desaturated palette, overcast diffuse light",
-    "austere":       "spare architectural photography, hard light, minimal colour",
-    "unsettling":    "cinematic photography, high contrast, deep shadow, cold accents",
+# keys are the ontology's own emotional_register labels — all twelve
+REGISTER_LIGHT: dict[str, str] = {
+    "euphoric":      "bright, lively practical light, colours as the materials really are",
+    "playful":       "even, cheerful light, colour carried by the materials",
+    "ceremonial":    "formal, balanced light, warm practicals against ambient fill",
+    "theatrical":    "directional stage light with real falloff into shadow",
+    "reverent":      "quiet warm light, restrained colour",
+    "tender":        "soft warm light at close range",
+    "intimate":      "low warm light, darker surroundings",
+    "contemplative": "soft even light, restrained palette",
+    "sublime":       "wide even light across the full volume",
+    "melancholic":   "overcast diffuse light, muted colour",
+    "austere":       "hard clean light, minimal colour",
+    "unsettling":    "high-contrast light, deep shadow, cool accents",
 }
+
+# Signs of a generated image rather than a photograph of something built.
+AI_LOOK_NEGATIVES = [
+    "cgi", "digital painting", "concept art", "video game render", "unreal engine look",
+    "over-perfect mirror symmetry", "glowing edges", "hdr halo", "oversaturated colour",
+    "excess gold sheen", "cloned identical props", "fantasy palace", "airbrushed surfaces",
+    "plastic textures", "floating lamps", "lens flare", "bloom haze",
+]
 
 # Colour is the single biggest thing missing from a purely architectural prompt: an
 # image model given no palette defaults to neutral stone. Each lighting philosophy
 # implies a colour world, stated explicitly so the render has one.
 PALETTE_BY_LIGHTING: dict[str, str] = {
-    "diya field":          "deep amber and ochre against near-black, hundreds of small flame points",
+    "diya field":          "deep amber and ochre against near-black, rows of small flame points",
     "candle scatter":      "warm amber pools against dark ground",
     "oil-lamp field":      "amber and umber, flame-lit, darkness between the lights",
     "open flame":          "orange and deep red, firelight falling on faces",
@@ -145,6 +155,7 @@ GLOBAL_NEGATIVES = [
     "generic luxury decor", "unrelated ornament", "copied reference elements",
     "text", "watermark", "logo", "deformed geometry", "warped perspective",
     "duplicated people", "plastic sheen",
+    *AI_LOOK_NEGATIVES,
 ]
 
 
@@ -224,10 +235,11 @@ class ArchitecturalPromptCompiler:
             add("COMPOSITION", "; ".join(x for x in (visual.composition, visual.layers_phrase(),
                                                      visual.depth) if x), "visual")
 
-        add("ARCHITECTURAL CONCEPT", *pick(
-            ((c.concept_thesis if c else ""), "concept"),
-            (f"{self._label(g.architectural_language.value)} expressed through "
-             f"{self._label(g.structural_logic.value)}", "dna")))
+        # The physical description is the concept's design lock, shared verbatim with
+        # every view and with the 3D handoff, so all of them draw the same building.
+        lock = build_design_lock(self.ont, dna, c, program)
+        for name, text, source in lock.sections:
+            add(name, text, source)
 
         add("SITE", *pick(
             ((c.landscape if c else ""), "concept"),
@@ -273,46 +285,9 @@ class ArchitecturalPromptCompiler:
             ((c.program.walkway if c else ""), "concept"),
             (f"{route} {focal_name}", "dna")))
 
-        add("STRUCTURE", *pick(
-            (("; ".join(x for x in (c.structure.structural_system,
-                                    c.structure.spans_and_supports,
-                                    c.structure.module) if x) if c else ""), "concept"),
-            (f"{self._label(g.structural_logic.value)}, built as "
-             f"{self._label(g.tectonic_logic.value)}", "dna")))
-        add("GEOMETRY", *pick(
-            ((c.structure.geometry if c else ""), "concept"), (geo, "dna")))
-        add("MASSING", *pick(
-            ((c.structure.mass_and_void if c else ""), "concept"),
-            (f"massing at {self._label(g.scale_strategy.value)}", "dna")))
-
-        mats = f"{prim} as the primary material"
-        if others:
-            mats += f", with {', '.join(others)} in secondary roles"
-        add("MATERIALS", *pick(
-            (((f"{c.materials.primary}; " if c.materials.primary else "")
-              + (", ".join(c.materials.secondary))) if c else "", "concept"),
-            (mats, "dna")))
-        add("MATERIAL BEHAVIOUR", *pick(
-            (("; ".join(x for x in (c.materials.material_behaviour,
-                                    c.materials.surface_treatment) if x) if c else ""),
-             "concept"),
-            (f"{prim} left legible as itself, its texture read by raking light", "dna")))
-
-        light_bits = []
-        if c:
-            light_bits = [x for x in (", ".join(c.lighting.lighting_sources),
-                                      c.lighting.colour_temperature,
-                                      c.lighting.height_and_distribution,
-                                      c.lighting.shadow_behaviour) if x]
         if visual is not None and visual.time_of_day:
-            light_bits.append(visual.time_of_day)
-        add("LIGHTING", *pick(
-            ("; ".join(light_bits), "concept"),
-            ("; ".join(x for x in (self._label(g.lighting_philosophy.value),
-                                   visual.time_of_day if visual else "") if x), "dna")))
+            add("TIME OF DAY", visual.time_of_day, "visual")
 
-        add("LANDSCAPE", *pick(((c.landscape if c else ""), "concept"),
-                               ("planting kept low so the plan stays readable", "dna")))
         add("ATMOSPHERE", *pick(
             ((c.atmosphere if c else ""), "concept"),
             (self._label(g.emotional_register.value), "dna")))
@@ -327,30 +302,10 @@ class ArchitecturalPromptCompiler:
             (camera, "visual" if visual is not None and visual.camera_position else "concept"),
             ("three-quarter view at 1.6 m eye height, 35 mm lens", "dna")))
 
-        # PALETTE is composed, not looked up: the concept's own materials give the
-        # colour, its lighting philosophy gives the light that falls on them. Two
-        # concepts can now only share a palette if they share both.
-        lighting_label = self._label(g.lighting_philosophy.value)
-        mat_colours = []
-        for m in g.material_palette[:3]:
-            key = m.material.split(":")[-1]
-            c_txt = COLOUR_BY_MATERIAL.get(key)
-            if c_txt and c_txt not in mat_colours:
-                mat_colours.append(c_txt)
-        light_txt = PALETTE_BY_LIGHTING.get(lighting_label, "")
-        palette = "; ".join(mat_colours)
-        if light_txt:
-            palette = f"{palette} — lit as {light_txt}" if palette else light_txt
-        add("PALETTE", palette or f"colour led by {prim}", "dna")
-
         register = self._label(g.emotional_register.value)
         add("ARCHITECTURAL VISUALIZATION STYLE",
-            f"{STYLE_BY_REGISTER.get(register, STYLE)}, correct perspective, "
-            "believable construction detail", "dna")
-        add("CONSTRUCTION REALISM", *pick(
-            ((c.construction_character if c else ""), "concept"),
-            (f"assembled as {self._label(g.tectonic_logic.value)} with a believable "
-             f"load path", "dna")))
+            f"{PHOTO_REALISM}; {REGISTER_LIGHT.get(register, REGISTER_LIGHT['contemplative'])}; "
+            f"{BUILT_TRUTH}", "dna")
 
         if reference_statements:
             add("TRANSFERRED PRINCIPLES", "; ".join(reference_statements), "reference")

@@ -182,8 +182,9 @@ def concept_detail(ont: Ontology, rec: ExplorationRecord, dna: ConceptDNA) -> di
     from app.prompt.set_design import compile_set_design
     base.update({
         "output_mode": rec.brief.output_mode,
-        "set_design": (compile_set_design(ont, rec, dna)
-                       if rec.brief.output_mode == "SET_3D" else None),
+        # Every concept gets its 3D handoff, whichever mode the run was started in:
+        # both describe the same design lock, so either tab is a view of one building.
+        "set_design": compile_set_design(ont, rec, dna) or None,
         "design_thesis": dna.phenotype.design_thesis,
         "spatial_explanation": dna.phenotype.spatial_explanation,
         "material_explanation": dna.phenotype.material_explanation,

@@ -1,24 +1,34 @@
 """A deterministic, people-free 3D handoff derived from one selected concept."""
 from __future__ import annotations
 
-import re
-
 from app.core.hashing import sha256_of
 from app.creative.program import parse_dimensions
+from app.prompt.architectural import AI_LOOK_NEGATIVES, BUILT_TRUTH, PHOTO_REALISM
+from app.prompt.design_lock import build_design_lock
+from app.prompt.views import ORTHO_NEGATIVES
 
 NEGATIVE = ("people, humans, guests, crowds, performers, bride, groom, faces, silhouettes, "
             "human scale figures, mannequins, portraits, characters on screens, "
             "watermarks, logos, poster layout, unreadable text, mismatched geometry, "
             "floating supports, impossible connections")
-_PEOPLE = re.compile(r"\b(people|humans?|guests?|crowds?|performers?|bride|groom|visitors?|"
-                     r"dancers?|couple|attendees?|figures?|witnesses)\b", re.I)
-
-
-def _physical(text: str) -> str:
-    # Narrative fields can ask an image model to add guests even when a later
-    # negative prompt forbids them. Keep only physical-description sentences.
-    return " ".join(s.strip() for s in re.split(r"(?<=[.!?;])\s+", text or "")
-                    if s.strip() and not _PEOPLE.search(s))
+# Kinds meant to look like a photograph of the built set. Everything else is a
+# model or a drawing, and saying "photograph" to those would undo them.
+PHOTO_KINDS = frozenset({"beauty_render", "area_render"})
+KIND_LABEL = {
+    "beauty_render": "photoreal render", "area_render": "photoreal area render",
+    "model_view": "3D model view", "clay_render": "clay massing model",
+    "scale_model": "physical scale model", "dimensioned_drawing": "dimensioned drawing",
+    "assembly_view": "exploded 3D model",
+}
+MODEL_STYLE = {
+    "model_view": "clean 3D architectural model, true materials in flat even light, crisp edges",
+    "clay_render": "architectural clay render, single matte grey material, soft ambient occlusion",
+    "scale_model": "studio photograph of a real handmade architectural model, shallow table depth",
+    "dimensioned_drawing": "measured architectural drawing, black linework on white, no shading",
+    "assembly_view": "exploded 3D model, true materials in flat even light, layers evenly spaced",
+}
+MODEL_NEGATIVES = ["fantasy palace", "oversaturated colour", "glowing edges", "lens flare",
+                   "scale figures"]
 
 
 def compile_set_design(ont, rec, dna) -> dict:
@@ -39,19 +49,14 @@ def compile_set_design(ont, rec, dna) -> dict:
     footprint_source = "Brief footprint" if supplied and supplied == (width, depth) else "Proposed footprint"
     dimensions = dict(width_m=width, depth_m=depth, height_m=height,
                       source=f"{footprint_source}; concept height estimate")
-    material = _physical('; '.join([concept.materials.primary, concept.materials.material_behaviour,
-                         concept.materials.surface_treatment, *concept.materials.secondary,
-                         concept.materials.palette_note])) if concept else ont.label(dna.genotype.primary_material().material)
-    structure = _physical(concept.structure.structural_system) if concept else ont.label(dna.genotype.structural_logic.value)
-    lighting = _physical('; '.join([*concept.lighting.lighting_sources, concept.lighting.colour_temperature,
-                         concept.lighting.height_and_distribution, concept.lighting.shadow_behaviour,
-                         concept.lighting.interaction_with_materials])) if concept else ont.label(dna.genotype.lighting_philosophy.value)
-    language = _physical(concept.architectural_language) if concept else ont.label(dna.genotype.architectural_language.value)
-    thesis = _physical(concept.concept_thesis) if concept else _physical(dna.phenotype.design_thesis)
-    locked = (f"DESIGN ID: {dna.concept_id}.\nDESIGN: {thesis}\n"
-              f"ARCHITECTURAL LANGUAGE: {language}\nGEOMETRY: {ont.label(dna.genotype.geometry.system)}\n"
-              f"STRUCTURE: {structure}\nMATERIALS: {material}\nLIGHTING: {lighting}")
-    signature = sha256_of(locked)
+    # The same physical description the Concept tab's prompts carry, word for word,
+    # so the handoff models the building the concept images show.
+    lock = build_design_lock(ont, dna, concept, program)
+    locked = f"DESIGN ID: {dna.concept_id}.\n{lock.text}"
+    signature = lock.signature
+    hero_intent = next((i for i in (getattr(rec, "visual_intents", {}) or {}).get(dna.concept_id, [])
+                        if i.view_key == "hero"), None)
+    time_of_day = getattr(hero_intent, "time_of_day", "") or ""
     areas = []
     for zone in (semantic.programme if semantic else []):
         if zone.priority == "optional" and zone.key not in nodes:
@@ -103,19 +108,28 @@ def compile_set_design(ont, rec, dna) -> dict:
     def add(key, label, kind, camera, scope, dims, instruction):
         size = "; ".join(f"{axis[:-2]} {dims[axis]:g} m" for axis in
                          ('width_m', 'depth_m', 'height_m') if dims.get(axis) is not None)
-        positive = (f"DELIVERABLE: {label}. {kind.replace('_', ' ')} of an EMPTY, unoccupied "
+        photo = kind in PHOTO_KINDS
+        if photo:
+            style = f"STYLE: {PHOTO_REALISM}; {BUILT_TRUTH}"
+            if time_of_day:
+                style += f"\nTIME OF DAY: {time_of_day}"
+        else:
+            style = f"STYLE: {MODEL_STYLE[kind]}"
+        positive = (f"DELIVERABLE: {label}. {KIND_LABEL[kind]} of an EMPTY, unoccupied "
                     f"{identity.event_type_label if identity else program.typology.value} set. "
                     "Show only architecture, set dressing, empty furniture and lighting equipment. "
                     "No living people, silhouettes or figures in reflections, screens or artwork.\n"
-                    f"{locked}\nSCOPE: {scope}\nDIMENSIONS: {size or 'Unresolved; do not invent dimension labels'}. "
+                    f"{locked}\nSCOPE: {scope}\n"
+                    f"DIMENSIONS: {size or 'Unresolved; do not invent dimension labels'}. "
                     f"{dims['source']}. These are concept design values, not surveyed or approved construction sizes.\n"
-                    f"CAMERA: {camera}\nVIEW REQUIREMENTS: {instruction}\n"
+                    f"CAMERA: {camera}\nVIEW REQUIREMENTS: {instruction}\n{style}\n"
                     "CONTINUITY: Reuse the same origin, dimensions, modules, materials and fixtures in every view. "
                     "Preserve access routes, reveals, connections and clearances. "
-                    "Geometry must be readable at modeling scale. Physically based materials, "
-                    "controlled exposure, crisp edges and legible shadows. No poster, montage or crowds.")
+                    "Geometry must be readable at modeling scale. No poster, montage or crowds.")
+        negative = ", ".join([NEGATIVE, *(AI_LOOK_NEGATIVES if photo else MODEL_NEGATIVES),
+                              *(ORTHO_NEGATIVES if kind == 'dimensioned_drawing' else ())])
         views.append(dict(key=key, label=label, kind=kind, camera=camera, dimensions=dims,
-                          positive_prompt=positive, negative_prompt=NEGATIVE,
+                          positive_prompt=positive, negative_prompt=negative,
                           prompt_hash=sha256_of(positive), shared_signature=signature,
                           image_status="not_connected", image_url=None))
 
@@ -126,6 +140,11 @@ def compile_set_design(ont, rec, dna) -> dict:
         'Open roof cutaway; expose circulation, modular assemblies and spatial relationships. No perspective distortion.')
     add('clay', 'Clay model / massing', 'clay_render', 'Same framing as the overall set render', master, dimensions,
         'Neutral grey clay material override, diffuse studio light, ambient occlusion, no textures. Preserve all geometry.')
+    add('scale_model', 'Physical scale model', 'scale_model',
+        'Tabletop three-quarter view from 45 degrees above, 50 mm lens, as photographed in a studio', master, dimensions,
+        "Architect's 1:50 presentation maquette of this exact set: white basswood and foam board, laser-cut "
+        'columns and screens, clear acrylic for glass and water, small fixture blocks, on a plain table. '
+        'Soft studio light with real contact shadows, slight glue lines and cut edges. No scale figures.')
     for key, label, camera in [
         ('plan', 'Dimensioned top plan', 'True orthographic top-down; no perspective'),
         ('front', 'Front elevation', 'True orthographic front elevation'),
