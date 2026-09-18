@@ -43,6 +43,7 @@ export default function Page() {
   const [runState, setRunState] = useState<"" | "stopping" | "stopped">("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const semanticFor = useRef<string | null>(null);
+  const pollVersion = useRef(0);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
@@ -54,8 +55,10 @@ export default function Page() {
 
   /** Poll until every concept has been written. Cards appear as they land. */
   const poll = useCallback((id: string, expected: number) => {
+    const version = pollVersion.current;
     getConcepts(id)
       .then(({ concepts: list, status, cancelling }) => {
+        if (version !== pollVersion.current) return;
         if (cancelling) setRunState("stopping");
         if (list.length) {
           setConcepts(list);
@@ -75,8 +78,11 @@ export default function Page() {
           setRunState("stopped");
           setExpected(list.length); // no placeholders for concepts that will never come
         }
-        const finished = (list.length > 0 && list.every(isSettled)) || stopped
-          || status === "FAILED";
+        const finished = isFinalStatus(status);
+        if (finished && !list.length && !stopped) {
+          setError("No concepts were produced. Please review the brief or try again.");
+          setPhase("brief");
+        }
         setDone(finished);
         if (finished) {
           // the run is archived server-side at completion; pick it up
@@ -86,11 +92,13 @@ export default function Page() {
         }
       })
       .catch(() => {
+        if (version !== pollVersion.current) return;
         // No live record: either the run has not reached stage 01 yet, or the backend
         // restarted and the run is gone. The saved session tells the two apart, so a
         // run cut off by a restart shows as stopped instead of spinning forever.
         getSession(id)
           .then((ex) => {
+            if (version !== pollVersion.current) return;
             if (ex.status === "INTERRUPTED" || ex.status === "CANCELLED") {
               const list: Concept[] = ex.concepts || [];
               setConcepts(list);
@@ -103,6 +111,7 @@ export default function Page() {
             }
           })
           .catch(() => {
+            if (version !== pollVersion.current) return;
             timer.current = setTimeout(() => poll(id, expected), 2500);
           });
       });
@@ -110,6 +119,7 @@ export default function Page() {
 
   const start = useCallback(
     (input: BriefInput) => {
+      pollVersion.current += 1;
       setError("");
       setConcepts([]);
       setSemantic(null);
@@ -133,11 +143,13 @@ export default function Page() {
 
   const openSession = useCallback(
     (id: string) => {
+      const version = ++pollVersion.current;
       if (timer.current) clearTimeout(timer.current);
       setError("");
       setOpen(null);
       getSession(id)
         .then((ex) => {
+          if (version !== pollVersion.current) return;
           const list: Concept[] = ex.concepts || [];
           setConcepts(list);
           setSemantic((ex.semantic as SemanticReading) || null);
@@ -151,8 +163,8 @@ export default function Page() {
           const finished = isFinalStatus(ex.status);
           const stopped = ex.status === "CANCELLED" || ex.status === "INTERRUPTED";
           setRunState(stopped ? "stopped" : "");
-          if (stopped) setExpected(list.length);
-          setDone((finished && list.length > 0 && list.every(isSettled)) || stopped);
+          if (finished) setExpected(list.length);
+          setDone(finished);
           if (!finished) poll(id, ex.k ?? list.length);
         })
         .catch((e) => setError(String(e.message || e)));
@@ -176,6 +188,7 @@ export default function Page() {
   };
 
   const reset = () => {
+    pollVersion.current += 1;
     if (timer.current) clearTimeout(timer.current);
     setExpected(0);
     setPhase("brief");
@@ -217,7 +230,8 @@ export default function Page() {
         )}
       </header>
 
-      <SessionList activeId={sessionId} onOpen={openSession} refreshKey={historyKey} />
+      <SessionList activeId={sessionId} onOpen={openSession} refreshKey={historyKey}
+        onDelete={(id) => { if (id === sessionId) reset(); }} />
 
       <main className="shell">
         {phase === "brief" && (

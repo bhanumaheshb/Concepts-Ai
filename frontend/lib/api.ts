@@ -40,6 +40,19 @@ export type Shot = {
 
 export type Step = { step: string; description: string };
 
+export type SetDimensions = {
+  width_m: number | null; depth_m: number | null; height_m: number | null; source: string;
+};
+export type SetDesign = {
+  version: string; concept_id: string; title: string; status: string;
+  dimensions: SetDimensions; design_lock: string; shared_signature: string;
+  areas: (SetDimensions & { key: string; label: string; role: string })[];
+  views: { key: string; label: string; kind: string; camera: string; dimensions: SetDimensions;
+    positive_prompt: string; negative_prompt: string }[];
+  walkthrough: { prompt: string; stops: { order: number; label: string; duration_seconds: number; camera_height_m: number }[] };
+  modeling_notes: string[]; review_required: string[];
+};
+
 /** Present once the writer has been asked for this concept.
  *  `available: false` means the model was asked and failed — never silently treat
  *  that as written, or engine prose gets presented as the model's work. */
@@ -78,6 +91,8 @@ export const hasFailed = (c: Concept) => c.synthesis?.available === false;
 export const isSettled = (c: Concept) => c.synthesis != null;
 
 export type ConceptDetail = Concept & {
+  output_mode?: "CONCEPT" | "SET_3D";
+  set_design?: SetDesign | null;
   structured_concept: {
     concept_title: string;
     concept_thesis: string;
@@ -110,6 +125,7 @@ export type Exploration = {
 };
 
 export type BriefInput = {
+  output_mode?: "CONCEPT" | "SET_3D";
   brief: string;
   project_type?: string;
   event_type?: string; // what is happening — decides the shot list
@@ -185,6 +201,7 @@ export const PROJECT_TYPES = [
 export function createExploration(input: BriefInput): Promise<Exploration> {
   const body: Record<string, unknown> = {
     brief: input.brief,
+    output_mode: input.output_mode ?? "CONCEPT",
     project_type: input.project_type || undefined,
     event_type: input.event_type?.trim() || undefined,
     tradition: input.tradition && input.tradition !== "UNSPECIFIED" ? input.tradition : undefined,
@@ -336,6 +353,10 @@ export const isStopped = (s: Session) => s.status === "CANCELLED" || s.status ==
 
 export function listSessions(): Promise<{ sessions: Session[] }> {
   return req("/api/sessions");
+}
+
+export function deleteSession(id: string): Promise<{ deleted: boolean }> {
+  return req(`/api/sessions/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
 /** The saved exploration payload — same shape the live endpoint returns. */

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { Box, Layers } from "lucide-react";
 import {
   BriefInput,
   getKnowledge,
@@ -28,6 +29,7 @@ export function BriefForm({
   busy: boolean;
 }) {
   const [brief, setBrief] = useState("");
+  const [outputMode, setOutputMode] = useState<"CONCEPT" | "SET_3D">("CONCEPT");
   // Nothing is pre-selected. A default here used to be sent as an explicit choice,
   // which turned every brief — a concert, a Haldi — into a Sangeet in a mandap.
   const [projectType, setProjectType] = useState("");
@@ -132,6 +134,10 @@ export function BriefForm({
 
   return (
     <div className="stage">
+      <div className="concept-modes" role="group" aria-label="Concept mode">
+        <button type="button" aria-pressed={outputMode === "CONCEPT"} disabled={busy} onClick={() => setOutputMode("CONCEPT")}><Layers size={24} />Concepts</button>
+        <button type="button" aria-pressed={outputMode === "SET_3D"} disabled={busy} onClick={() => setOutputMode("SET_3D")}><Box size={28} />3D Concepts</button>
+      </div>
       <h1 className="stage-lead">What are you designing?</h1>
       <p className="stage-sub">
         Describe it the way you would to a colleague. You will get a set of distinct
@@ -390,6 +396,7 @@ export function BriefForm({
           onClick={() =>
             onSubmit({
               brief: brief.trim(),
+              output_mode: outputMode,
               project_type: projectType || undefined,
               event_type: eventType || undefined,
               tradition,
@@ -401,7 +408,7 @@ export function BriefForm({
             })
           }
         >
-          {busy ? "Working…" : "Generate concepts"}
+          {busy ? "Working…" : outputMode === "SET_3D" ? "Generate 3D concepts" : "Generate concepts"}
         </button>
         {!ready && brief.length > 0 && (
           <span style={{ color: "var(--ink-3)", fontSize: 13 }}>

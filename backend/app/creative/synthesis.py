@@ -48,11 +48,13 @@ class SynthesisResult:
 class CreativeSynthesizer:
     """Provider-independent. Holds no knowledge of how any model is served."""
 
-    def __init__(self, ont: Ontology, provider, max_repairs: int = MAX_REPAIRS) -> None:
+    def __init__(self, ont: Ontology, provider, max_repairs: int = MAX_REPAIRS,
+                 max_workers: int = 5) -> None:
         self.ont = ont
         self.provider = provider
         self.validator = ConceptLLMValidator(ont)
         self.max_repairs = max_repairs
+        self.max_workers = max(1, max_workers)
 
     def synthesize(self, *, dna: ConceptDNA, brief: DesignBrief,
                    program: DesignProgram, forbidden_tokens: list[str] | None = None,

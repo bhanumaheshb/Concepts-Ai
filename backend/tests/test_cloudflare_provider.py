@@ -76,7 +76,7 @@ def test_it_calls_the_native_ai_run_endpoint():
     client(ok(json.dumps(CONCEPT)), seen).chat_json(system="s", user="u")
     assert seen["url"] == (
         "https://api.cloudflare.com/client/v4/accounts/acct_123/ai/run/"
-        "@cf/meta/llama-3.3-70b-instruct-fp8-fast")
+        "@cf/meta/llama-3.1-8b-instruct-fp8-fast")
     assert seen["method"] == "POST"
 
 
@@ -158,7 +158,7 @@ def test_a_transient_failure_is_retried_and_can_succeed():
             raise TimeoutError("upstream timed out")
         return ok(json.dumps(CONCEPT))
 
-    c = cloudflare.build_client(account_id="a", api_token="t", transport=flaky)
+    c = cloudflare.build_client(account_id="a", api_token="t", retries=1, transport=flaky)
     raw, _ = c.chat_json(system="s", user="u")
     assert attempts["n"] == 2
     assert raw["concept_title"] == CONCEPT["concept_title"]
@@ -243,7 +243,7 @@ def test_a_synthesised_concept_is_stamped_with_the_provider_and_model(setup_dna)
     concept = p.synthesize_concept(concept_dna=dna, brief=brief, program=program,
                                    constraints=constraints, seed=42)
     assert concept.source == "cloudflare"
-    assert concept.model == "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    assert concept.model == "@cf/meta/llama-3.1-8b-instruct-fp8-fast"
     assert concept.concept_title == CONCEPT["concept_title"]
 
 

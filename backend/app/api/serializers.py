@@ -179,7 +179,11 @@ def concept_detail(ont: Ontology, rec: ExplorationRecord, dna: ConceptDNA) -> di
     scene = rec.scenes.get(dna.concept_id)
     prompt = rec.prompts.get(dna.concept_id)
     ev = dna.evaluation
+    from app.prompt.set_design import compile_set_design
     base.update({
+        "output_mode": rec.brief.output_mode,
+        "set_design": (compile_set_design(ont, rec, dna)
+                       if rec.brief.output_mode == "SET_3D" else None),
         "design_thesis": dna.phenotype.design_thesis,
         "spatial_explanation": dna.phenotype.spatial_explanation,
         "material_explanation": dna.phenotype.material_explanation,

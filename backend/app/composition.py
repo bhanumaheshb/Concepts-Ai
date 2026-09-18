@@ -142,6 +142,7 @@ def build_synthesis_provider(settings, ont):
             account_id=settings.cf_account_id, api_token=settings.cf_api_token,
             model=settings.cf_model, base_url=settings.cf_base_url,
             timeout_s=settings.llm_timeout,
+            retries=settings.llm_retries,
             max_output_tokens=settings.llm_max_output_tokens)
     if settings.llm_provider == "lmstudio":
         from app.providers.llm import lmstudio
@@ -236,7 +237,8 @@ def get_container() -> Container:
             ont, llm, store, use_llm_critics=use_llm_critics,
             synthesizer=(CreativeSynthesizer(
                 ont, build_synthesis_provider(settings, ont),
-                max_repairs=settings.synthesis_repairs)
+                max_repairs=settings.synthesis_repairs,
+                max_workers=settings.synthesis_parallelism)
                 if settings.synthesis_enabled else None),
             arch_compiler=(ArchitecturalPromptCompiler(ont)
                            if settings.synthesis_enabled else None),

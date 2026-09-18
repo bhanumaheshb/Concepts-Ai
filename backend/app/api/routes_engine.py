@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import threading
+from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
@@ -53,6 +54,7 @@ class TrendBlock(BaseModel):
 
 
 class BriefRequest(BaseModel):
+    output_mode: Literal["CONCEPT", "SET_3D"] = "CONCEPT"
     project_type: str | None = None
     brief: str = Field(min_length=4)
     # What is happening, in whose tradition, in what kind of venue. All optional:
@@ -243,6 +245,7 @@ def create_exploration(req: BriefRequest, background: BackgroundTasks) -> dict:
         brief_id=new_id("bf"),
         raw_text=" ".join(filter(None, [req.brief, req.constraints])),
         typology=typology,
+        output_mode=req.output_mode,
         event_type=_enum(EventType, req.event_type, EventType.GENERIC_EVENT),
         event_type_text=(req.event_type or "").strip() or None,
         tradition=_enum(Tradition, req.tradition, Tradition.UNSPECIFIED),
@@ -397,9 +400,18 @@ def get_session_concept(exploration_id: str, concept_id: str) -> dict:
     return detail
 
 
-# There is deliberately no delete route. Sessions are the only record of a run that
-# survives a restart, and a stray click on a delete control already destroyed one.
-# Removing a session is a filesystem operation on backend/.sessions/, on purpose.
+@router.delete("/sessions/{exploration_id}")
+def delete_session(exploration_id: str) -> dict:
+    try:
+        removed = _sessions.delete(exploration_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid session id") from None
+    if not removed:
+        raise HTTPException(404, "Session not found")
+    flag = _active.get(exploration_id)
+    if flag is not None:
+        flag.set()
+    return {"exploration_id": exploration_id, "deleted": True}
 
 
 @router.get("/explorations")

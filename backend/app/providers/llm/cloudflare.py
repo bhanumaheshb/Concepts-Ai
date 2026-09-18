@@ -8,7 +8,7 @@ Credentials come from the environment and are never logged:
     LLM_PROVIDER=cloudflare
     CF_ACCOUNT_ID=...        # Workers AI account id
     CF_API_TOKEN=...         # token with the "Workers AI" permission
-    CF_MODEL=@cf/meta/llama-3.3-70b-instruct-fp8-fast   (optional)
+    CF_MODEL=@cf/meta/llama-3.1-8b-instruct-fp8-fast   (optional)
 
 An account id and token that are absent do NOT disable the synthesis stage. The stage
 still runs and fails loudly per concept, because silently degrading to the
@@ -24,11 +24,11 @@ API_BASE = "https://api.cloudflare.com/client/v4"
 # Instruction-tuned models on Workers AI large enough to hold a 21-section
 # architectural brief and return schema-valid JSON. The default is the fastest of
 # the ones that reliably do both.
-DEFAULT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+DEFAULT_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8-fast"
 SUGGESTED_MODELS = (
     "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "@cf/meta/llama-3.1-70b-instruct",
-    "@cf/meta/llama-3.1-8b-instruct-fast",
+    "@cf/meta/llama-3.1-8b-instruct-fp8-fast",
     "@cf/qwen/qwen2.5-coder-32b-instruct",
     "@cf/mistralai/mistral-small-3.1-24b-instruct",
 )
@@ -38,7 +38,7 @@ PROVIDER_NAME = "cloudflare"
 
 def build_client(*, account_id: str, api_token: str, model: str = "",
                  base_url: str = API_BASE, timeout_s: float = 120.0,
-                 transport=None) -> HttpLLM:
+                 retries: int = 0, transport=None) -> HttpLLM:
     """The Workers AI client. `transport` is injected only by the tests."""
     return HttpLLM(
         base_url=(base_url or API_BASE).rstrip("/"),
@@ -47,6 +47,7 @@ def build_client(*, account_id: str, api_token: str, model: str = "",
         account_id=account_id.strip(),
         api_key=api_token.strip(),
         timeout_s=timeout_s,
+        retries=retries,
         transport=transport,
     )
 
@@ -54,9 +55,10 @@ def build_client(*, account_id: str, api_token: str, model: str = "",
 def build_provider(*, account_id: str, api_token: str, model: str = "",
                    base_url: str = API_BASE, timeout_s: float = 120.0,
                    max_output_tokens: int = 3072,
-                   transport=None) -> HttpSynthesisProvider:
+                   retries: int = 0, transport=None) -> HttpSynthesisProvider:
     """A CreativeSynthesisProvider backed by Workers AI."""
     return HttpSynthesisProvider(
         build_client(account_id=account_id, api_token=api_token, model=model,
-                     base_url=base_url, timeout_s=timeout_s, transport=transport),
+                     base_url=base_url, timeout_s=timeout_s, retries=retries,
+                     transport=transport),
         name=PROVIDER_NAME, max_output_tokens=max_output_tokens)

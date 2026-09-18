@@ -163,6 +163,17 @@ def build_user_prompt(brief: DesignBrief, program: DesignProgram,
 
     a("## BRIEF")
     a(brief.raw_text.strip())
+    if brief.output_mode == "SET_3D":
+        a("3D SET DESIGN HANDOFF: Act as a senior architectural visualization and "
+          "temporary-set designer. Design the empty physical set, not an event poster "
+          "or a scene of people. Resolve entrance, connecting routes, enclosing walls, "
+          "the event-specific focus and furnished areas appropriate to THIS programme. "
+          "Describe modeled volumes, relief depth, modular joints, surface finishes, "
+          "practical fixtures and concealed support access. Keep one consistent "
+          "material and lighting language throughout. No people, performers, silhouettes "
+          "or crowds in any render. Express human experience through spatial sequence "
+          "and empty furniture. Dimensions not supplied by the brief are proposals, "
+          "never surveyed or construction-approved measurements.")
     if brief.location:
         a(f"Location: {brief.location}")
     a("")

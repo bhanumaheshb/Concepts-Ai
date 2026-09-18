@@ -1,22 +1,67 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { Session, isRunning, isStopped, listSessions } from "../lib/api";
+import { Session, isRunning, isStopped, listSessions, deleteSession } from "../lib/api";
+import { Trash2 } from "lucide-react";
 
 /** Past runs, kept on disk by the backend so they outlive a restart.
  *  Numbered oldest-first, so Session 1 stays Session 1 as new runs arrive.
- *  Read-only on purpose: a row opens a run, nothing here can destroy one. */
+ *  Deleted entries retain their server-side snapshot for recovery. */
+const COLLAPSE_KEY = "sessions-collapsed";
+const PHONE = "(max-width: 760px)";   // matches the stacked layout in globals.css
+
 export function SessionList({
   activeId,
   onOpen,
   refreshKey,
+  onDelete,
 }: {
   activeId: string | null;
   onOpen: (id: string) => void;
   refreshKey: number;
+  onDelete: (id: string) => void;
 }) {
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsedState] = useState(false);
+  const setCollapsed = (value: boolean) => {
+    setCollapsedState(value);
+    try { localStorage.setItem(COLLAPSE_KEY, value ? "1" : "0"); } catch { /* storage unavailable */ }
+  };
+
+  // On a phone the list sits ABOVE the brief form, so starting open buries the form
+  // under every past session. Start collapsed there; otherwise honour the last choice.
+  // Read after mount: the server render has no window, and matching it avoids a
+  // hydration mismatch.
+  useEffect(() => {
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(COLLAPSE_KEY); } catch { /* storage unavailable */ }
+    if (saved !== null) setCollapsedState(saved === "1");
+    else if (window.matchMedia(PHONE).matches) setCollapsedState(true);
+  }, []);
   const [busy, setBusy] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  // Two-step delete: a single stray click once cost a real session. The first click
+  // arms the button for a few seconds; only a second click deletes.
+  const [confirming, setConfirming] = useState<string | null>(null);
+  useEffect(() => {
+    if (!confirming) return;
+    const t = setTimeout(() => setConfirming(null), 4000);
+    return () => clearTimeout(t);
+  }, [confirming]);
+  const [error, setError] = useState("");
+
+  const remove = async (id: string) => {
+    setDeleting(id);
+    setError("");
+    try {
+      await deleteSession(id);
+      setSessions((rows) => rows.filter((s) => s.exploration_id !== id));
+      onDelete(id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not delete session.");
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   const load = useCallback(() => {
     listSessions()
@@ -65,10 +110,14 @@ export function SessionList({
 
       <ul className="sessions-list">
         {sessions.map((s) => (
-          <li key={s.exploration_id}>
+          <li key={s.exploration_id} className="session-item">
             <button
               className={`session-row${s.exploration_id === activeId ? " is-active" : ""}`}
-              onClick={() => onOpen(s.exploration_id)}
+              onClick={() => {
+                onOpen(s.exploration_id);
+                // on a phone, get the list out of the way of the results just opened
+                if (window.matchMedia(PHONE).matches) setCollapsedState(true);
+              }}
             >
               <span className="session-no">
                 Session {s.session_no}
@@ -86,9 +135,33 @@ export function SessionList({
                   : ""}
               </span>
             </button>
+            <button
+              type="button"
+              className={`session-delete${confirming === s.exploration_id ? " is-confirming" : ""}`}
+              title={confirming === s.exploration_id
+                ? `Click again to delete Session ${s.session_no}`
+                : `Delete Session ${s.session_no}`}
+              aria-label={confirming === s.exploration_id
+                ? `Confirm delete Session ${s.session_no}`
+                : `Delete Session ${s.session_no}`}
+              disabled={deleting !== null}
+              onClick={() => {
+                if (confirming === s.exploration_id) {
+                  setConfirming(null);
+                  remove(s.exploration_id);
+                } else {
+                  setConfirming(s.exploration_id);
+                }
+              }}
+            >
+              {confirming === s.exploration_id
+                ? <span className="session-delete-confirm">Delete?</span>
+                : <Trash2 size={15} aria-hidden="true" />}
+            </button>
           </li>
         ))}
       </ul>
+      {error && <div className="sessions-empty" role="alert">{error}</div>}
     </aside>
   );
 }

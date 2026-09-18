@@ -15,3 +15,7 @@ tsconfig.tsbuildinfo
 # local run history and scratch logs
 backend/.sessions/
 _c.log
+
+# dev server output
+frontend/dev.stdout.log
+frontend/dev.stderr.log

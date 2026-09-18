@@ -402,6 +402,15 @@ button, input, textarea, select { font: inherit; color: inherit; }
   padding: 18px 16px; font-size: 12.5px; line-height: 1.55; color: var(--ink-3);
 }
 .sessions-list { list-style: none; margin: 0; padding: 6px 0; }
+.session-item { position: relative; }
+.session-delete {
+  position: absolute; top: 5px; right: 4px; width: 28px; height: 28px;
+  display: grid; place-items: center; padding: 0; border: 0; border-radius: 4px;
+  background: transparent; color: var(--ink-3); cursor: pointer;
+}
+.session-delete:hover { color: #b42318; background: #fee4e2; }
+.session-delete:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.session-delete:disabled { opacity: .45; cursor: wait; }
 
 .session-row {
   position: relative; display: block; width: 100%; text-align: left;
@@ -505,3 +514,56 @@ button, input, textarea, select { font: inherit; color: inherit; }
 
 /* Stop: a quiet control until hovered; stopping is deliberate, not alarming. */
 .btn-stop:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+.concept-modes { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
+.concept-modes button { display: flex; justify-content: center; align-items: center; gap: 12px; padding: 20px 12px; font-size: 22px; font-weight: 600; background: transparent; border: 0; border-bottom: 3px solid transparent; color: var(--ink-3); cursor: pointer; }
+.concept-modes button[aria-pressed="true"] { color: var(--ink); border-bottom-color: #72bcad; background: rgba(114,188,173,.08); }
+.panel.panel-3d { width: min(1120px, calc(100vw - 32px)); max-width: 1120px; }
+.handoff-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin: 16px 0; }
+.set-handoff h3 { font-size: 20px; display: flex; align-items: center; gap: 10px; margin: 0; }
+.set-handoff h4 { font-size: 13px; color: var(--ink-2); margin: 22px 0 8px; }
+.handoff-status { display: block; color: var(--ink-3); font-size: 12px; margin: 8px 0; }
+.handoff-tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+.handoff-tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 12px; color: var(--ink-3); display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.handoff-tabs button[aria-pressed="true"] { color: var(--ink); border-bottom-color: #72bcad; }
+.handoff-tools { display: flex; gap: 8px; }
+.handoff-tools button { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: transparent; cursor: pointer; }
+.handoff-tools button:hover { border-color: #72bcad; }
+.handoff-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; }
+.view-list { display: flex; flex-direction: column; gap: 2px; align-self: start; }
+.view-list button { text-align: left; display: flex; align-items: baseline; gap: 10px; padding: 12px 10px; border: 0; border-left: 2px solid transparent; background: transparent; color: var(--ink-2); font-size: 13px; cursor: pointer; }
+.view-list button span { color: var(--ink-3); font-size: 11px; }
+.view-list button[aria-current="true"] { background: rgba(114,188,173,.09); border-left-color: #72bcad; color: var(--ink); }
+.view-content { min-width: 0; }
+.set-handoff .prompt { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 440px; overflow-y: auto; font-size: 12px; line-height: 1.8; }
+.dimension-readout { color: #8cc9ba; font-size: 13px; margin-top: 14px; }
+.dimension-table { overflow-x: auto; }
+.dimension-table table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.dimension-table th, .dimension-table td { padding: 12px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.dimension-table td { color: var(--ink-2); min-width: 75px; }
+.dimension-table th { font-weight: 500; }
+.walkthrough-stops { padding-left: 24px; }
+.walkthrough-stops li { padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.walkthrough-stops span { display: block; color: var(--ink-3); font-size: 12px; margin-top: 5px; }
+@media (max-width: 640px) {
+  .concept-modes button { font-size: 18px; gap: 8px; padding: 16px 6px; }
+  .handoff-layout { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .view-list { display: grid; grid-template-columns: 1fr 1fr; max-height: 190px; overflow-y: auto; border-bottom: 1px solid var(--line); }
+  .panel.panel-3d { width: calc(100vw - 16px); }
+}
+
+/* Delete is two-step: the armed state must read as a question, not an icon. */
+.session-delete.is-confirming { color: var(--accent); opacity: 1; }
+.session-delete-confirm { font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+
+/* The masthead's own vertical padding used to zero the shell's side padding, so on a
+   phone the wordmark touched the screen edge. Keep the shell's horizontal padding. */
+.masthead.shell { padding-left: 28px; padding-right: 28px; }
+@media (max-width: 760px) { .masthead.shell { padding-left: 20px; padding-right: 20px; } }
+
+/* Mode labels stay on one line; on a phone the icon shrinks before the words wrap. */
+.concept-modes button { white-space: nowrap; }
+@media (max-width: 420px) {
+  .concept-modes button { font-size: 16px; gap: 6px; padding: 14px 4px; }
+  .concept-modes button svg { width: 18px; height: 18px; }
+}

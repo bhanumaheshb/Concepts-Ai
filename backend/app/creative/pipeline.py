@@ -7,6 +7,7 @@ concept 12 rejected?" from stored data alone.
 from __future__ import annotations
 
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 
 from app.core import logging as elog
@@ -598,26 +599,42 @@ class Pipeline:
             else:
                 forbidden = sorted(antibrief.surface_tokens_excluding(set()))
                 with self._stage(rec, "14b", "Creative synthesis") as st:
-                    for dna in rec.concepts:
+
+                    def synthesize_one(dna):
                         if rec.cancelled():
-                            # stop between concepts: what is written is kept
-                            raise RunCancelled("14b")
+                            return dna, None
                         refs = self._reference_statements(rec, dna)
                         result = self.synthesizer.synthesize(
                             dna=dna, brief=brief, program=program,
                             forbidden_tokens=forbidden,
-                            reference_statements=refs, seed=seed)
+                            reference_statements=refs, seed=seed + dna.niche_index)
+                        return dna, result
+
+                    def record_result(dna, result):
+                        if result is None:
+                            return
                         rec.synthesis_calls += result.trace.attempts
                         rec.synthesis_repairs += 1 if result.trace.repaired else 0
-                        rec.synthesis_traces[dna.concept_id] = result.trace
                         rec.validations[dna.concept_id] = result.validation
                         constraints_by_concept[dna.concept_id] = result.constraints
                         if result.concept is not None:
                             rec.structured[dna.concept_id] = result.concept
+                        # Publish the completion marker only after the content is ready.
+                        rec.synthesis_traces[dna.concept_id] = result.trace
+
+                    workers = min(len(rec.concepts), self.synthesizer.max_workers)
+                    if workers:
+                        with ThreadPoolExecutor(max_workers=workers) as executor:
+                            futures = [executor.submit(synthesize_one, dna)
+                                       for dna in rec.concepts]
+                            for future in as_completed(futures):
+                                record_result(*future.result())
+                        if rec.cancelled():
+                            raise RunCancelled("14b")
                     ok = sum(1 for v in rec.validations.values() if v.passed)
                     st.detail = (f"{len(rec.structured)}/{len(rec.concepts)} synthesised, "
                                  f"{ok} valid, {rec.synthesis_repairs} repaired, "
-                                 f"{rec.synthesis_calls} model calls")
+                                 f"{rec.synthesis_calls} model calls, parallelism={workers}")
 
             # 14c visual direction, THEN prompt compilation. The director decides what
             # each image must communicate; the compilers only put that into words.

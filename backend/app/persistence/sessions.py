@@ -39,6 +39,8 @@ class SessionArchive:
         # ids are engine-generated (ex_<hex>); reject anything else rather than
         # letting a crafted id walk out of the archive directory
         safe = "".join(ch for ch in exploration_id if ch.isalnum() or ch in "_-")
+        if not safe or safe != exploration_id:
+            raise ValueError("Invalid session id")
         return self.root / f"{safe}.json"
 
     # ---- writing -----------------------------------------------------------
@@ -50,6 +52,8 @@ class SessionArchive:
         the history shows a run from its first concept rather than only after the
         last one. The write is atomic, so a reader never sees a half-written file.
         """
+        if self._path(exploration_id).with_suffix(".deleted").exists():
+            return
         doc = {
             "saved_at": time.time(),
             "exploration": payload,
@@ -93,10 +97,12 @@ class SessionArchive:
         total = len(rows)
         for i, r in enumerate(rows):
             r["session_no"] = total - i          # oldest is Session 1
-        return rows
+        return [r for r in rows if not self._path(r["exploration_id"]).with_suffix(".deleted").exists()]
 
     def get(self, exploration_id: str) -> dict[str, Any] | None:
         f = self._path(exploration_id)
+        if f.with_suffix(".deleted").exists():
+            return None
         if not f.exists():
             return None
         try:
@@ -107,6 +113,8 @@ class SessionArchive:
     def delete(self, exploration_id: str) -> bool:
         f = self._path(exploration_id)
         if f.exists():
-            f.unlink()
+            # Keep the original snapshot recoverable and prevent later snapshots
+            # from resurrecting a deleted running session.
+            f.with_suffix(".deleted").touch()
             return True
         return False

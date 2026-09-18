@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ConceptDetail, Shot, getConcept, getSessionConcept } from "../lib/api";
+import { SetDesignPanel } from "./SetDesignPanel";
 
 export function ConceptPanel({
   conceptId,
@@ -17,6 +18,7 @@ export function ConceptPanel({
 }) {
   const [data, setData] = useState<ConceptDetail | null>(null);
   const [error, setError] = useState("");
+  const [showConcept, setShowConcept] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -51,7 +53,7 @@ export function ConceptPanel({
 
   return (
     <div className="scrim" onClick={onClose}>
-      <div className="panel" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div className={`panel ${data?.set_design ? "panel-3d" : ""}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="panel-head">
           <h2 className="panel-title">{data?.title || "Loading…"}</h2>
           <button className="close" onClick={onClose} aria-label="Close">
@@ -63,7 +65,14 @@ export function ConceptPanel({
           {error && <div className="err">{error}</div>}
           {!data && !error && <p className="empty">Opening…</p>}
 
-          {data && (
+          {data?.set_design && <>
+            <div className="handoff-tabs" role="group" aria-label="Concept detail">
+              <button aria-pressed={!showConcept} onClick={() => setShowConcept(false)}>3D handoff</button>
+              <button aria-pressed={showConcept} onClick={() => setShowConcept(true)}>Concept</button>
+            </div>
+            {!showConcept && <SetDesignPanel data={data.set_design} onToast={onToast} />}
+          </>}
+          {data && (!data.set_design || showConcept) && (
             <>
               {c?.concept_thesis && <p className="lede">{c.concept_thesis}</p>}
 

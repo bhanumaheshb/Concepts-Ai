@@ -104,6 +104,7 @@ class DesignBrief(Frozen):
     brief_id: str
     project_id: str | None = None
     raw_text: str
+    output_mode: Literal["CONCEPT", "SET_3D"] = "CONCEPT"
     typology: Typology = Typology.GENERIC_SPATIAL
     # WHAT / FOR WHOM / WHERE. All default to UNSPECIFIED so an existing brief that
     # names none of them behaves exactly as it did before this field existed.

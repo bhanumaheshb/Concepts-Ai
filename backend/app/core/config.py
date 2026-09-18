@@ -58,6 +58,8 @@ class Settings(BaseModel):
     llm_timeout: float = 300.0            # a local model on CPU can take minutes
     llm_max_output_tokens: int = 8192   # the full concept schema does not fit in 3072
     synthesis_repairs: int = 1
+    synthesis_parallelism: int = 5
+    llm_retries: int = 0
     # --- creative cognition (conceptual exploration layer) ---
     # OFF by default: enabling it adds candidates and LLM calls, so every
     # recorded baseline was captured with it disabled.
@@ -153,6 +155,8 @@ def get_settings() -> Settings:
         llm_timeout=float(e("LLM_TIMEOUT", "300")),
         llm_max_output_tokens=int(e("LLM_MAX_OUTPUT_TOKENS", "8192")),
         synthesis_repairs=int(e("SYNTHESIS_REPAIRS", "1")),
+        synthesis_parallelism=max(1, min(10, int(e("SYNTHESIS_PARALLELISM", "5")))),
+        llm_retries=max(0, int(e("LLM_RETRIES", "0"))),
         semantic_reasoner_enabled=_b("SEMANTIC_REASONER_ENABLED", False),
         visual_reasoner_enabled=_b("VISUAL_REASONER_ENABLED", False),
         creative_cognition_enabled=_b("CREATIVE_COGNITION_ENABLED", False),

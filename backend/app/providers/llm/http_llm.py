@@ -145,7 +145,7 @@ class HttpLLM:
                 if attempt >= self.retries or not _is_retryable(exc):
                     break
                 time.sleep(0.6 * (attempt + 1))
-        raise LLMTransportError(f"model call failed: {self.last_error}") from last
+        raise LLMTransportError(f"model call failed: {last}") from last
 
     # ---- cloudflare workers ai ----------------------------------------------
     def _run_cloudflare(self, system: str, user: str, schema: dict | None,
@@ -157,7 +157,7 @@ class HttpLLM:
             # divergence is produced by the allocator before this call, so turning it
             # up at the sampler would only blur a concept the engine already chose.
             "max_tokens": max_tokens,
-            "seed": seed,
+            "seed": max(1, seed),
         }
         if schema:
             payload["response_format"] = {"type": "json_schema", "json_schema": schema}

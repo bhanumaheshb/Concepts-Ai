@@ -9,6 +9,7 @@ vendor is therefore a *client* plus a name, not a new provider class -- which is
 from __future__ import annotations
 
 import time
+import threading
 
 from app.creative.synthesis_prompt import PROMPT_VERSION, SYSTEM, build_user_prompt
 from app.domain.synthesis import StructuredArchitecturalConcept
@@ -26,9 +27,20 @@ class HttpSynthesisProvider:
         self.max_output_tokens = max_output_tokens
         self.prompt_version = PROMPT_VERSION
         self.calls = 0
-        self.last_raw: dict | None = None
-        self.last_prompt: str = ""
-        self.last_error: str | None = None
+        self._local = threading.local()
+        self._calls_lock = threading.Lock()
+
+    @property
+    def last_raw(self) -> dict | None:
+        return getattr(self._local, "last_raw", None)
+
+    @property
+    def last_prompt(self) -> str:
+        return getattr(self._local, "last_prompt", "")
+
+    @property
+    def last_error(self) -> str | None:
+        return getattr(self._local, "last_error", None)
 
     @property
     def model(self) -> str:
@@ -53,7 +65,21 @@ class HttpSynthesisProvider:
             trend_statements=list(trend_context or []),
             repair_instruction=repair_instruction,
         )
-        self.last_prompt = user
+        if self.max_output_tokens <= 3072:
+            user += ("\nKeep the JSON concise: one complete descriptive sentence per field, "
+                     "three spatial sequence steps, and short lists. Include every "
+                     "required field and all locked design values. Avoid repeating "
+                     "the same explanation across fields. Aim for 700-900 words total. "
+                     "Except the title, use at least 12 words per narrative string, "
+                     "including architectural_language, atmosphere and spatial_organization. "
+                     "Use at least 12 words in structure.structural_system describing "
+                     "how the locked structural logic carries loads. Name each locked "
+                     "material, structural logic and geometry within its explanation. "
+                     "Give every required programme zone a spatial description in "
+                     "program.additional_zones. A style name or adjective alone is insufficient.")
+        self._local.last_prompt = user
+        self._local.last_raw = None
+        self._local.last_error = None
         started = time.time()
         try:
             raw, duration = self.client.chat_json(
@@ -63,10 +89,11 @@ class HttpSynthesisProvider:
             # Deliberately NOT caught here. Falling back to the deterministic provider
             # would present mock prose as model output; the pipeline records the
             # failure per concept instead, where it stays visible.
-            self.last_error = str(exc)
+            self._local.last_error = str(exc)
             raise
-        self.calls += 1
-        self.last_raw = raw
+        with self._calls_lock:
+            self.calls += 1
+        self._local.last_raw = raw
         concept = coerce_concept(raw)
         return concept.model_copy(update={
             "source": self.name, "model": self.model,

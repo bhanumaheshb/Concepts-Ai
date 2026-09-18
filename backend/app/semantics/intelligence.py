@@ -56,6 +56,7 @@ LEGACY_TYPOLOGY_EVENT = {
     Typology.EXHIBITION: "exhibition", Typology.PAVILION: "pavilion",
 }
 _LEAD = re.compile(r"^(?:an?|the|our|my|a\s+\d[\d,]*[-\s]*(?:person|people|guest|pax)s?)\s+")
+_VENUE_SUFFIX = re.compile(r"^[\s-]+(?:halls?|rooms?|cent(?:er|re)s?|venues?|buildings?)\b")
 
 
 class DesignIntelligence:
@@ -80,10 +81,18 @@ class DesignIntelligence:
         uncertain: list[str] = []
 
         # -- event identity: the brief's own words, then the form, then legacy typology
-        ev_hits = [m for m in k.event_index.find(text) if not m.negated]
+        # An event word used as a venue modifier is not the event being designed:
+        # "wedding in a convention hall" must not become a conference.
+        normalised_text = normalise(text)
+        venue_spans = []
+        for hit in k.event_index.find(text) + k.family_alias_index.find(text):
+            suffix = _VENUE_SUFFIX.match(normalised_text[hit.end:])
+            if suffix:
+                venue_spans.append((hit.start, hit.end + suffix.end()))
+        ev_hits = [m for m in k.event_index.find(text, masked=venue_spans) if not m.negated]
         text_event = max(ev_hits, key=lambda m: (len(m.phrase), -m.start)).key if ev_hits else None
         if text_event is None:
-            fam_hits = [m for m in k.family_alias_index.find(text) if not m.negated]
+            fam_hits = [m for m in k.family_alias_index.find(text, masked=venue_spans) if not m.negated]
             text_event = fam_hits[0].key if fam_hits else None
             family_only = text_event is not None
         else:
@@ -113,7 +122,7 @@ class DesignIntelligence:
 
         et = k.event_types.get(event_key or "")
         # masking the event's own phrase stops "Haldi ceremony" also reading as a ceremony
-        masked = [(m.start, m.end) for m in ev_hits if m.key == event_key]
+        masked = venue_spans + [(m.start, m.end) for m in ev_hits if m.key == event_key]
 
         # -- tradition: stated or selected, never guessed
         tradition = None
